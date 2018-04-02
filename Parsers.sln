@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Routers", "Routers", "{B15DF168-0A6D-40E3-9787-0B2625454322}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProtocolParsers", "ProtocolParsers", "{87A7590B-71E5-4D39-9E29-734FE86ABBDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JunOS", "Routers\Juniper\JunOS\JunOS.csproj", "{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CiscoIOS", "Routers\Cisco\CiscoIOS\CiscoIOS.csproj", "{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CiscoIOS_OSPFParser", "ProtocolParsers\Cisco\CiscoIOS_OSPFParser\CiscoIOS_OSPFParser.csproj", "{87453085-DC6D-4F39-BE94-455530944BC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JunOS_BGPParser", "ProtocolParsers\Juniper\JunOS\JunOS_BGPParser\JunOS_BGPParser.csproj", "{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JunOS_OSPFParser", "ProtocolParsers\Juniper\JunOS\JunOS_OSPFParser\JunOS_OSPFParser.csproj", "{C038DE69-A327-41E4-A6E7-4CF7055AFEBA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JunOS_STATICParser", "ProtocolParsers\Juniper\JunOS\JunOS_STATICParser\JunOS_STATICParser.csproj", "{2FB138B2-C840-4C80-A8D5-02911A77FFCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87453085-DC6D-4F39-BE94-455530944BC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87453085-DC6D-4F39-BE94-455530944BC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87453085-DC6D-4F39-BE94-455530944BC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87453085-DC6D-4F39-BE94-455530944BC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C038DE69-A327-41E4-A6E7-4CF7055AFEBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C038DE69-A327-41E4-A6E7-4CF7055AFEBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C038DE69-A327-41E4-A6E7-4CF7055AFEBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C038DE69-A327-41E4-A6E7-4CF7055AFEBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FB138B2-C840-4C80-A8D5-02911A77FFCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FB138B2-C840-4C80-A8D5-02911A77FFCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FB138B2-C840-4C80-A8D5-02911A77FFCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FB138B2-C840-4C80-A8D5-02911A77FFCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB4EDF1C-55CA-47CF-B26E-6FEDAEE0092A} = {B15DF168-0A6D-40E3-9787-0B2625454322}
+		{9AA96C2A-DCEA-4AEC-8169-FAD077B63FC3} = {B15DF168-0A6D-40E3-9787-0B2625454322}
+		{87453085-DC6D-4F39-BE94-455530944BC4} = {87A7590B-71E5-4D39-9E29-734FE86ABBDA}
+		{57978EB9-ABAB-49BF-AF23-EA2D30EC35CF} = {87A7590B-71E5-4D39-9E29-734FE86ABBDA}
+		{C038DE69-A327-41E4-A6E7-4CF7055AFEBA} = {87A7590B-71E5-4D39-9E29-734FE86ABBDA}
+		{2FB138B2-C840-4C80-A8D5-02911A77FFCA} = {87A7590B-71E5-4D39-9E29-734FE86ABBDA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6B0DCE6A-0F62-427F-B563-51AABCBD4907}
+	EndGlobalSection
+EndGlobal
