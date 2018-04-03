@@ -591,7 +591,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v0.9";
+		public string SupportTag => "Cisco, IOS Router support module v0.91";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device

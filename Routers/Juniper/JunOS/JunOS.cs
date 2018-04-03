@@ -369,7 +369,7 @@ namespace L3Discovery.Routers.JunOS
       }
     }
 
-    public string SupportTag => "Juniper, JunOS EX series switch support module v0.9";
+    public string SupportTag => "Juniper, JunOS EX series switch support module v0.91";
 
     public string SystemSerial
     {

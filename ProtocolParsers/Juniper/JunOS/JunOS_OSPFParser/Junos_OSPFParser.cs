@@ -161,20 +161,29 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 					if (line.ToLowerInvariant().StartsWith("ospf database"))
 					{
 						// line is like : OSPF database, Area 10.72.0.0
-						if (currentArea?.AreaID != "")
+						string[] o = line.SplitByComma();
+						string[] a = o[1].SplitBySpace();
+						string thisAreaID = a[1];
+						if (currentArea == null)
+						{
+							currentArea = new OSPFArea();
+							currentArea.AreaID = thisAreaID.Trim();
+							currentArea.AreaType = GetAreaType(currentArea.AreaID);
+						}
+						else if (thisAreaID != currentArea.AreaID)
 						{
 							// area ID is changing
 							this._ospfAreaLSAs[currentArea] = OSPFLSAs;
+							OSPFLSAs = new Dictionary<string, List<OSPFLSA>>();
+							LSAs = new List<OSPFLSA>();
+							currentArea = new OSPFArea();
+							currentArea.AreaID = thisAreaID.Trim();
+							currentArea.AreaType = GetAreaType(currentArea.AreaID);
 						}
-						OSPFLSAs = new Dictionary<string, List<OSPFLSA>>();
-						LSAs = new List<OSPFLSA>();
-						string[] o = line.SplitByComma();
-						string[] a = o[1].SplitBySpace();
-						currentArea = new OSPFArea() { AreaID = a[1], AreaType = GetAreaType(a[1]) };
 					}
 					else
 					{
-						// Tha LSA Type should be the first word in thisLine
+						// The LSA Type should be the first word in thisLine
 						string[] r = line.ToLowerInvariant().SplitBySpace();
 						string LSATypeName = r[0];
 						if (LSATypeName != "type")
@@ -202,39 +211,43 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 				}
 			}
 			// add the last area router ID-s
-			if (currentArea?.AreaID != "")
+			if (currentArea != null)
 			{
 				this._ospfAreaLSAs[currentArea] = OSPFLSAs;
 			}
 			#endregion
 			#region Local functions
-			string GetAreaType(string AreaID)
+			OSPFAreaType GetAreaType(string AreaID)
 			{
 				try
 				{
 					// parsing as per https://www.juniper.net/documentation/en_US/junos/topics/reference/command-summary/show-ospf-ospf3-overview.html
-					if (AreaID == "0.0.0.0") return "Backbone";
+					if (AreaID == "0.0.0.0") return OSPFAreaType.Backbone;
 					bool inDesiredAreaSection = false;
 					foreach (string line in ospfOverView.SplitByLine().Select(l => l.ToLowerInvariant().Trim()))
 					{
-						if (line.StartsWith(string.Format("area: {0}", AreaID))) inDesiredAreaSection = false;
+						if (line.StartsWith(string.Format("area: {0}", AreaID)))
+						{
+							if (inDesiredAreaSection) break;
+							inDesiredAreaSection = true;
+						}
 						if (inDesiredAreaSection)
 						{
 							if (line.StartsWith("stub type:"))
 							{
 								string[] typeDesc = line.Split(':');
-								if (typeDesc[1].Contains("normal stub")) return "Stub";
-								if (typeDesc[1].Contains("not stub")) return "Normal";
-								if (typeDesc[1].Contains("Not so Stubby") || typeDesc[1].Contains("NSSA")) return "NSSA";
+								if (typeDesc[1].Contains("normal stub")) return OSPFAreaType.Stub;
+								if (typeDesc[1].Contains("not stub")) return OSPFAreaType.Normal;
+								if (typeDesc[1].Contains("not so stubby") || typeDesc[1].Contains("nssa")) return OSPFAreaType.NSSA;
 							}
 						}
 					}
-					return "n/a";
+					return OSPFAreaType.Unknown;
 				}
 				catch (Exception Ex)
 				{
 					DebugEx.WriteLine("JUNOS_OSPFParser.ProcessOSPFDatabase.GetAreaType() : unexpected error : " + Ex.Message);
-					return "?";
+					return OSPFAreaType.Unknown;
 				}
 				#endregion
 			}

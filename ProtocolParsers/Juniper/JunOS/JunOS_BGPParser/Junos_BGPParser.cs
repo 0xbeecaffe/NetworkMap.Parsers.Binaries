@@ -207,7 +207,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
       else return null;
     }
 
-    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v2.5";
+    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v0.91";
 
     public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.BGP };
 

@@ -95,6 +95,6 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
 
     public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.STATIC };
 
-    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v2.5";
+    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v0.91";
   }
 }
