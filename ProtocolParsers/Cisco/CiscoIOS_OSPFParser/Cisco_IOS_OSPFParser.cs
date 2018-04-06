@@ -30,7 +30,7 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 		/// The IRouter this parser is working for
 		/// </summary>
 		private IRouter _router;
-		private string _OperationStatusLabel;
+		private string _OperationStatusLabel = "Init";
 		/// <summary>
 		/// Used to store LSAs. The outer key in Dictionary is the area, the inner key is the LSA Type. List values are OSPFLSA objects.
 		/// </summary>
@@ -131,6 +131,13 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 			}
 		}
 
+		public void Reset()
+		{
+			_router = null;
+			_OperationStatusLabel = "Init";
+			_ospfAreaLSAs = new Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>>();
+		}
+
 		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
 		{
 			if (protocol == RoutingProtocol.OSPF) return this;
@@ -139,7 +146,7 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 
 		public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.OSPF };
 
-		public string SupportTag => "Cisco, IOS OSPF Protocol Parser module v0.91";
+		public string SupportTag => "Cisco, IOS OSPF Protocol Parser module v0.92";
 
 		#region IOSPFProtocolPArser implementation
 

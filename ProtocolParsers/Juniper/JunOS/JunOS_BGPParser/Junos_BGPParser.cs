@@ -26,7 +26,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
     /// The IRouter this parser is working for
     /// </summary>
     private IRouter _router;
-    private string _OperationStatusLabel = "Idle";
+    private string _OperationStatusLabel = "Init";
 
     public string OperationStatusLabel => _OperationStatusLabel;
 
@@ -201,13 +201,19 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
       }
     }
 
-    public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
+		public void Reset()
+		{
+			_router = null;
+			_OperationStatusLabel = "Init";
+		}
+
+		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
     {
       if (protocol == RoutingProtocol.BGP) return this;
       else return null;
     }
 
-    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v0.91";
+    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v0.92";
 
     public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.BGP };
 

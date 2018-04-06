@@ -87,7 +87,13 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
       }
     }
 
-    public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
+		public void Reset()
+		{
+			_router = null;
+			_OperationStatusLabel = "Init";
+		}
+
+		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
     {
       if (protocol == RoutingProtocol.STATIC) return this;
       else return null;
@@ -95,6 +101,6 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
 
     public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.STATIC };
 
-    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v0.91";
+    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v0.92";
   }
 }
