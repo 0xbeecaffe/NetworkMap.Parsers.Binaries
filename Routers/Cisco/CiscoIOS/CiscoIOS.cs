@@ -25,7 +25,6 @@ namespace L3Discovery.Routers.CiscoIOS
 	{
 		#region Fields
 		private IScriptableSession _session;
-
 		private string _hostName;
 		private string _versionInfo;
 		private string _inventory;
@@ -323,6 +322,93 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// Must return a string representing the device platform
 		/// </summary>
 		public string Platform { get { return "IOS"; } }
+
+		public void RegisterNHRP(INeighborRegistry registry)
+		{
+			try
+			{
+				string standyInterfaces = _session.ExecCommand("show standby");
+				string[] standbyIntfLines = standyInterfaces.SplitByLine();
+				// 
+				// Sample input for parsing
+				//
+				//GigabitEthernet0/0/1 - Group 44
+				//  State is Active
+				//	  5 state changes, last state change 4w4d
+				//  Virtual IP address is 10.81.0.1
+				//  Active virtual MAC address is 0000.0c07.ac2c(MAC In Use)
+				//	  Local virtual MAC address is 0000.0c07.ac2c(v1 default)
+				//  Hello time 1 sec, hold time 3 sec
+				//	  Next hello sent in 0.256 secs
+				//  Authentication text, string "ROWVA252"
+				//  Preemption enabled, delay min 60 secs
+				//  Active router is local
+				//  Standby router is 10.81.0.3, priority 100 (expires in 3.040 sec)
+				//  Priority 105 (configured 105)
+				//			Track object 1 state Up decrement 10
+				//  Group name is "hsrp-Gi0/0/1-44" (default)
+
+
+				string VIPAddress = "";
+				string GroupID = "";
+				string PeerAddress = "";
+				bool isActive = false;
+				RouterInterface ri = null;
+				foreach (string thisLine in standbyIntfLines)
+				{
+					if (thisLine.IndentLevel() == 0)
+					{
+						// interface definition is changing
+						if (GroupID != "" && VIPAddress != "")
+						{
+							registry.RegisterNHRPPeer(this, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
+							VIPAddress = "";
+							GroupID = "";
+							PeerAddress = "";
+							ri = null;
+						}
+						// 
+						string[] words = thisLine.SplitBySpace();
+						string ifName = words[0];
+						ri = GetInterfaceByName(ifName);
+						Match m = Regex.Match(thisLine, @"(?<=Group )\d{0,99}", RegexOptions.Compiled);
+						if (m.Success) GroupID = m.Value;
+						continue;
+					}
+					if (ri != null)
+					{
+						if (thisLine.ToLowerInvariant().Trim().StartsWith("virtual ip address is"))
+						{
+							Match m = Regex.Match(thisLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", RegexOptions.Compiled);
+							if (m.Success) VIPAddress = m.Value;
+							continue;
+						}
+						if (thisLine.ToLowerInvariant().Trim().StartsWith("active router is local"))
+						{
+							isActive = true;
+							continue;
+						}
+						if (thisLine.ToLowerInvariant().Trim().StartsWith("standby router is"))
+						{
+							Match m = Regex.Match(thisLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", RegexOptions.Compiled);
+							if (m.Success) PeerAddress = m.Value;
+							break;
+						}
+					}
+
+				}
+				// register the last one
+				if (ri != null && VIPAddress != "" && GroupID != "")
+				{
+					registry.RegisterNHRPPeer(this, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
+				}
+			}
+			catch (Exception Ex)
+			{
+				string msg = string.Format("CiscoIOSRouter says : error processing NHRP interfaces : {0}", Ex.Message);
+				DebugEx.WriteLine(msg);
+			}
+		}
 
 		/// <summary>
 		/// Instructs the router object to reset its internal state and cache if any.
@@ -649,6 +735,8 @@ namespace L3Discovery.Routers.CiscoIOS
 				try
 				{
 					string inetInterfaces = _session.ExecCommand("show ip int brief");
+
+
 					foreach (string line in inetInterfaces.SplitByLine())
 					{
 						try
@@ -723,7 +811,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v0.93";
+		public string SupportTag => "Cisco, IOS Router support module v0.94";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
