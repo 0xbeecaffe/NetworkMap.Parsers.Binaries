@@ -42,6 +42,8 @@ global ActionResult
 global Router
 global ParsingForProtocols
 global ParsingForVendor
+global OperationStatusLabel
+OperationStatusLabel = "Initializing..."
 
 # Router object is passed in ConnectionInfo.aParam
 Router = ConnectionInfo.aParam
@@ -122,8 +124,8 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>691</Origin_X>
-    <Origin_Y>264</Origin_Y>
+    <Origin_X>653</Origin_X>
+    <Origin_Y>285</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -143,40 +145,6 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>4</vsID>
-    <CommandID>539dfde8-0100-42e5-bf23-625f8241756d</CommandID>
-    <Name>ReturnStatus</Name>
-    <DisplayLabel>Return Status</DisplayLabel>
-    <Commands />
-    <MainCode>########################################################################
-#                                                                      #
-# This call should return a text representing the actual parser status #
-#                                                                      #
-########################################################################
-global ActionResult
-global OperationStatusLabel
-
-ActionResult = OperationStatusLabel</MainCode>
-    <Origin_X>526</Origin_X>
-    <Origin_Y>407</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description>Status should return any free text message representing the actual parser status.</Description>
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>756:480</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>5</vsID>
     <CommandID>a9279407-046b-4e50-b4e6-fcd0c543379a</CommandID>
     <Name>ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
@@ -189,6 +157,7 @@ ActionResult = OperationStatusLabel</MainCode>
 #                                                                            #
 ##############################################################################
 global Router
+global OperationStatusLabel
 
 # The neighbor registry object is received in ConnectionInfo.aParam
 # This must be used to register a new neighbor for further discovery.
@@ -203,6 +172,7 @@ OperationStatusLabel = "Identifying router..."
 TextToParse = Session.ExecCommand("show ip route static")
 cToken.ThrowIfCancellationRequested()
 
+OperationStatusLabel = "Processing STATIC routes..."
 static_lines = [str.lower(thisLine.strip()) for thisLine in TextToParse.splitlines()]
 for line in static_lines:
   cToken.ThrowIfCancellationRequested()
@@ -214,21 +184,26 @@ for line in static_lines:
       routeForNetwork = foundNetwork[0]
       nexthop = foundNexthop[0]
       # get the outgoing interface
-      arpEntry = Session.ExecCommand("show arp {0} | i {0}".format(nexthop))
-      # arpEntry should look like : Internet  100.65.0.41  144   a0f3.e46d.6773  ARPA   GigabitEthernet0/0
-      arpwords = filter(None, arpEntry.split())
+      OperationStatusLabel = "Finding egress interface for {0}...".format(nexthop)
+      cefEntry = Session.ExecCommand("show ip cef {0} | i via".format(nexthop))
+      # Exaple output 1 : via 172.18.145.82, FastEthernet0/0, 0 dependencies
+      # Exaple output 2 : via FastEthernet0/0, 0 dependencies
+      cefwords = filter(None, cefEntry.split())
       outInterfaceName = ""
       ri = None
-      if len(arpwords) &gt; 0 :
-        outInterfaceName = arpwords[len(arpwords) - 1]
+      if len(cefwords) &gt;= 4 :
+        outInterfaceName = cefwords[len(cefwords) - 3]
+        outInterfaceName = outInterfaceName.strip(",")
+        OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
         ri = Router.GetInterfaceByName(outInterfaceName)
         if ri != None:
+          OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
           nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);
 #
 # No need to return anything via ActionResult
 #</MainCode>
-    <Origin_X>129</Origin_X>
-    <Origin_Y>256</Origin_Y>
+    <Origin_X>160</Origin_X>
+    <Origin_Y>278</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -236,7 +211,7 @@ for line in static_lines:
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -244,11 +219,11 @@ for line in static_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>975:1004</EditorSize>
+    <EditorSize>1932:975</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>6</vsID>
+    <vsID>5</vsID>
     <CommandID>a236adee-1d6f-4c2a-8e90-c9fd13489289</CommandID>
     <Name>UnknownTask</Name>
     <DisplayLabel>Unknown task - ERROR</DisplayLabel>
@@ -278,7 +253,7 @@ raise ValueError("{0} has received an unhandled Command request : {1}".format(Mo
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>7</vsID>
+    <vsID>6</vsID>
     <CommandID>36370047-eab4-446b-9797-7455b5926e84</CommandID>
     <Name>ReturnProtocols</Name>
     <DisplayLabel>Supported Protocols</DisplayLabel>
@@ -293,8 +268,8 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>253</Origin_X>
-    <Origin_Y>408</Origin_Y>
+    <Origin_X>304</Origin_X>
+    <Origin_Y>448</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -311,6 +286,36 @@ this module can support</Description>
     <WatchVariables />
     <Initializer />
     <EditorSize>873:514</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>7</vsID>
+    <CommandID>6b6e4f5b-aab8-463e-a92e-dfb7e99d0242</CommandID>
+    <Name>Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Commands />
+    <MainCode>global ActionResult
+global ConnectionDropped
+global ScriptSuccess
+global ConnectionInfo
+global BreakExecution</MainCode>
+    <Origin_X>610</Origin_X>
+    <Origin_Y>430</Origin_Y>
+    <Size_Width>155</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description />
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -331,21 +336,6 @@ this module can support</Description>
   <vScriptConnector>
     <cID>1</cID>
     <ConnectorID />
-    <Name>SwitchTask_ReturnStatus</Name>
-    <DisplayLabel>GetOperationStatusLabel</DisplayLabel>
-    <Left>2</Left>
-    <Right>4</Right>
-    <Condition>return ConnectionInfo.Command == "GetOperationStatusLabel"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>0</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>2</cID>
-    <ConnectorID />
     <Name>SwitchTask_ReturnSupportTag</Name>
     <DisplayLabel>GetSupportTag</DisplayLabel>
     <Left>2</Left>
@@ -359,7 +349,7 @@ this module can support</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>3</cID>
+    <cID>2</cID>
     <ConnectorID />
     <Name>SwitchTask_Initialize</Name>
     <DisplayLabel>Initialize</DisplayLabel>
@@ -374,12 +364,12 @@ this module can support</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>4</cID>
+    <cID>3</cID>
     <ConnectorID />
     <Name>SwitchTask_ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Left>2</Left>
-    <Right>5</Right>
+    <Right>4</Right>
     <Condition>return ConnectionInfo.Command == "Parse"</Condition>
     <Variables />
     <Break>false</Break>
@@ -389,12 +379,12 @@ this module can support</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>5</cID>
+    <cID>4</cID>
     <ConnectorID />
     <Name>SwitchTask_ReturnProtocols</Name>
     <DisplayLabel>GetSupportedProtocols</DisplayLabel>
     <Left>2</Left>
-    <Right>7</Right>
+    <Right>6</Right>
     <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
     <Variables />
     <Break>false</Break>
@@ -404,12 +394,12 @@ this module can support</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>6</cID>
+    <cID>5</cID>
     <ConnectorID />
     <Name>SwitchTask_UnknownTask</Name>
     <DisplayLabel>Unknown</DisplayLabel>
     <Left>2</Left>
-    <Right>6</Right>
+    <Right>5</Right>
     <Condition>return True</Condition>
     <Variables />
     <Break>false</Break>
@@ -418,9 +408,24 @@ this module can support</Description>
     <WatchVariables />
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
+  <vScriptConnector>
+    <cID>6</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Left>2</Left>
+    <Right>7</Right>
+    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>6</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
   <Parameters>
-    <ScriptName>Cisco_IOS_STATICParser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.1"
+    <ScriptName>CiscoIOS_STATICParser</ScriptName>
+    <GlobalCode>ScriptVersion = "0.92"
 # Describe the Module Name
 ModuleName = "Cisco IOS STATIC Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
@@ -452,11 +457,11 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6279995</EditorScaleFactor>
+    <EditorScaleFactor>0.8799996</EditorScaleFactor>
     <Description>This vScript template can be used as a starting point for
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=711, Height=444}</EditorSize>
+    <EditorSize>{Width=838, Height=612}</EditorSize>
   </Parameters>
 </vScriptDS>

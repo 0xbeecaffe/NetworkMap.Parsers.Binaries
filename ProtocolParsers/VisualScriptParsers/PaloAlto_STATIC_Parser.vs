@@ -7,10 +7,10 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>438</Origin_X>
-    <Origin_Y>12</Origin_Y>
-    <Size_Width>100</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>238</Origin_X>
+    <Origin_Y>66</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -54,10 +54,10 @@ if Router != None:
     ActionResult = False
 else:
   ActionResult = False</MainCode>
-    <Origin_X>579</Origin_X>
-    <Origin_Y>82</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>393</Origin_X>
+    <Origin_Y>152</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -87,8 +87,8 @@ for the specified protocol using the given Router instance.</Description>
 #                                                         #
 ###########################################################
 pass</MainCode>
-    <Origin_X>439</Origin_X>
-    <Origin_Y>247</Origin_Y>
+    <Origin_X>268</Origin_X>
+    <Origin_Y>254</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -122,10 +122,10 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>699</Origin_X>
-    <Origin_Y>208</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>378</Origin_X>
+    <Origin_Y>434</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -157,84 +157,87 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
 
 global Router
 global OperationStatusLabel
+from System.Net import IPAddress
 
 # The neighbor registry object is received in ConnectionInfo.aParam
 nRegistry = ConnectionInfo.aParam
 # A CancellationToken is received in ConnectionInfo.bParam
 cToken = ConnectionInfo.bParam
 
-OperationStatusLabel = "Querying OSPF neighbors..."  
-TextToParse = Session.ExecCommand("show routing protocol ospf neighbor")
+OperationStatusLabel = "Querying STATIC routes..."  
+response = Session.ExecCommand("show routing route type static")
 #--
-OperationStatusLabel = "Processing OSPF data..."
+OperationStatusLabel = "Processing routes..."
 cToken.ThrowIfCancellationRequested()
 
-# loop variables
-blockSeparator = "======"
-neighborRouterID = ""
-neighborState = ""
-remoteNeighboringIP = ""
-areaID = ""
-description = ""
-lineNum = 0
-
-# iterate through lines
-ospf_lines = [str.lower(thisLine.strip()) for thisLine in TextToParse.splitlines()]
-for line in ospf_lines:
-  lineNum += 1
-  #--
-  cToken.ThrowIfCancellationRequested()
-  #--
+routeBlock = False
+currentHeaderFields = []
+currentHeaderLine = ""
+static_lines = [str.lower(thisLine.strip()) for thisLine in response.splitlines()]
+for thisLine in static_lines:
   try:
-    words = filter(None, line.split(":"))
-    if lineNum == len(ospf_lines) or blockSeparator in words[0]:
-      # this is a new block
-      if neighborRouterID != "":
-        # register actual neighbor
-        # try to figure out the outgoing interface for this adjacency
-        OperationStatusLabel = "Finding outgoing interface for {0}...".format(remoteNeighboringIP)
-        response = Session.ExecCommand("show arp all | match {0}".format(remoteNeighboringIP))
-        if response != "":
-          rWords = filter(None, response.split(" "))
-          outInterfaceName = rWords[0]     
-          # find the RouterInterface by name   
-          ri = Router.GetInterfaceByName(outInterfaceName)   
-          if ri != None:
-            # add the areaID
-            ri.OSPFArea = areaID
-            OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-            nRegistry.RegisterNeighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)   
-          else:
-            msg = "PAloAlto.OSPFarser : cannot find RouterInterface for interface name : {0}".format(outInterfaceName)
-            System.Diagnostics.DebugEx.WriteLine(msg) 
-        else:
-          msg = "PAloAlto.OSPFarser : cannot find outgoing interface for OSPF neighbor : {0}".format(remoteNeighboringIP)
-          System.Diagnostics.DebugEx.WriteLine(msg) 
-       
-        # clear loop variables  
-        blockSeparator = "======"
-        neighborRouterID = ""
-        neighborState = ""
-        remoteNeighboringIP = ""
-        areaID = ""
-        description = "";    
-    else:
-      # populate loop variables
-      if len(words) &gt;= 2:
-        if words[0] == "neighbor address" : remoteNeighboringIP = words[1].strip()
-        if words[0] == "neighbor router id" : neighborRouterID = words[1].strip()
-        if words[0] == "status" : neighborState = words[1].strip()
-        if words[0] == "area id" : areaID = words[1].strip()
+    # a line with the first word of "destination " signals the routing block, and gives us the header
+    if thisLine.startswith("destination "):
+      currentHeaderLine = thisLine
+      currentHeaderFields = filter(None, currentHeaderLine.split(" "))
+      routeBlock = True
+      continue
 
-        
+    # a line with the first word of "total" signals the end of the routing block, so skip the rest
+    if thisLine.startswith("total"):
+      routeBlock = False
+      break      
+      
+    if routeBlock:
+      words = filter(None, thisLine.split(" "))
+      firstWord = words[0]
+      # The line that contains a / character int he first word is a good candidate to check
+      if "/" in firstWord:
+        ipAdressAndMask = firstWord.split("/")
+        prefixAddress = ipAdressAndMask[0]
+        prefixLength = ipAdressAndMask[1]
+        # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
+        ipa = clr.Reference[IPAddress]()
+        # check if the last word is a valid ip address
+        if IPAddress.TryParse(prefixAddress, ipa) and str(ipa.Value) == prefixAddress:    
+          try:
+            # the length of currentHeaderFields can guide us if we are parsing the correct information
+            # expected header : destination nexthop metric flags age interface next-AS 
+            # hesader length should be 7
+            if len(currentHeaderFields) == 7:
+              # -- routeForNetwork is the prefix for this static route entry (destination)
+              routeForNetwork = firstWord
+              # -- parse nextHop --
+              s = currentHeaderLine.index("nexthop")
+              e = currentHeaderLine.index("metric")
+              nextHop = thisLine[s:e].strip()
+              # -- parse outInterface --
+              s = currentHeaderLine.index("interface")
+              e = currentHeaderLine.index("next-as")
+              outInterfaceName = thisLine[s:e].strip()    
+              # --          
+              OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
+              ri = Router.GetInterfaceByName(outInterfaceName)
+              if ri != None:
+                OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
+                nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nextHop, ri.Address, ri);
+                  
+          except Exception as Ex:
+            message = "PaloAlto STATIC route parser error : could not parse route table line &lt; {0} &gt;. Error is : {1} ".format(thisLine, str(Ex))
+            System.Diagnostics.DebugEx.WriteLine(message)        
+      
+      
   except Exception as Ex:
-    msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
+    msg = "PaloAlto STATIC route parser error : could not process line &lt; {0} &gt;. Error is : {1}".format(thisLine, str(Ex))  
     System.Diagnostics.DebugEx.WriteLine(msg) 
+
+#
+# No need to return anything via ActionResult
 #</MainCode>
-    <Origin_X>603</Origin_X>
-    <Origin_Y>474</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>45</Origin_X>
+    <Origin_Y>307</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -248,24 +251,24 @@ for line in ospf_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1391:830</EditorSize>
+    <EditorSize>982:1026</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>5</vsID>
     <CommandID>a236adee-1d6f-4c2a-8e90-c9fd13489289</CommandID>
     <Name>UnknownTask</Name>
-    <DisplayLabel>Unknown task - ERROR</DisplayLabel>
+    <DisplayLabel>Unknown task</DisplayLabel>
     <Commands />
     <MainCode>global ActionResult
 global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>209</Origin_X>
-    <Origin_Y>78</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>77</Origin_X>
+    <Origin_Y>150</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -297,10 +300,10 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>666</Origin_X>
-    <Origin_Y>362</Origin_Y>
-    <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>159</Origin_X>
+    <Origin_Y>439</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -319,185 +322,6 @@ this module can support</Description>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>7</vsID>
-    <CommandID>261dd3fe-ee65-486e-9d1a-151316c9c97d</CommandID>
-    <Name>Return_OSPFAreas</Name>
-    <DisplayLabel>OSPF Areas</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-
-ActionResult = OSPFProcessor.GetAreas()
-</MainCode>
-    <Origin_X>248</Origin_X>
-    <Origin_Y>482</Origin_Y>
-    <Size_Width>125</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description>Should return the OSPF Areas the current router is member of</Description>
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>980:771</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>8</vsID>
-    <CommandID>d59d6d5c-8a80-41c7-be6e-99383e0b169b</CommandID>
-    <Name>Return_OSPFLSATypes</Name>
-    <DisplayLabel>Return OSPF LSA types</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-
-# the OSPF Area ID to be queried is received in ConnectionInfo.aParam
-ospfArea = ConnectionInfo.aParam
-
-ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
-    <Origin_X>116</Origin_X>
-    <Origin_Y>357</Origin_Y>
-    <Size_Width>164</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description>Should returns the list of existing LSA Types for the requested OSPF Area</Description>
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>672:617</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>9</vsID>
-    <CommandID>701a9e3a-f8e6-4fba-8f4a-dce0e57c1b01</CommandID>
-    <Name>Return_OSPFLSA</Name>
-    <DisplayLabel>Return Requested LSAs</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-
-# the OSPF Area ID to be queried is received in ConnectionInfo.aParam
-ospfArea = ConnectionInfo.aParam
-# the requested LSA Type Name is received in ConnectionInfo.bParam
-LSAType = ConnectionInfo.bParam
-# return the LSAs
-ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
-    <Origin_X>92</Origin_X>
-    <Origin_Y>215</Origin_Y>
-    <Size_Width>164</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description>Should return the list of OSPF LSAs of the requested type
-for the requested Area ID</Description>
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>667:514</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>10</vsID>
-    <CommandID>48189624-9c1e-426c-a8ea-2308304f15fc</CommandID>
-    <Name>OSPFProcessor</Name>
-    <DisplayLabel>Process OSPF Database</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-global ConnectionDropped
-global ScriptSuccess
-global ConnectionInfo
-global BreakExecution
-global ScriptExecutor
-global Session</MainCode>
-    <Origin_X>24</Origin_X>
-    <Origin_Y>562</Origin_Y>
-    <Size_Width>166</Size_Width>
-    <Size_Height>50</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by AREA IDs. The internal dictinary is then keyed by LSAType - like Router, or Network.
-OSPFAreaLSAs = {}
-# example content :
-# LSAs = [item1, item2]
-# OSPFLSAs = {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}
-# OSPFAreaLSAs = {"0.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}</Variables>
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock>"""Query and Process the OSPF Database"""
-def ProcessDatabase(self): 
-  #
-  # Override this 
-  #
-  # Execute necessary commands on the device to get the OSPF database and process it
-  # to popolate self.OSPFAreaLSAs dictionary
-  #
-  #
-  pass  
-  
-    
-"""Return the list of LSAs for the requested Type and Area """  
-def GetAreaLSAs(self, ospfArea, lsaTypeName):
-  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
-  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
-  # get All LSAs for the requested Area
-  AreaLSAs = self.OSPFAreaLSAs.get(ospfArea)
-  RequestedAreaLSAs = []
-  # get the LSA list for the requested LSA type
-  if AreaLSAs != None : RequestedAreaLSAs = AreaLSAs.get(lsaTypeName)
-  return RequestedAreaLSAs
-  
-  
-
-"""Return all of the LSA Type Names for the specified Area """
-def GetLSATypeNames(self, ospfArea):
-  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
-  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()  
-  # get All LSAs for the requested Area
-  AreaLSAs = self.OSPFAreaLSAs.get(ospfArea)
-  LSATypeNames = []
-  if AreaLSAs != None : LSATypeNames = AreaLSAs.keys()
-  return LSATypeNames
-  
-  
-
-"""Return all the Areas the router belongs to """  
-def GetAreas(self):
-  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
-  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
-  Areas = self.OSPFAreaLSAs.keys()
-  return Areas
-  
-
-  
-def Reset(self):
-  # old code self.OSPFAreaRouterID = {}
-  self.OSPFAreaLSAs = {}</CustomCodeBlock>
-    <DemoMode>false</DemoMode>
-    <Description>Process OSPF Database in order to collect Area IDs and different LSAs</Description>
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>1079:863</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>11</vsID>
     <CommandID>b5741130-1379-4d0d-9c5d-cb54707476ff</CommandID>
     <Name>Reset</Name>
     <DisplayLabel>Reset</DisplayLabel>
@@ -511,13 +335,12 @@ global OperationStatusLabel
 global Router
 
 OperationStatusLabel = "Working"
-OSPFProcessor.Reset()
 ActionResult = None
 Router = None</MainCode>
-    <Origin_X>432</Origin_X>
-    <Origin_Y>558</Origin_Y>
-    <Size_Width>128</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>448</Origin_X>
+    <Origin_Y>306</Origin_Y>
+    <Size_Width>146</Size_Width>
+    <Size_Height>39</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -530,7 +353,7 @@ Router = None</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
+    <EditorSize>943:787</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -626,55 +449,10 @@ Router = None</MainCode>
   <vScriptConnector>
     <cID>6</cID>
     <ConnectorID />
-    <Name>SwitchTask_Return_OSPFLSA</Name>
-    <DisplayLabel>GetOSPFLSAs</DisplayLabel>
-    <Left>2</Left>
-    <Right>9</Right>
-    <Condition>return ConnectionInfo.Command == "GetOSPFLSAs"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>5</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>7</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_OSPFLSATypes</Name>
-    <DisplayLabel>GetOSPFLSATypes</DisplayLabel>
-    <Left>2</Left>
-    <Right>8</Right>
-    <Condition>return ConnectionInfo.Command == "GetOSPFLSATypes"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>6</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>8</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_OSPFAreas</Name>
-    <DisplayLabel>GetOSPFAreas</DisplayLabel>
-    <Left>2</Left>
-    <Right>7</Right>
-    <Condition>return ConnectionInfo.Command == "GetOSPFAreas"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>7</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>9</cID>
-    <ConnectorID />
     <Name>SwitchTask_Reset</Name>
     <DisplayLabel>Reset</DisplayLabel>
     <Left>2</Left>
-    <Right>11</Right>
+    <Right>7</Right>
     <Condition>return ConnectionInfo.Command == "Reset"</Condition>
     <Variables />
     <Break>false</Break>
@@ -684,17 +462,17 @@ Router = None</MainCode>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>PaloAlto_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <ScriptName>PaloAlto_STATIC_Parser</ScriptName>
+    <GlobalCode>ScriptVersion = "0.90"
 # Describe the Module Name
-ModuleName = "PaloAlto OSPF Protocol Parser Support Module - Python vScript Parser"
+ModuleName = "PaloAlto STATIC Protocol Parser Support Module - Python vScript Parser"
 # Describes current operation status. The name of this variable is fixed !
 # PGT will search specifically for "OperationStatusLabel"
 OperationStatusLabel = "Working"
 # The Router instance associated to this parser. Set in Initialize
 Router = None
 #This is the protocol supported by this module
-ParsingForProtocols = [L3Discovery.RoutingProtocol.OSPF]
+ParsingForProtocols = [L3Discovery.RoutingProtocol.STATIC]
 #This is the vendor name supported by this module
 ParsingForVendor = "PaloAlto"</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
@@ -723,6 +501,6 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=825, Height=621}</EditorSize>
+    <EditorSize>{Width=599, Height=544}</EditorSize>
   </Parameters>
 </vScriptDS>

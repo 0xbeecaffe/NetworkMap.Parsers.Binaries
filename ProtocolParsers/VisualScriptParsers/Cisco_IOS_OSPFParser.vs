@@ -7,8 +7,8 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>308</Origin_X>
-    <Origin_Y>53</Origin_Y>
+    <Origin_X>24</Origin_X>
+    <Origin_Y>346</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -36,6 +36,8 @@
 global Router
 global ParsingForProtocol
 global ParsingForVendor
+global OperationStatusLabel
+OperationStatusLabel = "Initializing..."  
 
 # Router object is passed in ConnectionInfo.aParam
 Router = ConnectionInfo.aParam
@@ -48,10 +50,12 @@ if Router != None:
   else:
     ActionResult = False
 else:
-  ActionResult = False</MainCode>
-    <Origin_X>483</Origin_X>
-    <Origin_Y>94</Origin_Y>
-    <Size_Width>100</Size_Width>
+  ActionResult = False
+
+</MainCode>
+    <Origin_X>461</Origin_X>
+    <Origin_Y>124</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -77,8 +81,8 @@ routing protocol  it has been invoked for.</Description>
     <DisplayLabel>Switch task</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>307</Origin_X>
-    <Origin_Y>223</Origin_Y>
+    <Origin_X>206</Origin_X>
+    <Origin_Y>341</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -103,11 +107,14 @@ which action to take.</Description>
     <Name>ReturnSupportTag</Name>
     <DisplayLabel>Support Tag</DisplayLabel>
     <Commands />
-    <MainCode>global ActionResult
-ActionResult = "Cisco, IOS OSPF Protocol Parser Module - Python vScript Parser v1.0"</MainCode>
-    <Origin_X>552</Origin_X>
-    <Origin_Y>191</Origin_Y>
-    <Size_Width>125</Size_Width>
+    <MainCode>global ScriptVersion
+global ActionResult
+global ModuleName
+
+ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
+    <Origin_X>392</Origin_X>
+    <Origin_Y>72</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -127,39 +134,12 @@ the current Protocol Parser</Description>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>4</vsID>
-    <CommandID>539dfde8-0100-42e5-bf23-625f8241756d</CommandID>
-    <Name>ReturnStatus</Name>
-    <DisplayLabel>Return Status</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-
-ActionResult = OperationStatusLabel</MainCode>
-    <Origin_X>564</Origin_X>
-    <Origin_Y>289</Origin_Y>
-    <Size_Width>100</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description />
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>568:538</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>5</vsID>
     <CommandID>a9279407-046b-4e50-b4e6-fcd0c543379a</CommandID>
     <Name>ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Commands />
     <MainCode>global Router
+global OperationStatusLabel
 
 # The neighbor registry object is received in ConnectionInfo.aParam
 nRegistry = ConnectionInfo.aParam
@@ -197,7 +177,7 @@ for line in ospf_lines:
     foundIPs = re.findall(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", line)
     if len(foundIPs) == 2 and System.Net.IPAddress.TryParse(foundIPs[0], nID) and System.Net.IPAddress.TryParse(foundIPs[1], nIP) :
       # This is a new peer, initialize variables
-      ifName = words[5]
+      ifName = words[len(words)-1]
       OperationStatusLabel = "Querying router interface {0}...".format(ifName)
       ri = Router.GetInterfaceByName(ifName)
       if ri != None:
@@ -221,10 +201,10 @@ for line in ospf_lines:
     msg = "Cisco IOS OSPF vScript Parser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
     System.Diagnostics.DebugEx.WriteLine(msg) 
 </MainCode>
-    <Origin_X>305</Origin_X>
-    <Origin_Y>409</Origin_Y>
-    <Size_Width>100</Size_Width>
-    <Size_Height>37</Size_Height>
+    <Origin_X>518</Origin_X>
+    <Origin_Y>261</Origin_Y>
+    <Size_Width>164</Size_Width>
+    <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -241,7 +221,7 @@ for line in ospf_lines:
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>6</vsID>
+    <vsID>5</vsID>
     <CommandID>58e9be86-73f7-4c61-9334-e6a207cfaf18</CommandID>
     <Name>ReturnProtocols</Name>
     <DisplayLabel>Supported Protocols</DisplayLabel>
@@ -250,10 +230,10 @@ for line in ospf_lines:
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>453</Origin_X>
-    <Origin_Y>399</Origin_Y>
-    <Size_Width>136</Size_Width>
-    <Size_Height>38</Size_Height>
+    <Origin_X>525</Origin_X>
+    <Origin_Y>336</Origin_Y>
+    <Size_Width>164</Size_Width>
+    <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -271,7 +251,7 @@ that are actively running on the router</Description>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>7</vsID>
+    <vsID>6</vsID>
     <CommandID>88d6e50e-8635-4812-bcb6-a09a43be81b7</CommandID>
     <Name>UnknownTask</Name>
     <DisplayLabel>Unknown task</DisplayLabel>
@@ -280,9 +260,9 @@ that are actively running on the router</Description>
 
 ActionResult = None
 raise ValueError("CiscoIOS OSPF Parser module has received an unhandled Command request : {0}".format(ConnectionInfo.Command))</MainCode>
-    <Origin_X>132</Origin_X>
-    <Origin_Y>93</Origin_Y>
-    <Size_Width>138</Size_Width>
+    <Origin_X>453</Origin_X>
+    <Origin_Y>551</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -301,7 +281,7 @@ that is not handled. This is an ERROR condition.</Description>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>8</vsID>
+    <vsID>7</vsID>
     <CommandID>1a445e8a-3d14-4ba1-9e31-84cda5984f01</CommandID>
     <Name>OSPFProcessor</Name>
     <DisplayLabel>Process OSPF Database</DisplayLabel>
@@ -313,35 +293,41 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>40</Origin_X>
-    <Origin_Y>503</Origin_Y>
+    <Origin_X>28</Origin_X>
+    <Origin_Y>589</Origin_Y>
     <Size_Width>166</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
-    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by AREA IDs. The internal dictinary is then keyed by LSAType - like Router, or Network.
+    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by OSPFArea objects. The internal dictinary is then keyed by LSAType - like Router, or Network.
 OSPFAreaLSAs = {}
 # example content :
 # LSAs = [item1, item2]
 # OSPFLSAs = {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}
-# OSPFAreaLSAs = {"0.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}</Variables>
+# OSPFAreaLSAs = {"0.0.0.0, Backone" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0, Normal" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}
+
+# OSPFAreaInfo will contain the output of "show ip ospf" command and is used to find Area related informations
+OSPFAreInfo = ""</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock>"""Query and Process the OSPF Database"""
 def ProcessDatabase(self): 
+  global OperationStatusLabel
   # clear contents
   self.OSPFAreaLSAs = {}
   # query OSPF database
+  OperationStatusLabel = "Querying OSPF database..."
   ospfAreaDatabase = Session.ExecCommand("show ip ospf database")
-  currentAreaID = ""
+  currentArea = None
   currentLSATypeName = ""
   # LSAs = [item1, item2]
   LSAs = []
   # OSPFLSAs = {"Router" : [item1, item2], "Network" : [item1, item2]}
   OSPFLSAdict = {}
   lines = [str.lower(thisLine.strip()) for thisLine in ospfAreaDatabase.splitlines()]
+  OperationStatusLabel = "Processing OSPF database..."
   for thisLine in lines:
     # header : Link ID         ADV Router      Age Seq#       Checksum Link count
     # line is like :100.65.0.46     100.65.0.46     238         0x8000EBC3 0x00D97D 1  
@@ -351,14 +337,18 @@ def ProcessDatabase(self):
         areaName = re.findall(r"(?&lt;=\().*?(?=\))", thisLine)[0]
         thisAreaID = re.findall(r"(?&lt;=area )[\d.]{0,99}", areaName)[0]
         thisLSATypeName = re.match(r"^.*(?=(link))", thisLine).group()
-        if currentAreaID == "":
-          currentAreaID = thisAreaID.strip()
+        if currentArea == None:
+          currentArea = L3Discovery.OSPFArea()
+          currentArea.AreaID = thisAreaID.strip()
+          currentArea.AreaType = self.GetAreaType(currentArea.AreaID)
           
-        elif thisAreaID != currentAreaID:
+        elif thisAreaID.strip() != currentArea.AreaID:
           # area ID is changing
-          self.OSPFAreaLSAs[currentAreaID] = OSPFLSAdict
+          self.OSPFAreaLSAs[currentArea] = OSPFLSAdict
           OSPFLSAdict = {}
-          currentAreaID = thisAreaID.strip()
+          currentArea = L3Discovery.OSPFArea()
+          currentArea.AreaID = thisAreaID.strip()
+          currentArea.AreaType = self.GetAreaType(currentArea.AreaID)
         
         if currentLSATypeName != thisLSATypeName:
           # LSA Type is changing
@@ -391,12 +381,12 @@ def ProcessDatabase(self):
           thisLSA.AdvRouter = AdvRouter
           LSAs.Add(thisLSA)
           
-    except:
+    except Exception as Ex:
       msg = "Cisco IOS OSPF vScript Parser : Error while processing ospf database. Error is : {0}".format(str(Ex))
       System.Diagnostics.DebugEx.WriteLine(msg) 
       
   # add the last area router ID-s
-  if currentAreaID != "": self.OSPFAreaLSAs[currentAreaID] = OSPFLSAdict
+  if currentArea != None: self.OSPFAreaLSAs[currentArea] = OSPFLSAdict
   
   
     
@@ -431,9 +421,48 @@ def GetAreas(self):
   if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
   Areas = self.OSPFAreaLSAs.keys()
   return Areas
-  
 
+"""Return the OSPF Area Type name for the requested AREA ID """
+def GetAreaType(self, ospfAreaID):
+  if ospfAreaID == "0.0.0.0" :
+    return "Backbone"
+  if self.OSPFAreInfo == "" :
+    self.OSPFAreInfo = Session.ExecCommand("show ip ospf")
   
+  # this is what we will return
+  areaTypeName = ""
+    
+  try:
+    lines = [str.lower(thisLine.strip()) for thisLine in self.OSPFAreInfo.splitlines()]
+    OperationStatusLabel = "Processing OSPF Area information..."
+    scanningAreaBlock = False
+    areaBlock = []
+    # parse OSPFAreInfo to get the ext block related to the requested areaID
+    for thisLine in lines:
+        if thisLine.startswith("area {0}".format(ospfAreaID)):
+          if scanningAreaBlock:
+            break
+          else:
+            scanningAreaBlock = True
+            continue
+        if scanningAreaBlock:
+          areaBlock.Add(thisLine)
+    # No we have the text block relevant to requested areaID
+    areaTypeName = ["NSSA" for thisLine in areaBlock if "nssa" in thisLine]
+    if areaTypeName == "":
+      areaTypeName = ["Stub" for thisLine in areaBlock if "stub" in thisLine]
+    if areaTypeName == "":
+      areaTypeName = ["Totlly stubby" for thisLine in areaBlock if "totally" in thisLine]
+      
+    areaTypeName = "Normal"
+    
+  except Exception as Ex:
+    msg = "Cisco IOS OSPF vScript Parser : Error while processing ospf area block. Error is : {0}".format(str(Ex))
+    System.Diagnostics.DebugEx.WriteLine(msg)
+    areaTypeName = "n/a"
+    
+  return areaTypeName
+    
 def Reset(self):
   # old code self.OSPFAreaRouterID = {}
   self.OSPFAreaLSAs = {}</CustomCodeBlock>
@@ -441,11 +470,11 @@ def Reset(self):
     <Description>Process OSPF Database in order to collect Area IDs and different LSAs</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>822:830</EditorSize>
+    <EditorSize>1317:802</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>9</vsID>
+    <vsID>8</vsID>
     <CommandID>61c8703b-410e-41c3-b3b2-b0485b46ce0f</CommandID>
     <Name>Return_OSPFAreas</Name>
     <DisplayLabel>OSPF Areas</DisplayLabel>
@@ -454,16 +483,16 @@ def Reset(self):
 
 ActionResult = OSPFProcessor.GetAreas()
 </MainCode>
-    <Origin_X>139</Origin_X>
-    <Origin_Y>378</Origin_Y>
-    <Size_Width>125</Size_Width>
+    <Origin_X>524</Origin_X>
+    <Origin_Y>412</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -474,7 +503,7 @@ ActionResult = OSPFProcessor.GetAreas()
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>10</vsID>
+    <vsID>9</vsID>
     <CommandID>3d17c0fc-460d-49e3-b16e-bc93d7bc4122</CommandID>
     <Name>Return_OSPFLSATypes</Name>
     <DisplayLabel>Return OSPF LSA types</DisplayLabel>
@@ -485,8 +514,8 @@ ActionResult = OSPFProcessor.GetAreas()
 ospfArea = ConnectionInfo.aParam
 
 ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
-    <Origin_X>29</Origin_X>
-    <Origin_Y>297</Origin_Y>
+    <Origin_X>480</Origin_X>
+    <Origin_Y>485</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -494,7 +523,7 @@ ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -505,7 +534,7 @@ ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>11</vsID>
+    <vsID>10</vsID>
     <CommandID>2c9396b9-a15a-44f6-8bc4-65a9fc7c7450</CommandID>
     <Name>Return_OSPFLSA</Name>
     <DisplayLabel>Return Requested LSAs</DisplayLabel>
@@ -518,8 +547,46 @@ ospfArea = ConnectionInfo.aParam
 LSAType = ConnectionInfo.bParam
 # return the LSAs
 ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
-    <Origin_X>21</Origin_X>
-    <Origin_Y>184</Origin_Y>
+    <Origin_X>385</Origin_X>
+    <Origin_Y>605</Origin_Y>
+    <Size_Width>164</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>true</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description>Returns the list of OSPF LSAs of the requested type
+for the requested Area ID</Description>
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>667:514</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>11</vsID>
+    <CommandID>54f3ae65-bbaf-49a3-819c-0e636d5f6b1a</CommandID>
+    <Name>Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Commands />
+    <MainCode>global ActionResult
+global ConnectionDropped
+global ScriptSuccess
+global ConnectionInfo
+global BreakExecution
+global OperationStatusLabel
+global Router
+
+OperationStatusLabel = "Working"
+OSPFProcessor.Reset()
+ActionResult = None
+Router = None</MainCode>
+    <Origin_X>499</Origin_X>
+    <Origin_Y>187</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -531,11 +598,10 @@ ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
-    <Description>Returns the list of OSPF LSAs of the requested type
-for the requested Area ID</Description>
+    <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>667:514</EditorSize>
+    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -556,21 +622,6 @@ for the requested Area ID</Description>
   <vScriptConnector>
     <cID>1</cID>
     <ConnectorID />
-    <Name>SwitchTask_ReturnStatus</Name>
-    <DisplayLabel>GetOperationStatusLabel</DisplayLabel>
-    <Left>2</Left>
-    <Right>4</Right>
-    <Condition>return ConnectionInfo.Command == "GetOperationStatusLabel"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>2</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>2</cID>
-    <ConnectorID />
     <Name>SwitchTask_ReturnSupportTag</Name>
     <DisplayLabel>GetSupportTag</DisplayLabel>
     <Left>2</Left>
@@ -584,7 +635,7 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>3</cID>
+    <cID>2</cID>
     <ConnectorID />
     <Name>SwitchTask_Initialize</Name>
     <DisplayLabel>Initialize</DisplayLabel>
@@ -599,28 +650,13 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>4</cID>
+    <cID>3</cID>
     <ConnectorID />
     <Name>SwitchTask_ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Left>2</Left>
-    <Right>5</Right>
+    <Right>4</Right>
     <Condition>return ConnectionInfo.Command == "Parse"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>4</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>5</cID>
-    <ConnectorID />
-    <Name>SwitchTask_ReturnProtocols</Name>
-    <DisplayLabel>GetSupportedProtocols</DisplayLabel>
-    <Left>2</Left>
-    <Right>6</Right>
-    <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>3</Order>
@@ -629,12 +665,27 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>6</cID>
+    <cID>4</cID>
+    <ConnectorID />
+    <Name>SwitchTask_ReturnProtocols</Name>
+    <DisplayLabel>GetSupportedProtocols</DisplayLabel>
+    <Left>2</Left>
+    <Right>5</Right>
+    <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>2</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>5</cID>
     <ConnectorID />
     <Name>SwitchTask_UnknownTask</Name>
     <DisplayLabel>Unknown</DisplayLabel>
     <Left>2</Left>
-    <Right>7</Right>
+    <Right>6</Right>
     <Condition>return True</Condition>
     <Variables />
     <Break>false</Break>
@@ -644,28 +695,13 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>7</cID>
+    <cID>6</cID>
     <ConnectorID />
     <Name>SwitchTask_OSPFLSAs</Name>
     <DisplayLabel>GetOSPFLSATypes</DisplayLabel>
     <Left>2</Left>
-    <Right>10</Right>
-    <Condition>return ConnectionInfo.Command == "GetOSPFLSATypes"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>6</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>8</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_OSPFAreas</Name>
-    <DisplayLabel>GetOSPFAreas</DisplayLabel>
-    <Left>2</Left>
     <Right>9</Right>
-    <Condition>return ConnectionInfo.Command == "GetOSPFAreas"</Condition>
+    <Condition>return ConnectionInfo.Command == "GetOSPFLSATypes"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>5</Order>
@@ -674,13 +710,43 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>9</cID>
+    <cID>7</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_OSPFAreas</Name>
+    <DisplayLabel>GetOSPFAreas</DisplayLabel>
+    <Left>2</Left>
+    <Right>8</Right>
+    <Condition>return ConnectionInfo.Command == "GetOSPFAreas"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>4</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>8</cID>
     <ConnectorID />
     <Name>SwitchTask_Return_OSPFLSA</Name>
     <DisplayLabel>GetOSPFLSAs</DisplayLabel>
     <Left>2</Left>
-    <Right>11</Right>
+    <Right>10</Right>
     <Condition>return ConnectionInfo.Command == "GetOSPFLSAs"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>6</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>9</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Left>2</Left>
+    <Right>11</Right>
+    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>7</Order>
@@ -689,8 +755,10 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>CiscoIOS_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "2.9"
+    <ScriptName>Cisco_IOS_OSPF_Parser</ScriptName>
+    <GlobalCode>ScriptVersion = "0.92"
+# Describe the Module Name
+ModuleName = "Cisco IOS OSPF Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
 OperationStatusLabel = "Init"
 # The Router instance associated to this parser. Set in Initialize
@@ -720,8 +788,8 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6519996</EditorScaleFactor>
+    <EditorScaleFactor>0.9159999</EditorScaleFactor>
     <Description />
-    <EditorSize>{Width=614, Height=443}</EditorSize>
+    <EditorSize>{Width=701, Height=766}</EditorSize>
   </Parameters>
 </vScriptDS>

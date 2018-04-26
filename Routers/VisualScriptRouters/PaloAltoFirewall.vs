@@ -214,8 +214,8 @@ if len(_s) &gt; 0:
  ActionResult = _s[0]
 else:
   ActionResult = "n/a"</MainCode>
-    <Origin_X>512</Origin_X>
-    <Origin_Y>713</Origin_Y>
+    <Origin_X>563</Origin_X>
+    <Origin_Y>725</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -288,8 +288,8 @@ stackCount == 1
 # Implement required logic to get the correct number
 #
 ActionResult = stackCount;</MainCode>
-    <Origin_X>332</Origin_X>
-    <Origin_Y>713</Origin_Y>
+    <Origin_X>319</Origin_X>
+    <Origin_Y>716</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -334,11 +334,11 @@ for thisLine in routeLines:
       if "/" in firstWord:
         ipAdressAndMask = firstWord.split("/")
         prefixAddress = ipAdressAndMask[0]
-        prefixLength = ipAdressAndMask[0]
+        prefixLength = ipAdressAndMask[1]
         # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
         ipa = clr.Reference[IPAddress]()
         # check if the last word is a valid ip address
-        if IPAddress.TryParse(prefixAddress, ipa) and str(ipa) == prefixAddress:    
+        if IPAddress.TryParse(prefixAddress, ipa) and str(ipa.Value) == prefixAddress:    
           try:
             # the 4th word is the flag telling us the protocol type
             # flags: A:active, ?:loose, C:connect, H:host, S:static, ~:internal, R:rip, O:ospf, B:bgp, 
@@ -354,14 +354,14 @@ for thisLine in routeLines:
               elif protocolType == "R" : thisLineProtocol = L3Discovery.RoutingProtocol.RIP
               elif protocolType == "B" : thisLineProtocol = L3Discovery.RoutingProtocol.BGP
               rte = L3Discovery.RouteTableEntry()
-              rte.Protocol = thisLineProtocol
+              rte.Protocol = str(thisLineProtocol)
               rte.RouterID = RouterIDAndASNumber.GetRouterID(rte.Protocol)
               rte.Prefix = prefixAddress
               rte.MaskLength = int(prefixLength)
               rte.NextHop = words[1]
               rte.Best = False # don't know actually
               rte.Tag = ""
-              rte.OutInterface = words[6]
+              if len(words) &gt;= 6 : rte.OutInterface = words[5]
               rte.AD = ""
               rte.Metric = words[2]
               parsedRoutes.Add(rte)
@@ -391,7 +391,7 @@ ActionResult = parsedRoutes</MainCode>
     <Description>This call should be able to return the full routing table of the device</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1175:1042</EditorSize>
+    <EditorSize>1733:938</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -406,35 +406,11 @@ ActionResult = parsedRoutes</MainCode>
 #                                                                    #
 ######################################################################
 global ActionResult
-global _routedInterfaces
-from System.Net import IPAddress
+global ScriptSuccess
 
-if len(_routedInterfaces) == 0:
-  # Query the device for inet interfaces
-  inetInterfaces = Session.ExecCommand("show interface all").splitlines()
-  # Parse the result and fill up foundInterfaces list
-  for line in inetInterfaces:
-    words = filter(None, line.split(" "))
-    if len(words) &gt; 0:
-      lastWord = words[len(words)-1]
-      # The line that contains a / character int he last word is a good candidate to check
-      if "/" in lastWord:
-        ipAddressAndMask = lastWord.split("/")
-        ipAddress = ipAddressAndMask[0]
-        maskLength = ipAddressAndMask[1]
-        # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
-        ipa = clr.Reference[IPAddress]()
-        # check if the last word is a valid ip address
-        if IPAddress.TryParse(ipAddress, ipa) and ipa.ToString() == ipAddress:
-          ri = L3Discovery.RouterInterface()
-          ri.Name = words[0]
-          ri.Address = ipAddress
-          ri.Status =  "up"
-          ri.MaskLength = maskLength
-          #if (_interfaceConfigurations.ContainsKey(ri.Name)) ri.Configuration = _interfaceConfigurations[ri.Name];
-          _routedInterfaces.Add(ri)
-
-ActionResult = _routedInterfaces </MainCode>
+ActionResult = GetInterfaces.GetRoutedInterfaces()
+ScriptSuccess = True
+</MainCode>
     <Origin_X>91</Origin_X>
     <Origin_Y>434</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -444,14 +420,14 @@ ActionResult = _routedInterfaces </MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
     <Description>This call should be able to return the list of routed interfaces </Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>919:841</EditorSize>
+    <EditorSize>1078:887</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -486,7 +462,7 @@ ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -542,7 +518,7 @@ ActionResult = _runningRoutingProtocols</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -762,29 +738,10 @@ global ActionResult
 # the interface name to be queried is received in ConnectionInfo.aParam
 # strip any leading or trailing spaces, otherwise command execution will fail
 ifName = ConnectionInfo.aParam.strip()
-# this is the RouterInterface object to be returned
-ri = L3Discovery.RouterInterface()
-ri.Name = ifName
-# get config from cache if exists, query otherwise
-ifConfig = _interfaceConfigurations.get(ifName)
-if ifConfig == None:
-  cmd = "show interface all | match {0}".format(ifName)
-  ifConfig = Session.ExecCommand(cmd)
-  _interfaceConfigurations[ifName] = ifConfig
-  
-# fill other interface parameters
-ri.Configuration = ifConfig
-# ifConfig columns : name            id  vsys zone    forwarding   tag   address                  
-# ifConfig sample  : ethernet1/1.520 256 1    ENG-LAB vr:PROD      520   10.83.168.1/24    
-configWords = filter(None, ifConfig.split(" "))
-ri.Description = " ".join([configWords[0], configWords[3], configWords[4]])
-addressAndMask = configWords[6].split('/')
-ri.Address = addressAndMask[0]
-ri.MaskLength = addressAndMask[1]
 
 #return the interface
-ActionResult = ri</MainCode>
-    <Origin_X>116</Origin_X>
+ActionResult = GetInterfaces.GetInterfaceByName(ifName)</MainCode>
+    <Origin_X>112</Origin_X>
     <Origin_Y>301</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
@@ -793,7 +750,7 @@ ActionResult = ri</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -818,21 +775,9 @@ global ActionResult
 
 # the interface ip address to be queried is received in ConnectionInfo.aParam
 ifAddress = ConnectionInfo.aParam
-# this is the RouterInterface object to be returned
-ri = L3Discovery.RouterInterface()
-ri.Address = ifAddress
-# get config from cache if exists, query otherwise
-ifName= next((thisIfConfig.Key for thisIfConfig in _interfaceConfigurations if thisIfConfig.find(ifAddress) &gt; 0), None)
 
-if ifName == None:
-  cmd = "show interface all | match {0}".format(ifAddress)
-  ifInfo = Session.ExecCommand(cmd)
-  # ifInfo should look like : "ethernet1/1.520 256  1 ZoneName  vr:PROD 520 10.83.168.1/24"
-  aparams= filter(None, ifInfo.split(" "))
-  ifName = aparams[0]
-  
 #return the interface name
-ActionResult = ifName.strip()</MainCode>
+ActionResult = GetInterfaces.GetInterfaceNameByAddress(ifAddress)</MainCode>
     <Origin_X>152</Origin_X>
     <Origin_Y>237</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -849,7 +794,7 @@ ActionResult = ifName.strip()</MainCode>
     <Description>This call should be able to return an interface name based on its IP address</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>994:929</EditorSize>
+    <EditorSize>994:706</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -862,7 +807,7 @@ ActionResult = ifName.strip()</MainCode>
 #                                                                           #
 # This call should be able to update the interface configuration field      #
 # of a given RouterInterface object.                                        #
-# A returned bool value should indicate whether the update was successful   #                                      #
+# A returned bool value should indicate whether the update was successful   #                                      
 #                                                                           #
 #############################################################################
 
@@ -872,14 +817,7 @@ global ActionResult
 queryInterface = ConnectionInfo.aParam
 
 try:
-  # return config from cache if exists, query otherwise
-  ifConfig = _interfaceConfigurations.get(queryInterface.Name)
-  if ifConfig == None:
-    cmd = "show interface all | match {0}".format(queryInterface.Name)
-    ifConfig = Session.ExecCommand(cmd)
-    _interfaceConfigurations[queryInterface.Name] = ifConfig
-    
-  queryInterface.Configuration = ifConfig
+  queryInterface.Configuration = GetInterfaces.GetInterfaceConfiguration(queryInterface.Name)
   ActionResult = True
 except:
   ActionResult = False</MainCode>
@@ -900,7 +838,7 @@ except:
 A returned bool value should indicate whether the update was successful.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>684:753</EditorSize>
+    <EditorSize>1194:753</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -913,9 +851,15 @@ A returned bool value should indicate whether the update was successful.</Descri
 global HostName
 
 _versionInfo = Version.GetVersion()
-HostName = Session.GetHostName();
+HostName = Session.GetHostName()
+
 if "paloaltonetworks" in _versionInfo.lower():
-  ActionResult = True
+  prompt = Session.GetFullPrompt()
+  if "active" in prompt :
+    ActionResult = True
+  else:
+    # Current parser and object module do not support working with the passive firewall
+    ActionResult = False
 else :
   ActionResult = False</MainCode>
     <Origin_X>345</Origin_X>
@@ -934,24 +878,30 @@ else :
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>781:563</EditorSize>
+    <EditorSize>873:602</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>22</vsID>
     <CommandID>75e1f93c-a59b-419b-b685-9e1f1016ef36</CommandID>
-    <Name>Copy_of_Stop_2</Name>
+    <Name>Reset</Name>
     <DisplayLabel>Reset</DisplayLabel>
     <Commands />
-    <MainCode>_versionInfo = None
-_hostName = None
-_stackCount = -1
+    <MainCode>global _versionInfo
+global _hostName
+global _stackCount
+global _runningRoutingProtocols
+global _interfaceConfigurations
 
+_versionInfo = ""
+_hostName = ""
+_stackCount = -1
 _runningRoutingProtocols = []
 _interfaceConfigurations = {}
 
 Version.Reset()
-RouterIDAndASNumber.Reset()</MainCode>
+RouterIDAndASNumber.Reset()
+GetInterfaces.Reset()</MainCode>
     <Origin_X>441</Origin_X>
     <Origin_Y>65</Origin_Y>
     <Size_Width>121</Size_Width>
@@ -965,7 +915,8 @@ RouterIDAndASNumber.Reset()</MainCode>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
-    <Description />
+    <Description>This object should reset the vScript to its original state by 
+clearing any and variables populated during a previous run</Description>
     <WatchVariables />
     <Initializer />
     <EditorSize>637:523</EditorSize>
@@ -984,8 +935,8 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>111</Origin_X>
-    <Origin_Y>774</Origin_Y>
+    <Origin_X>248</Origin_X>
+    <Origin_Y>849</Origin_Y>
     <Size_Width>149</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -1022,8 +973,8 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>759</Origin_X>
-    <Origin_Y>781</Origin_Y>
+    <Origin_X>642</Origin_X>
+    <Origin_Y>849</Origin_Y>
     <Size_Width>150</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -1095,11 +1046,253 @@ def Reset(self):
   self.BGPASNumber = ""
   self.staticRouterID = ""</CustomCodeBlock>
     <DemoMode>false</DemoMode>
+    <Description>This object is responsible to retrieve protocol
+dependent RouterID and parse BGP AS number</Description>
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>1070:815</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>25</vsID>
+    <CommandID>99d17b29-26fb-40f8-a24b-9b9547aabe6e</CommandID>
+    <Name>GetInterfaces</Name>
+    <DisplayLabel>Get interface details</DisplayLabel>
+    <Commands />
+    <MainCode />
+    <Origin_X>449</Origin_X>
+    <Origin_Y>853</Origin_Y>
+    <Size_Width>144</Size_Width>
+    <Size_Height>50</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables># List of FWInterface objects
+FWInterfaces = []   </Variables>
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock># Add your custom methods to object like below
+class FWInterface(object):
+  def __init__(self):
+    self.Name = ""
+    self.ID = ""    
+    self.Speed = ""
+    self.Duplex = ""
+    self.State = ""
+    self.MAC = ""
+    self.VSYS = ""
+    self.Zone = ""
+    self.Forwarding = ""
+    self.Tag = ""
+    self.Address = ""
+    self.MaskLength = ""
+
+"""Collects interface details for all interfaces """
+def ParseInterfaces(self) :
+  from  PGT.Common import IPOperations
+  # get all interface data
+  response = Session.ExecCommand("show interface all")
+  interfaceBlock = False
+  currentHeaderFields = []
+  currentHeaderLine = ""
+  tunnelMAC = ""
+  loopbackMAC = ""
+  intf_lines = [str.lower(thisLine.strip()) for thisLine in response.splitlines()]
+  for thisLine in intf_lines:  
+    try:
+      # a line with dashes is just a separator, skip it
+      if thisLine.startswith("------"): 
+        continue
+      
+      # a line with the first word of "name " signals an interface block, and gives us the header
+      if thisLine.startswith("name "):
+        currentHeaderLine = thisLine
+        currentHeaderFields = filter(None, currentHeaderLine.split(" "))
+        interfaceBlock = True
+        continue
+      
+      # skip the rest
+      if thisLine.startswith("aggregation"):
+        interfaceBlock = False
+        continue
+        
+      # an empty line can also signal the end of an interface block   
+      if interfaceBlock and thisLine == "":
+        interfaceBlock = False
+        continue
+      
+      # parse interface data in block
+      if interfaceBlock:
+        lineWords = filter(None, thisLine.split(" "))
+        # the first item is interface name in each block
+        ifName = lineWords[0]
+        thisFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
+        if thisFWInterface == None:
+          # interface not found by name, create new one
+          thisFWInterface = self.FWInterface()
+          thisFWInterface.Name = ifName
+          if ifName.startswith("tunnel."):
+            thisFWInterface.MAC = tunnelMAC
+          if ifName.startswith("loopback."):
+            thisFWInterface.MAC = loopbackMAC
+            
+          self.FWInterfaces.Add(thisFWInterface)
+        
+        # the length of currentHeaderFields can guide us, which block we are in now
+        if len(currentHeaderFields) == 5:
+          # this is the physical IF parameters block
+          # header :name,id,speed/duplex/state,mac,address    
+          # ID        
+          s = currentHeaderLine.index("id")
+          e = currentHeaderLine.index("speed/duplex/state")
+          thisFWInterface.ID = thisLine[s:e].strip() 
+          # speed/duplex/state
+          s = currentHeaderLine.index("speed/duplex/state")
+          e = currentHeaderLine.index("mac")
+          SDS = thisLine[s:e].strip().split("/")
+          thisFWInterface.Speed = SDS[0]
+          if len(SDS) &gt;= 2 : thisFWInterface.Duplex = SDS[1]
+          if len(SDS) &gt;= 3 : thisFWInterface.State = SDS[2]
+          # MAC
+          s = currentHeaderLine.index("mac")
+          e = len(thisLine)  
+          thisFWInterface.MAC = thisLine[s:e].strip()
+          # memorize MAC address for cloned interfaces
+          if ifName == "tunnel":
+            tunnelMAC = thisFWInterface.MAC
+          if ifName == "loopback":
+            loopbackMAC = thisFWInterface.MAC
+          
+        elif len(currentHeaderFields) == 7 :
+          # this is the logical IF parameters block
+          # header : name,id,vsys,zone,forwarding,tag,address  
+          # vsys
+          s = currentHeaderLine.index("vsys")
+          e = currentHeaderLine.index("zone")
+          thisFWInterface.VSYS = thisLine[s:e].strip()
+          # zone
+          s = currentHeaderLine.index("zone")
+          e = currentHeaderLine.index("forwarding")           
+          thisFWInterface.Zone = thisLine[s:e].strip()
+          # forwarding
+          s = currentHeaderLine.index("forwarding")
+          e = currentHeaderLine.index("tag")
+          thisFWInterface.Forwarding = thisLine[s:e].strip()
+          # tag
+          s = currentHeaderLine.index("tag")
+          e = currentHeaderLine.index("address")        
+          thisFWInterface.Tag = thisLine[s:e].strip()
+          # address
+          s = currentHeaderLine.index("address")
+          e = len(thisLine)
+          addr = thisLine[s:e].strip()
+          if addr != "n/a":
+            addressAndMask = addr.split('/')
+            thisFWInterface.Address = addressAndMask[0]
+            thisFWInterface.MaskLength = addressAndMask[1]
+    except Exception as Ex:
+      msg = "PaloAltoFirewall vScript Parser : Error while processing interface information. Error is : {0}".format(str(Ex))
+      System.Diagnostics.DebugEx.WriteLine(msg) 
+      
+  # --- Get management interface details ---
+  response = Session.ExecCommand("show interface management")
+  if response != "":
+    MGMTInterface = self.FWInterface()
+    intf_lines = [str.lower(thisLine.strip()) for thisLine in response.splitlines()]
+    for thisLine in intf_lines:   
+      if thisLine.startswith("ip address"): 
+        words = thisLine.split(":")
+        MGMTInterface.Address = words[1].strip()
+      if thisLine.startswith("netmask"): 
+        words = thisLine.split(":")
+        netMask = words[1]
+        MGMTInterface.MaskLength = str(IPOperations.GetMaskLength(netMask))
+        MGMTInterface.Name = "Management"
+        self.FWInterfaces.Add(MGMTInterface)
+        break        
+            
+
+"""Returns a RouterInterface object for the interface specified by its name"""        
+def GetInterfaceByName(self, ifName):
+  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
+  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
+  return self.FWInterface2RouterInterface(foundFWInterface)
+  
+""" Returns a RouterInterface object for the interface specified by its ip address """    
+def GetInterfaceNameByAddress(self, ipAddress):
+  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
+  ifName = ""
+  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Address == ipAddress), None)
+  if foundFWInterface != None:
+    ifName = foundFWInterface.Name
+  return ifName     
+
+""" Return a synthetic configuration of an interface """
+def GetInterfaceConfiguration(self, ifName):
+  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
+  ifConfig = ""
+  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
+  if foundFWInterface != None:
+    ifConfig = "{0}{\r\n  ID={1}\r\n  Address={2}/{3}\r\n}".format(foundFWInterface.Name, foundFWInterface.ID, foundFWInterface.Address, foundFWInterface.MaskLength )
+  return ifConfig 
+
+"""  Map an FWInterface object to L3Discovery.RouterInterface object"""
+def FWInterface2RouterInterface(self, fwInterface):
+  if fwInterface == None : return None
+  # -- 
+  ri = L3Discovery.RouterInterface()
+  ri.Name = fwInterface.Name
+  ri.Address = fwInterface.Address
+  ri.Status =  fwInterface.State
+  ri.MaskLength = fwInterface.MaskLength
+  ri.Description = " ".join([fwInterface.Name, fwInterface.ID, fwInterface.VSYS, fwInterface.Zone])
+  return ri
+  
+""" Return interfaces in the form of list of RouterInterface"""
+def GetRoutedInterfaces(self):
+  if len(self.FWInterfaces) == 0 : self.ParseInterfaces() 
+  routedInterfaces = filter(lambda x: x.Address != "", self.FWInterfaces)
+  return map(self.FWInterface2RouterInterface, routedInterfaces)
+  
+def Reset(self):
+  self.FWInterfaces = []</CustomCodeBlock>
+    <DemoMode>false</DemoMode>
+    <Description>This object will parse interface details</Description>
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>922:992</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>26</vsID>
+    <CommandID>82bc327f-ca2d-48d0-ba65-7f952d80492f</CommandID>
+    <Name>RegisterNHRP</Name>
+    <DisplayLabel>Register NHRP</DisplayLabel>
+    <Commands />
+    <MainCode>global ActionResult
+global ConnectionDropped
+global ScriptSuccess
+global ConnectionInfo
+global BreakExecution</MainCode>
+    <Origin_X>442</Origin_X>
+    <Origin_Y>775</Origin_Y>
+    <Size_Width>139</Size_Width>
+    <Size_Height>43</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1484:999</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
+    <EditorSize>568:460</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
     <cID>0</cID>
@@ -1431,6 +1624,21 @@ def Reset(self):
     <WatchVariables />
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
+  <vScriptConnector>
+    <cID>22</cID>
+    <ConnectorID />
+    <Name>SwitchTask_RegisterNHRP</Name>
+    <DisplayLabel>Register NHRP</DisplayLabel>
+    <Left>2</Left>
+    <Right>26</Right>
+    <Condition>return ConnectionInfo.Command == "RegisterNHRP"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>22</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
   <Parameters>
     <ScriptName>PaloAltoFirewall</ScriptName>
     <GlobalCode>###################################
@@ -1438,7 +1646,7 @@ def Reset(self):
 # Declare global variables here   #
 #                                 #
 ###################################
-scriptVersion = "v0.9"
+scriptVersion = "v0.97"
 VersionInfo = ""
 HostName = ""
 
@@ -1469,12 +1677,9 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6039999</EditorScaleFactor>
-    <Description>This vScript template can be used as a starting point for creating a 
-new Router  module for Network Map. This is required to add support
-for a new vendor. 
-You will also need to add routing protocol Parser Module to fully support 
-network discovery fo that vendor.</Description>
-    <EditorSize>{Width=646, Height=566}</EditorSize>
+    <EditorScaleFactor>0.6160002</EditorScaleFactor>
+    <Description>This vScript is responsible to parse configuration
+items from a Palo Alto PAN firewall</Description>
+    <EditorSize>{Width=735, Height=677}</EditorSize>
   </Parameters>
 </vScriptDS>

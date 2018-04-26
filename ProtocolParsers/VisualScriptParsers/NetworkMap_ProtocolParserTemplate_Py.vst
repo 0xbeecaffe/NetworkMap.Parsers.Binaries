@@ -7,9 +7,9 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>438</Origin_X>
-    <Origin_Y>12</Origin_Y>
-    <Size_Width>100</Size_Width>
+    <Origin_X>43</Origin_X>
+    <Origin_Y>393</Origin_Y>
+    <Size_Width>134</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -54,9 +54,9 @@ if Router != None:
     ActionResult = False
 else:
   ActionResult = False</MainCode>
-    <Origin_X>615</Origin_X>
-    <Origin_Y>99</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>441</Origin_X>
+    <Origin_Y>101</Origin_Y>
+    <Size_Width>140</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -87,10 +87,10 @@ for the specified protocol using the given Router instance.</Description>
 #                                                         #
 ###########################################################
 pass</MainCode>
-    <Origin_X>437</Origin_X>
-    <Origin_Y>222</Origin_Y>
+    <Origin_X>266</Origin_X>
+    <Origin_Y>393</Origin_Y>
     <Size_Width>100</Size_Width>
-    <Size_Height>50</Size_Height>
+    <Size_Height>47</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -122,9 +122,9 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>697</Origin_X>
-    <Origin_Y>185</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>312</Origin_X>
+    <Origin_Y>49</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -156,9 +156,9 @@ global ActionResult
 global OperationStatusLabel
 
 ActionResult = OperationStatusLabel</MainCode>
-    <Origin_X>676</Origin_X>
-    <Origin_Y>312</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>519</Origin_X>
+    <Origin_Y>155</Origin_Y>
+    <Size_Width>136</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -210,9 +210,9 @@ cToken.ThrowIfCancellationRequested()
 #
 # No need to return anything via ActionResult
 #</MainCode>
-    <Origin_X>406</Origin_X>
-    <Origin_Y>484</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>607</Origin_X>
+    <Origin_Y>317</Origin_Y>
+    <Size_Width>144</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -234,16 +234,16 @@ and register the neighbors found by the routing protocol for discovery.</Descrip
     <vsID>6</vsID>
     <CommandID>a236adee-1d6f-4c2a-8e90-c9fd13489289</CommandID>
     <Name>UnknownTask</Name>
-    <DisplayLabel>Unknown task - ERROR</DisplayLabel>
+    <DisplayLabel>Unknown</DisplayLabel>
     <Commands />
     <MainCode>global ActionResult
 global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>209</Origin_X>
-    <Origin_Y>78</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>460</Origin_X>
+    <Origin_Y>676</Origin_Y>
+    <Size_Width>128</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -254,7 +254,7 @@ raise ValueError("{0} has received an unhandled Command request : {1}".format(Mo
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
-    <Description />
+    <Description>This is an unknown task, report as error</Description>
     <WatchVariables />
     <Initializer />
     <EditorSize>1059:530</EditorSize>
@@ -276,9 +276,9 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>578</Origin_X>
-    <Origin_Y>409</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>608</Origin_X>
+    <Origin_Y>420</Origin_Y>
+    <Size_Width>154</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -306,9 +306,9 @@ this module can support</Description>
 
 ActionResult = OSPFProcessor.GetAreas()
 </MainCode>
-    <Origin_X>218</Origin_X>
-    <Origin_Y>406</Origin_Y>
-    <Size_Width>125</Size_Width>
+    <Origin_X>581</Origin_X>
+    <Origin_Y>521</Origin_Y>
+    <Size_Width>155</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -333,13 +333,13 @@ ActionResult = OSPFProcessor.GetAreas()
     <Commands />
     <MainCode>global ActionResult
 
-# the OSPF Area ID to be queried is received in ConnectionInfo.aParam
+# the OSPF Area object to be queried is received in ConnectionInfo.aParam
 ospfArea = ConnectionInfo.aParam
 
 ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
-    <Origin_X>77</Origin_X>
-    <Origin_Y>302</Origin_Y>
-    <Size_Width>164</Size_Width>
+    <Origin_X>520</Origin_X>
+    <Origin_Y>608</Origin_Y>
+    <Size_Width>167</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -370,9 +370,9 @@ ospfArea = ConnectionInfo.aParam
 LSAType = ConnectionInfo.bParam
 # return the LSAs
 ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
-    <Origin_X>82</Origin_X>
-    <Origin_Y>180</Origin_Y>
-    <Size_Width>164</Size_Width>
+    <Origin_X>353</Origin_X>
+    <Origin_Y>735</Origin_Y>
+    <Size_Width>165</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -403,20 +403,21 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>22</Origin_X>
-    <Origin_Y>479</Origin_Y>
+    <Origin_X>43</Origin_X>
+    <Origin_Y>719</Origin_Y>
     <Size_Width>166</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
-    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by AREA IDs. The internal dictinary is then keyed by LSAType - like Router, or Network.
+    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by OSPFArea objects. The internal dictinary is then keyed by LSAType - like Router, or Network.
 OSPFAreaLSAs = {}
 # example content :
 # LSAs = [item1, item2]
 # OSPFLSAs = {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}
-# OSPFAreaLSAs = {"0.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}</Variables>
+# OSPFAreaLSAs = {"0.0.0.0, Backone" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0, Normal" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}
+</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock>"""Query and Process the OSPF Database"""
@@ -463,7 +464,19 @@ def GetAreas(self):
   Areas = self.OSPFAreaLSAs.keys()
   return Areas
   
-
+"""Return the OSPF Area Type name for the requested AREA ID """
+def GetAreaType(self, ospfAreaID):
+  if ospfAreaID == "0.0.0.0" :
+    return "Backbone"
+  # this is what we will return
+  areaTypeName = ""
+  #
+  # Override this 
+  #
+  # Execute necessary commands on the device to get the type of the requested OSPFArea
+  #
+  #
+  return areaTypeName
   
 def Reset(self):
   # old code self.OSPFAreaRouterID = {}
@@ -472,8 +485,38 @@ def Reset(self):
     <Description>Process OSPF Database in order to collect Area IDs and different LSAs</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1079:863</EditorSize>
+    <EditorSize>1172:768</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>12</vsID>
+    <CommandID>93fd708a-d41a-45c1-9862-6ec9b2378ee1</CommandID>
+    <Name>Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Commands />
+    <MainCode>global ActionResult
+global ConnectionDropped
+global ScriptSuccess
+global ConnectionInfo
+global BreakExecution</MainCode>
+    <Origin_X>572</Origin_X>
+    <Origin_Y>219</Origin_Y>
+    <Size_Width>142</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description />
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>568:460</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
     <cID>0</cID>
@@ -494,7 +537,7 @@ def Reset(self):
     <cID>1</cID>
     <ConnectorID />
     <Name>SwitchTask_ReturnStatus</Name>
-    <DisplayLabel>GetOperationStatusLabel</DisplayLabel>
+    <DisplayLabel>Status</DisplayLabel>
     <Left>2</Left>
     <Right>4</Right>
     <Condition>return ConnectionInfo.Command == "GetOperationStatusLabel"</Condition>
@@ -554,7 +597,7 @@ def Reset(self):
     <cID>5</cID>
     <ConnectorID />
     <Name>SwitchTask_ReturnProtocols</Name>
-    <DisplayLabel>GetSupportedProtocols</DisplayLabel>
+    <DisplayLabel>Protocols</DisplayLabel>
     <Left>2</Left>
     <Right>7</Right>
     <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
@@ -625,6 +668,21 @@ def Reset(self):
     <WatchVariables />
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
+  <vScriptConnector>
+    <cID>10</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Left>2</Left>
+    <Right>12</Right>
+    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>10</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
   <Parameters>
     <ScriptName>VSProtocolParser_Template</ScriptName>
     <GlobalCode>ScriptVersion = "0.0"
@@ -659,11 +717,11 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>true</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>1</EditorScaleFactor>
+    <EditorScaleFactor>0.6519994</EditorScaleFactor>
     <Description>This vScript template can be used as a starting point for
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=931, Height=674}</EditorSize>
+    <EditorSize>{Width=636, Height=646}</EditorSize>
   </Parameters>
 </vScriptDS>

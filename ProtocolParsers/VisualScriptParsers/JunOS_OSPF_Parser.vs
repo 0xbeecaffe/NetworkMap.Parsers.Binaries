@@ -130,39 +130,12 @@ the current Protocol Parser</Description>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>4</vsID>
-    <CommandID>539dfde8-0100-42e5-bf23-625f8241756d</CommandID>
-    <Name>ReturnStatus</Name>
-    <DisplayLabel>Return Status</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-
-ActionResult = OperationStatusLabel</MainCode>
-    <Origin_X>577</Origin_X>
-    <Origin_Y>279</Origin_Y>
-    <Size_Width>100</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description />
-    <WatchVariables />
-    <Initializer />
-    <EditorSize>568:538</EditorSize>
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>5</vsID>
     <CommandID>a9279407-046b-4e50-b4e6-fcd0c543379a</CommandID>
     <Name>ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Commands />
     <MainCode>global Router
+global OperationStatusLabel
 
 # The neighbor registry object is received in ConnectionInfo.aParam
 nRegistry = ConnectionInfo.aParam
@@ -224,8 +197,8 @@ for line in ospf_lines:
     msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
     System.Diagnostics.DebugEx.WriteLine(msg) 
 </MainCode>
-    <Origin_X>331</Origin_X>
-    <Origin_Y>418</Origin_Y>
+    <Origin_X>504</Origin_X>
+    <Origin_Y>401</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -244,7 +217,7 @@ for line in ospf_lines:
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>6</vsID>
+    <vsID>5</vsID>
     <CommandID>8def390e-2884-43ad-bda1-e12cdf892b47</CommandID>
     <Name>ReturnProtocols</Name>
     <DisplayLabel>Supported Protocols</DisplayLabel>
@@ -253,8 +226,8 @@ for line in ospf_lines:
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>466</Origin_X>
-    <Origin_Y>370</Origin_Y>
+    <Origin_X>546</Origin_X>
+    <Origin_Y>293</Origin_Y>
     <Size_Width>136</Size_Width>
     <Size_Height>38</Size_Height>
     <isStart>false</isStart>
@@ -274,7 +247,7 @@ this module can support</Description>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>7</vsID>
+    <vsID>6</vsID>
     <CommandID>0e509eae-8ea6-4daa-98fd-5791a6aab5ae</CommandID>
     <Name>UnknownTask</Name>
     <DisplayLabel>Unknown task</DisplayLabel>
@@ -304,7 +277,7 @@ that is not handled. This is an ERROR condition.</Description>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>8</vsID>
+    <vsID>7</vsID>
     <CommandID>22b500c7-757c-495c-b9d2-314afdc7d8bb</CommandID>
     <Name>OSPFProcessor</Name>
     <DisplayLabel>Process OSPF Database</DisplayLabel>
@@ -316,8 +289,8 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>31</Origin_X>
-    <Origin_Y>447</Origin_Y>
+    <Origin_X>23</Origin_X>
+    <Origin_Y>486</Origin_Y>
     <Size_Width>166</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -435,7 +408,7 @@ def Reset(self):
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>9</vsID>
+    <vsID>8</vsID>
     <CommandID>0ae817fb-7e0c-4390-9e93-83810bcdf2df</CommandID>
     <Name>Return_OSPFAreas</Name>
     <DisplayLabel>OSPF Areas</DisplayLabel>
@@ -444,8 +417,8 @@ def Reset(self):
 
 ActionResult = OSPFProcessor.GetAreas()
 </MainCode>
-    <Origin_X>170</Origin_X>
-    <Origin_Y>369</Origin_Y>
+    <Origin_X>152</Origin_X>
+    <Origin_Y>381</Origin_Y>
     <Size_Width>125</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -464,7 +437,7 @@ ActionResult = OSPFProcessor.GetAreas()
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>10</vsID>
+    <vsID>9</vsID>
     <CommandID>b0fe4bde-5cfb-42a5-8155-1de6b7f4e2ec</CommandID>
     <Name>OSPFLSAs</Name>
     <DisplayLabel>Return OSPF LSA types</DisplayLabel>
@@ -495,7 +468,7 @@ ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>11</vsID>
+    <vsID>10</vsID>
     <CommandID>2891e683-ecfc-4c0c-ae12-e5019cbd610f</CommandID>
     <Name>Return_OSPFLSA</Name>
     <DisplayLabel>Return Requested LSAs</DisplayLabel>
@@ -528,6 +501,43 @@ for the requested Area ID</Description>
     <EditorSize>667:514</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
+  <vScriptCommands>
+    <vsID>11</vsID>
+    <CommandID>b03de8da-9b96-49c9-978e-451bd31c231b</CommandID>
+    <Name>Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Commands />
+    <MainCode>global ActionResult
+global ConnectionDropped
+global ScriptSuccess
+global ConnectionInfo
+global BreakExecution
+global OperationStatusLabel
+global Router
+
+OperationStatusLabel = "Working"
+OSPFProcessor.Reset()
+ActionResult = None
+Router = None</MainCode>
+    <Origin_X>330</Origin_X>
+    <Origin_Y>417</Origin_Y>
+    <Size_Width>113</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description />
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>568:460</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+  </vScriptCommands>
   <vScriptConnector>
     <cID>0</cID>
     <ConnectorID />
@@ -546,21 +556,6 @@ for the requested Area ID</Description>
   <vScriptConnector>
     <cID>1</cID>
     <ConnectorID />
-    <Name>SwitchTask_ReturnStatus</Name>
-    <DisplayLabel>GetOperationStatusLabel</DisplayLabel>
-    <Left>2</Left>
-    <Right>4</Right>
-    <Condition>return ConnectionInfo.Command == "GetOperationStatusLabel"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>0</Order>
-    <Description />
-    <WatchVariables />
-    <EditorSize>671:460</EditorSize>
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>2</cID>
-    <ConnectorID />
     <Name>SwitchTask_ReturnSupportTag</Name>
     <DisplayLabel>GetSupportTag</DisplayLabel>
     <Left>2</Left>
@@ -574,7 +569,7 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>3</cID>
+    <cID>2</cID>
     <ConnectorID />
     <Name>SwitchTask_Initialize</Name>
     <DisplayLabel>Initialize</DisplayLabel>
@@ -583,18 +578,18 @@ for the requested Area ID</Description>
     <Condition>return ConnectionInfo.Command == "Initialize"</Condition>
     <Variables />
     <Break>false</Break>
-    <Order>2</Order>
+    <Order>0</Order>
     <Description />
     <WatchVariables />
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>4</cID>
+    <cID>3</cID>
     <ConnectorID />
     <Name>SwitchTask_ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Left>2</Left>
-    <Right>5</Right>
+    <Right>4</Right>
     <Condition>return ConnectionInfo.Command == "Parse"</Condition>
     <Variables />
     <Break>false</Break>
@@ -604,12 +599,12 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>5</cID>
+    <cID>4</cID>
     <ConnectorID />
     <Name>SwitchTask_ReturnProtocols</Name>
     <DisplayLabel>GetSupportedProtocols</DisplayLabel>
     <Left>2</Left>
-    <Right>6</Right>
+    <Right>5</Right>
     <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
     <Variables />
     <Break>false</Break>
@@ -619,12 +614,12 @@ for the requested Area ID</Description>
     <EditorSize>1131:817</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>6</cID>
+    <cID>5</cID>
     <ConnectorID />
     <Name>SwitchTask_UnknownTask</Name>
     <DisplayLabel>Unknown</DisplayLabel>
     <Left>2</Left>
-    <Right>7</Right>
+    <Right>6</Right>
     <Condition>return True</Condition>
     <Variables />
     <Break>true</Break>
@@ -634,12 +629,12 @@ for the requested Area ID</Description>
     <EditorSize>1131:817</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>7</cID>
+    <cID>6</cID>
     <ConnectorID />
     <Name>SwitchTask_Return_OSPFLSA</Name>
     <DisplayLabel>GetOSPFLSAs</DisplayLabel>
     <Left>2</Left>
-    <Right>11</Right>
+    <Right>10</Right>
     <Condition>return ConnectionInfo.Command == "GetOSPFLSAs"</Condition>
     <Variables />
     <Break>false</Break>
@@ -649,12 +644,12 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>8</cID>
+    <cID>7</cID>
     <ConnectorID />
     <Name>SwitchTask_OSPFLSAs</Name>
     <DisplayLabel>GetOSPFLSATypes</DisplayLabel>
     <Left>2</Left>
-    <Right>10</Right>
+    <Right>9</Right>
     <Condition>return ConnectionInfo.Command == "GetOSPFLSATypes"</Condition>
     <Variables />
     <Break>false</Break>
@@ -664,12 +659,12 @@ for the requested Area ID</Description>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
-    <cID>9</cID>
+    <cID>8</cID>
     <ConnectorID />
     <Name>SwitchTask_Return_OSPFAreas</Name>
     <DisplayLabel>GetOSPFAreas</DisplayLabel>
     <Left>2</Left>
-    <Right>9</Right>
+    <Right>8</Right>
     <Condition>return ConnectionInfo.Command == "GetOSPFAreas"</Condition>
     <Variables />
     <Break>false</Break>
@@ -678,9 +673,24 @@ for the requested Area ID</Description>
     <WatchVariables />
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
+  <vScriptConnector>
+    <cID>9</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Left>2</Left>
+    <Right>11</Right>
+    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>2</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "2.9"
+    <GlobalCode>ScriptVersion = "0.92"
 ModuleName =  "Juniper, JunOS OSPF Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
 OperationStatusLabel = "Working"
@@ -705,15 +715,15 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6159997</EditorScaleFactor>
+    <EditorScaleFactor>1.096</EditorScaleFactor>
     <Description>This Protocol Parser can handle JunOS routers 
 and switches running OSPF protocol.</Description>
-    <EditorSize>{Width=639, Height=416}</EditorSize>
+    <EditorSize>{Width=854, Height=535}</EditorSize>
   </Parameters>
 </vScriptDS>

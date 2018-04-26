@@ -379,7 +379,10 @@ namespace L3Discovery.Routers.JunOS
 				try
 				{
 					string inetInterfaces = _session.ExecCommand("show interfaces terse | match inet");
-
+					// Because JunOS reports the VRRP VIP addresses in "show interface terse" output, it is necessary to 
+					// check interface ip of VRRP enabled interfaces
+					string vrrpSummary = _session.ExecCommand("show vrrp summary | match lcl");
+					string[] vrrpSummaryLines = vrrpSummary.SplitByLine();
 					foreach (string line in inetInterfaces.SplitByLine())
 					{
 						try
@@ -389,8 +392,6 @@ namespace L3Discovery.Routers.JunOS
 							{
 								// words should look like : xe-0/0/25.0,up,up,inet,172.20.1.18/31 
 								string ifName = words[0];
-
-
 								if (!ifName.StartsWith("bme"))
 								{
 									string[] ifIPAndMask = words[4].Split('/');
@@ -399,7 +400,15 @@ namespace L3Discovery.Routers.JunOS
 									{
 										RouterInterface ri = new RouterInterface();
 										ri.Name = ifName;
-										ri.Address = ifIPAndMask[0];
+										// check if VRRP is enabled for interface
+										string vrrpLine = vrrpSummaryLines.FirstOrDefault(l => l.StartsWith(ifName));
+										if (vrrpLine != null)
+										{
+											// VRRP is running on interface, use the lcl address. Address should be the last word in line
+											string[] vrrpLineWords = vrrpLine.SplitBySpace();
+											ri.Address = vrrpLineWords[vrrpLineWords.Length - 1];
+										}
+										else ri.Address = ifIPAndMask[0];
 										ri.MaskLength = ifIPAndMask.Length >= 2 ? ifIPAndMask[1] : "";
 										ri.Status = string.Format("{0},{1}", words[1], words[2]);
 										if (_interfaces.ContainsKey(ri.Name)) ri.Configuration = _interfaces[ri.Name].Configuration;
@@ -439,7 +448,7 @@ namespace L3Discovery.Routers.JunOS
 			}
 		}
 
-		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v0.97";
+		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v0.98";
 
 		public string SystemSerial
 		{
