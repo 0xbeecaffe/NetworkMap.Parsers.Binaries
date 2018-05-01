@@ -143,9 +143,9 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 
 		public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.OSPF };
 
-		public string SupportTag => "Juniper, JunOS OSPF Protocol Parser module v0.92";
+		public string SupportTag => "Juniper, JunOS OSPF Protocol Parser module v0.97";
 
-		#region IOSPFProtocolPArser implementation
+		#region IOSPFProtocolParser implementation
 
 		public void ProcessOSPFDatabase()
 		{

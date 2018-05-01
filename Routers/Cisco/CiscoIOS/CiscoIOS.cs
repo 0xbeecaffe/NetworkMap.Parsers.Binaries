@@ -392,7 +392,6 @@ namespace L3Discovery.Routers.CiscoIOS
 						{
 							Match m = Regex.Match(thisLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", RegexOptions.Compiled);
 							if (m.Success) PeerAddress = m.Value;
-							break;
 						}
 					}
 
@@ -811,7 +810,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v0.94";
+		public string SupportTag => "Cisco, IOS Router support module v0.97";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
@@ -855,7 +854,6 @@ namespace L3Discovery.Routers.CiscoIOS
 		#region Private members
 		private void CalculateRouterIDAndASNumber()
 		{
-
 			#region Determine default router ID
 			string l3interfaces = _session.ExecCommand("sh ip interface brief");
 			if (!string.IsNullOrEmpty(l3interfaces))
