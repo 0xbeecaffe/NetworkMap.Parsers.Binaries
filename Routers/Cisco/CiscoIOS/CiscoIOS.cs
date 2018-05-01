@@ -627,6 +627,7 @@ namespace L3Discovery.Routers.CiscoIOS
 								{
 									parserSuccess = true;
 									prefix = addressFound.Value;
+									if (prefix == "0.0.0.0") maskLength = 0;
 									// get next-hop
 									Match nexthopFound = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
 									if (nexthopFound.Success)
@@ -810,7 +811,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v0.97";
+		public string SupportTag => "Cisco, IOS Router support module v0.99";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
