@@ -37,10 +37,10 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 		private Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>> _ospfAreaLSAs = new Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>>();
 		#endregion
 
-		public bool Initilize(IRouter router, RoutingProtocol protocol)
+		public bool Initilize(IRouter router, Enum protocol)
 		{
 			_router = router;
-			if (protocol == RoutingProtocol.OSPF)
+			if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.OSPF)
 			{
 				return router?.Vendor == "Cisco";
 			}
@@ -108,7 +108,7 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 								neighborState = words[2];
 								description = "";
 								_OperationStatusLabel = string.Format("Registering OSPF neighbor {0}...", neighborRouterID);
-								registry.RegisterNeighbor(_router, RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
+								registry.RegisterL3Neighbor(_router, RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
 							}
 						}
 					}
@@ -138,15 +138,15 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 			_ospfAreaLSAs = new Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>>();
 		}
 
-		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
+		public ISpecializedProtocolParser ProtocolDependentParser(Enum protocol)
 		{
-			if (protocol == RoutingProtocol.OSPF) return this;
+			if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.OSPF) return this;
 			else return null;
 		}
 
-		public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.OSPF };
+		public Enum[] SupportedProtocols => new Enum[] { RoutingProtocol.OSPF };
 
-		public string SupportTag => "Cisco, IOS OSPF Protocol Parser module v0.92";
+		public string SupportTag => "Cisco, IOS OSPF Protocol Parser module v1.0";
 
 		#region IOSPFProtocolPArser implementation
 

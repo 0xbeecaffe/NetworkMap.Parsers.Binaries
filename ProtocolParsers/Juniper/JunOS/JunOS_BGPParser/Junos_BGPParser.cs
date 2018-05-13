@@ -30,10 +30,10 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 
     public string OperationStatusLabel => _OperationStatusLabel;
 
-    public bool Initilize(IRouter router, RoutingProtocol protocol)
+    public bool Initilize(IRouter router, Enum protocol)
     {
       _router = router;
-      if (protocol == RoutingProtocol.BGP)
+      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.BGP)
       {
         return router?.Vendor == "JunOS";
       }
@@ -172,7 +172,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
               _OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
               RouterInterface ri = _router.GetInterfaceByName(localInterfaceName);
               _OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
-              registry.RegisterNeighbor(_router, RoutingProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+              registry.RegisterL3Neighbor(_router, RoutingProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
               // now all is done for this peer, skip lines until next peer is found
               skipRestOfLines = true;
             }
@@ -207,15 +207,15 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 			_OperationStatusLabel = "Init";
 		}
 
-		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
+		public ISpecializedProtocolParser ProtocolDependentParser(Enum protocol)
     {
-      if (protocol == RoutingProtocol.BGP) return this;
+      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.BGP) return this;
       else return null;
     }
 
-    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v0.92";
+    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v1.0";
 
-    public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.BGP };
+    public Enum[] SupportedProtocols => new Enum[] { RoutingProtocol.BGP };
 
     internal enum BGPType { eBGP, iBGP, undetermined };
   }

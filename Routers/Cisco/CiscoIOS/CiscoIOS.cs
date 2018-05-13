@@ -66,7 +66,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return the list of static and dynamic routing protocols active on this router. 
 		/// </summary>
-		public RoutingProtocol[] ActiveRoutingProtocols
+		public Enum[] ActiveProtocols
 		{
 			get
 			{
@@ -96,7 +96,7 @@ namespace L3Discovery.Routers.CiscoIOS
 
 				}
 				DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningRoutingProtocols.Select(p => p.ToString()))), DebugLevel.Full);
-				return _runningRoutingProtocols.ToArray();
+				return _runningRoutingProtocols.Cast<Enum>().ToArray();
 			}
 		}
 
@@ -611,22 +611,36 @@ namespace L3Discovery.Routers.CiscoIOS
 							foreach (string rLine in routeLines.Select(l => l.Trim()))
 							{
 								string[] words = rLine.SplitBySpace();
-								// if the first word is an ip address and the line contains the expression "is subnetted" then we will learn the subnet mask for upcoming route entries
+								// lets check if we find an ipAddress/MaskLength combination in the line
 								Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
-								if (rLine.Contains("is subnetted") && prefixFound.Success)
+								// or just an ipAddress
+								Match addressFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+								// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
+								if (rLine.Contains("subnetted") && prefixFound.Success)
 								{
-									string firstWord = words[0];
-									string[] addressAndMask = firstWord.Split('/');
+									string[] addressAndMask = prefixFound.Value.Split('/');
 									if (addressAndMask.Length == 2) int.TryParse(addressAndMask[1], out maskLength);
 									// proceed to next rLine
 									continue;
 								}
-								// get the prefix
-								Match addressFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
-								if (addressFound.Success)
+								if (prefixFound.Success)
+								{
+									string[] addressAndMask = prefixFound.Value.Split('/');
+									if (addressAndMask.Length == 2)
+									{
+										int.TryParse(addressAndMask[1], out maskLength);
+										prefix = addressAndMask[0];
+									}
+								}
+								else if (addressFound.Success)
+								{
+									prefix = addressFound.Value;
+								}
+								else continue;
+								
+								if (prefix != "")
 								{
 									parserSuccess = true;
-									prefix = addressFound.Value;
 									if (prefix == "0.0.0.0") maskLength = 0;
 									// get next-hop
 									Match nexthopFound = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
@@ -811,7 +825,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v0.99";
+		public string SupportTag => "Cisco, IOS Router support module v1.0";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
@@ -906,7 +920,7 @@ namespace L3Discovery.Routers.CiscoIOS
 
 			#region  get routerID for all routing protocols this router is running
 			// ordering is important to ensure that BGP and OSPF precedes STATIC
-			foreach (RoutingProtocol thisPprotocol in ActiveRoutingProtocols.OrderBy(p => p))
+			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p=> p is RoutingProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{

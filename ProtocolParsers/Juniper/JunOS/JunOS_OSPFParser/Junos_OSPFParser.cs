@@ -35,10 +35,10 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 		private Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>> _ospfAreaLSAs = new Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>>();
 		#endregion
 
-		public bool Initilize(IRouter router, RoutingProtocol protocol)
+		public bool Initilize(IRouter router, Enum protocol)
 		{
 			_router = router;
-			if (protocol == RoutingProtocol.OSPF)
+			if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.OSPF)
 			{
 				return router?.Vendor == "JunOS";
 			}
@@ -105,7 +105,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 								remoteNeighboringIP = nIP.ToString();
 								description = "";
 								_OperationStatusLabel = string.Format("Registering OSPF neighbor {0}...", neighborRouterID);
-								registry.RegisterNeighbor(_router, RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
+								registry.RegisterL3Neighbor(_router, RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
 							}
 						}
 					}
@@ -135,15 +135,15 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 			_ospfAreaLSAs = new Dictionary<OSPFArea, Dictionary<string, List<OSPFLSA>>>();
 		}
 
-		public ISpecializedProtocolParser ProtocolDependentParser(RoutingProtocol protocol)
+		public ISpecializedProtocolParser ProtocolDependentParser(Enum protocol)
 		{
-			if (protocol == RoutingProtocol.OSPF) return this;
+			if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.OSPF) return this;
 			else return null;
 		}
 
-		public RoutingProtocol[] SupportedProtocols => new RoutingProtocol[] { RoutingProtocol.OSPF };
+		public Enum[] SupportedProtocols => new Enum[] { RoutingProtocol.OSPF };
 
-		public string SupportTag => "Juniper, JunOS OSPF Protocol Parser module v0.97";
+		public string SupportTag => "Juniper, JunOS OSPF Protocol Parser module v1.0";
 
 		#region IOSPFProtocolParser implementation
 

@@ -52,7 +52,7 @@ namespace L3Discovery.Routers.JunOS
 		#endregion
 
 		#region IRouter implementation
-		public RoutingProtocol[] ActiveRoutingProtocols
+		public Enum[] ActiveProtocols
 		{
 			get
 			{
@@ -83,7 +83,7 @@ namespace L3Discovery.Routers.JunOS
 						_runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC);
 					}
 				}
-				return _runningRoutingProtocols.ToArray();
+				return _runningRoutingProtocols.Cast<Enum>().ToArray();
 			}
 		}
 
@@ -448,7 +448,7 @@ namespace L3Discovery.Routers.JunOS
 			}
 		}
 
-		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v0.98";
+		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v1.0";
 
 		public string SystemSerial
 		{
@@ -502,7 +502,7 @@ namespace L3Discovery.Routers.JunOS
 			#endregion
 
 			#region  get routerID for all routing protocols this router is running
-			foreach (RoutingProtocol thisPprotocol in ActiveRoutingProtocols.OrderBy(p => p))
+			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p=> p is RoutingProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
