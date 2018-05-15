@@ -181,9 +181,18 @@ namespace L3Discovery.Routers.JunOS
 		{
 			_session = session;
 			ScriptSettings = SettingsManager.GetCurrentScriptSettings();
-			_versionInfo = session.ExecCommand("show version");
-			_hostName = session.GetHostName();
-			return _versionInfo.ToLowerInvariant().Contains("junos");
+			if (ScriptSettings != null)
+			{
+				_versionInfo = session.ExecCommand("show version");
+				_hostName = session.GetHostName();
+				return _versionInfo.ToLowerInvariant().Contains("junos");
+			}
+			else
+			{
+				DebugEx.WriteLine(string.Format("Unable to initialize {0} because ScriptSettings could not be retrieved", GetType().FullName));
+				return false;
+			}
+				
 		}
 
 		public string Inventory
@@ -468,7 +477,7 @@ namespace L3Discovery.Routers.JunOS
 				if (!string.IsNullOrEmpty(modelLine))
 				{
 					string model = modelLine.Split(':')[1].Trim();
-					if (model.StartsWith("ex")) return "Switch";
+					if (model.StartsWith("ex") || model.StartsWith("qfx")) return "Switch";
 					else if (model.StartsWith("mx")) return "Router";
 					else if (model.StartsWith("srx")) return "Firewall";
 					else return "Unknown";

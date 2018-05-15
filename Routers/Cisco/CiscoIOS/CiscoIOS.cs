@@ -265,9 +265,17 @@ namespace L3Discovery.Routers.CiscoIOS
 		{
 			_session = session;
 			ScriptSettings = SettingsManager.GetCurrentScriptSettings();
-			_versionInfo = session.ExecCommand("show version");
-			_hostName = session.GetHostName();
-			return _versionInfo.ToLowerInvariant().Contains("cisco");
+			if (ScriptSettings != null)
+			{
+				_versionInfo = session.ExecCommand("show version");
+				_hostName = session.GetHostName();
+				return _versionInfo.ToLowerInvariant().Contains("cisco");
+			}
+			else
+			{
+				DebugEx.WriteLine(string.Format("Unable to initialize {0} because ScriptSettings could not be retrieved", GetType().FullName));
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -637,7 +645,7 @@ namespace L3Discovery.Routers.CiscoIOS
 									prefix = addressFound.Value;
 								}
 								else continue;
-								
+
 								if (prefix != "")
 								{
 									parserSuccess = true;
@@ -920,7 +928,7 @@ namespace L3Discovery.Routers.CiscoIOS
 
 			#region  get routerID for all routing protocols this router is running
 			// ordering is important to ensure that BGP and OSPF precedes STATIC
-			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p=> p is RoutingProtocol).OrderBy(p => p))
+			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p => p is RoutingProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
