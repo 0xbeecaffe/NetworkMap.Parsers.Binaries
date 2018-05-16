@@ -192,7 +192,7 @@ namespace L3Discovery.Routers.JunOS
 				DebugEx.WriteLine(string.Format("Unable to initialize {0} because ScriptSettings could not be retrieved", GetType().FullName));
 				return false;
 			}
-				
+
 		}
 
 		public string Inventory
@@ -347,26 +347,37 @@ namespace L3Discovery.Routers.JunOS
 								DebugEx.WriteLine("JunOS router is unable to parse routing protocol name : " + thisProtocolName);
 								continue;
 							}
-							string nextHopAddress = Regex.Match(thisProtocolBlock, @"(?<=to )[\d\.]{0,99}", RegexOptions.Compiled)?.Value;
+							MatchCollection nextHopAddresses = Regex.Matches(thisProtocolBlock, @"(?<=to )[\d\.]{0,99}", RegexOptions.Compiled);
 							string routeTag = Regex.Match(thisProtocolBlock, @"(?<=tag )[\d\.]{0,99}", RegexOptions.Compiled)?.Value;
-							string outInterface = Regex.Match(thisProtocolBlock, @"(?<=via ).*", RegexOptions.Compiled)?.Value;
+							MatchCollection outInterfaces = Regex.Matches(thisProtocolBlock, @"(?<=via ).*", RegexOptions.Compiled);
 							try
 							{
-								RouteTableEntry re = new RouteTableEntry();
-								// get the router ID corresponding to protocol, or get the router ID for the most preferred routing protocol
-								if (_routerID.ContainsKey(thisRoutingProtocol)) re.RouterID = _routerID[thisRoutingProtocol];
-								else re.RouterID = _routerID[_routerID.Keys.OrderBy(k => (int)k).First()];
-								string[] prefixAndMask = thisNetwork.Split('/');
-								re.Prefix = prefixAndMask[0];
-								re.MaskLength = int.Parse(prefixAndMask[1]);
-								re.Protocol = thisProtocolName.ToUpperInvariant();
-								re.AD = routePreference;
-								re.Metric = "";
-								re.NextHop = nextHopAddress;
-								re.Best = isBestRoute;
-								re.Tag = routeTag;
-								re.OutInterface = outInterface.TrimEnd('\r');
-								parsedRoutes.Add(re);
+								for (int matchIndex = 0; matchIndex < outInterfaces.Count; matchIndex++)
+								{
+									RouteTableEntry re = new RouteTableEntry();
+									// Protocol
+									re.Protocol = thisProtocolName.ToUpperInvariant();
+									// RouterID : get the router ID corresponding to protocol, or get the router ID for the most preferred routing protocol
+									if (_routerID.ContainsKey(thisRoutingProtocol)) re.RouterID = _routerID[thisRoutingProtocol];
+									else re.RouterID = _routerID[_routerID.Keys.OrderBy(k => (int)k).First()];
+									// Prefix and Mask length
+									string[] prefixAndMask = thisNetwork.Split('/');
+									re.Prefix = prefixAndMask[0];
+									re.MaskLength = int.Parse(prefixAndMask[1]);
+									// OutInterface
+									Match thisOutInterface = outInterfaces[matchIndex];
+									re.OutInterface = thisOutInterface.Value.TrimEnd('\r');
+									// NexthopAddress
+									if (nextHopAddresses.Count > matchIndex) re.NextHop = nextHopAddresses[matchIndex].Value;
+									else re.NextHop = "";
+									// prefix parameters
+									re.AD = routePreference;
+									re.Metric = "";
+									if (outInterfaces.Count == 1) re.Best = isBestRoute;
+									else re.Best = thisProtocolBlock.Contains(string.Format("> to {0}", re.NextHop));
+									re.Tag = routeTag;
+									parsedRoutes.Add(re);
+								}
 							}
 							catch (Exception Ex)
 							{
@@ -511,7 +522,7 @@ namespace L3Discovery.Routers.JunOS
 			#endregion
 
 			#region  get routerID for all routing protocols this router is running
-			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p=> p is RoutingProtocol).OrderBy(p => p))
+			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p => p is RoutingProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
