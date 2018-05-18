@@ -373,8 +373,7 @@ namespace L3Discovery.Routers.JunOS
 									// prefix parameters
 									re.AD = routePreference;
 									re.Metric = "";
-									if (outInterfaces.Count == 1) re.Best = isBestRoute;
-									else re.Best = thisProtocolBlock.Contains(string.Format("> to {0}", re.NextHop));
+									re.Best = isBestRoute;
 									re.Tag = routeTag;
 									parsedRoutes.Add(re);
 								}
