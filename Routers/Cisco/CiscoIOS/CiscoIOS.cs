@@ -1,4 +1,5 @@
-﻿/*
+﻿#define DEBUG
+/*
  * #########################################################################*/
 /* #                                                                       #*/
 /* #  This file is part of PGTNetworkMap project, which is written         #*/
@@ -10,6 +11,7 @@
 /* #                                                                       #*/
 /* #########################################################################*/
 
+using PGT;
 using PGT.Common;
 using PGT.ExtensionInterfaces;
 using System;
@@ -17,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace L3Discovery.Routers.CiscoIOS
@@ -33,6 +36,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
+		private const string _internalClassVersion = "v1.01";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 		// There is no global router ID settings in IOS. Therefore, we will prefer BGP then OSPF RouterID, but 
 		// we still need to determine a default routerID in case no dynamic routing protocol is running only STATIC.
@@ -55,11 +59,22 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		private Dictionary<string, RouterInterface> _interfaces = new Dictionary<string, RouterInterface>();
 
-
 		/// <summary>
 		/// The list of routing protocols active on this router
 		/// </summary>
 		private List<RoutingProtocol> _runningRoutingProtocols;
+		#endregion
+
+		#region Constructors
+		public CiscoIOSRouter()
+		{
+			if (DebugEx.DebugLevelThreshold >= DebugLevel.Full)
+			{
+				Assembly curAssembly = Assembly.GetAssembly(typeof(CiscoIOSRouter));
+				DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated from {1}. Internal class version : {2}", this.GetType().FullName, curAssembly, _internalClassVersion), DebugLevel.Full);
+			}
+			else DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated", this.GetType().FullName), DebugLevel.Informational);
+		}
 		#endregion
 
 		#region IRouter implementation
@@ -263,13 +278,16 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <param name="session"></param>
 		public bool Initialize(IScriptableSession session)
 		{
+			DebugEx.WriteLine(string.Format("{0}.Initialize() : querying device for session {1} ", GetType().FullName, session.ConnectionParameters.DeviceIP), DebugLevel.Full);
 			_session = session;
 			ScriptSettings = SettingsManager.GetCurrentScriptSettings();
 			if (ScriptSettings != null)
 			{
 				_versionInfo = session.ExecCommand("show version");
 				_hostName = session.GetHostName();
-				return _versionInfo.ToLowerInvariant().Contains("cisco");
+				bool isCisco = _versionInfo.ToLowerInvariant().Contains("cisco");
+				DebugEx.WriteLine(string.Format("{0}.Initialize() : returning {1}, based on {2} ", GetType().FullName, isCisco, _versionInfo), DebugLevel.Full);
+				return isCisco;
 			}
 			else
 			{
@@ -735,9 +753,14 @@ namespace L3Discovery.Routers.CiscoIOS
 						}
 					}
 				}
+				catch (CommandTimeoutException Ex)
+				{
+					DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() : Command timed out while gathering route table : " + Ex.Message);
+					throw;
+				}
 				catch (Exception Ex)
 				{
-					DebugEx.WriteLine("CiscoIOSRouter thrown an unexpected error while gathering route table : " + Ex.Message);
+					DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() :  thrown an unexpected error while gathering route table : " + Ex.Message);
 				}
 				return parsedRoutes.ToArray();
 			}

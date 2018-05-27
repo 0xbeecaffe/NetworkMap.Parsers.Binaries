@@ -48,6 +48,11 @@
       <HintPath>..\..\..\..\PrettyGoodTerminal\bin\PGTNetworkMap.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="STerminal, Version=8.0.0.0, Culture=neutral, PublicKeyToken=dea660495dba9127, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\PrettyGoodTerminal\bin\STerminal.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

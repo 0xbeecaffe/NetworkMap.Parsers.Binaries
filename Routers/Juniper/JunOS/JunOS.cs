@@ -1,4 +1,5 @@
-﻿/*
+﻿#define DEBUG
+/*
  * #########################################################################*/
 /* #                                                                       #*/
 /* #  This file is part of PGTNetworkMap project, which is written         #*/
@@ -10,6 +11,7 @@
 /* #                                                                       #*/
 /* #########################################################################*/
 
+using PGT;
 using PGT.Common;
 using PGT.ExtensionInterfaces;
 using System;
@@ -17,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace L3Discovery.Routers.JunOS
@@ -33,6 +36,7 @@ namespace L3Discovery.Routers.JunOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
+		private const string _internalClassVersion = "v1.01";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 
 		/// <summary>
@@ -49,6 +53,18 @@ namespace L3Discovery.Routers.JunOS
 		/// The list of routing protocols active on this router
 		/// </summary>
 		private List<RoutingProtocol> _runningRoutingProtocols;
+		#endregion
+
+		#region Constructors
+		public JuniperEX()
+		{
+			if (DebugEx.DebugLevelThreshold >= DebugLevel.Full)
+			{
+				Assembly curAssembly = Assembly.GetAssembly(typeof(JuniperEX));
+				DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated from {1}. Internal class version : {2}", this.GetType().FullName, curAssembly, _internalClassVersion), DebugLevel.Full);
+			}
+			else DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated", this.GetType().FullName), DebugLevel.Informational);
+		}
 		#endregion
 
 		#region IRouter implementation
@@ -179,13 +195,16 @@ namespace L3Discovery.Routers.JunOS
 
 		public bool Initialize(IScriptableSession session)
 		{
+			DebugEx.WriteLine(string.Format("{0}.Initialize() : querying device for session {1} ", GetType().FullName, session.ConnectionParameters.DeviceIP), DebugLevel.Full);
 			_session = session;
 			ScriptSettings = SettingsManager.GetCurrentScriptSettings();
 			if (ScriptSettings != null)
 			{
 				_versionInfo = session.ExecCommand("show version");
 				_hostName = session.GetHostName();
-				return _versionInfo.ToLowerInvariant().Contains("junos");
+				bool isJunOS = _versionInfo.ToLowerInvariant().Contains("junos");
+				DebugEx.WriteLine(string.Format("{0}.Initialize() : returning {1}, based on {2} ", GetType().FullName, isJunOS, _versionInfo), DebugLevel.Full);
+				return isJunOS;
 			}
 			else
 			{
@@ -289,7 +308,7 @@ namespace L3Discovery.Routers.JunOS
 			}
 			catch (Exception Ex)
 			{
-				string msg = string.Format("CiscoIOSRouter says : error processing NHRP interfaces : {0}", Ex.Message);
+				string msg = string.Format("JuniperEX.RegisterNHRP() : error processing NHRP interfaces : {0}", Ex.Message);
 				DebugEx.WriteLine(msg);
 			}
 		}
@@ -320,71 +339,83 @@ namespace L3Discovery.Routers.JunOS
 			get
 			{
 				List<RouteTableEntry> parsedRoutes = new List<RouteTableEntry>();
-				string routes = _session.ExecCommand("show route");
-				MatchCollection knownNetworks = Regex.Matches(routes, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
-				if (knownNetworks.Count > 0)
+				try
 				{
-					// insert actual routes
-					for (int i = 0; i < knownNetworks.Count; i++)
+					string routes = _session.ExecCommand("show route");
+					MatchCollection knownNetworks = Regex.Matches(routes, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+					if (knownNetworks.Count > 0)
 					{
-						string thisNetwork = knownNetworks[i].Value;
-						int routeBlockStart = knownNetworks[i].Index;
-						int routeBlockEnd = i == knownNetworks.Count - 1 ? routes.Length : knownNetworks[i + 1].Index;
-						string thisRouteBlock = routes.Substring(routeBlockStart, routeBlockEnd - routeBlockStart);
-						MatchCollection protocolBlocksHeaders = Regex.Matches(thisRouteBlock, @"[*[](.*?)\]", RegexOptions.Compiled);
-						for (int j = 0; j < protocolBlocksHeaders.Count; j++)
+						// insert actual routes
+						for (int i = 0; i < knownNetworks.Count; i++)
 						{
-							string thisProtocolBlockHeader = protocolBlocksHeaders[j].Value;
-							bool isBestRoute = thisProtocolBlockHeader.IndexOf("*[") >= 0;
-							int protocolBlockStart = protocolBlocksHeaders[j].Index;
-							int protocolBlockEnd = j == protocolBlocksHeaders.Count - 1 ? thisRouteBlock.Length : protocolBlocksHeaders[j + 1].Index;
-							string thisProtocolBlock = thisRouteBlock.Substring(protocolBlockStart, protocolBlockEnd - protocolBlockStart);
-							string thisProtocolName = Regex.Match(thisProtocolBlockHeader, @"[a-zA-Z,-]+", RegexOptions.Compiled)?.Value;
-							string routePreference = Regex.Match(thisProtocolBlockHeader, @"[0-9]+", RegexOptions.Compiled)?.Value;
-							thisProtocolName = thisProtocolName.Replace("-", ""); // access-internal -> accessinternal
-							if (!Enum.TryParse<RoutingProtocol>(thisProtocolName.ToUpperInvariant(), true, out RoutingProtocol thisRoutingProtocol))
+							string thisNetwork = knownNetworks[i].Value;
+							int routeBlockStart = knownNetworks[i].Index;
+							int routeBlockEnd = i == knownNetworks.Count - 1 ? routes.Length : knownNetworks[i + 1].Index;
+							string thisRouteBlock = routes.Substring(routeBlockStart, routeBlockEnd - routeBlockStart);
+							MatchCollection protocolBlocksHeaders = Regex.Matches(thisRouteBlock, @"[*[](.*?)\]", RegexOptions.Compiled);
+							for (int j = 0; j < protocolBlocksHeaders.Count; j++)
 							{
-								DebugEx.WriteLine("JunOS router is unable to parse routing protocol name : " + thisProtocolName);
-								continue;
-							}
-							MatchCollection nextHopAddresses = Regex.Matches(thisProtocolBlock, @"(?<=to )[\d\.]{0,99}", RegexOptions.Compiled);
-							string routeTag = Regex.Match(thisProtocolBlock, @"(?<=tag )[\d\.]{0,99}", RegexOptions.Compiled)?.Value;
-							MatchCollection outInterfaces = Regex.Matches(thisProtocolBlock, @"(?<=via ).*", RegexOptions.Compiled);
-							try
-							{
-								for (int matchIndex = 0; matchIndex < outInterfaces.Count; matchIndex++)
+								string thisProtocolBlockHeader = protocolBlocksHeaders[j].Value;
+								bool isBestRoute = thisProtocolBlockHeader.IndexOf("*[") >= 0;
+								int protocolBlockStart = protocolBlocksHeaders[j].Index;
+								int protocolBlockEnd = j == protocolBlocksHeaders.Count - 1 ? thisRouteBlock.Length : protocolBlocksHeaders[j + 1].Index;
+								string thisProtocolBlock = thisRouteBlock.Substring(protocolBlockStart, protocolBlockEnd - protocolBlockStart);
+								string thisProtocolName = Regex.Match(thisProtocolBlockHeader, @"[a-zA-Z,-]+", RegexOptions.Compiled)?.Value;
+								string routePreference = Regex.Match(thisProtocolBlockHeader, @"[0-9]+", RegexOptions.Compiled)?.Value;
+								thisProtocolName = thisProtocolName.Replace("-", ""); // access-internal -> accessinternal
+								if (!Enum.TryParse<RoutingProtocol>(thisProtocolName.ToUpperInvariant(), true, out RoutingProtocol thisRoutingProtocol))
 								{
-									RouteTableEntry re = new RouteTableEntry();
-									// Protocol
-									re.Protocol = thisProtocolName.ToUpperInvariant();
-									// RouterID : get the router ID corresponding to protocol, or get the router ID for the most preferred routing protocol
-									if (_routerID.ContainsKey(thisRoutingProtocol)) re.RouterID = _routerID[thisRoutingProtocol];
-									else re.RouterID = _routerID[_routerID.Keys.OrderBy(k => (int)k).First()];
-									// Prefix and Mask length
-									string[] prefixAndMask = thisNetwork.Split('/');
-									re.Prefix = prefixAndMask[0];
-									re.MaskLength = int.Parse(prefixAndMask[1]);
-									// OutInterface
-									Match thisOutInterface = outInterfaces[matchIndex];
-									re.OutInterface = thisOutInterface.Value.TrimEnd('\r');
-									// NexthopAddress
-									if (nextHopAddresses.Count > matchIndex) re.NextHop = nextHopAddresses[matchIndex].Value;
-									else re.NextHop = "";
-									// prefix parameters
-									re.AD = routePreference;
-									re.Metric = "";
-									re.Best = isBestRoute;
-									re.Tag = routeTag;
-									parsedRoutes.Add(re);
+									DebugEx.WriteLine("JunOS router is unable to parse routing protocol name : " + thisProtocolName);
+									continue;
 								}
-							}
-							catch (Exception Ex)
-							{
-								string msg = string.Format("JunOS IRouter : error processing route table : {0}", Ex.Message);
-								DebugEx.WriteLine(msg);
+								MatchCollection nextHopAddresses = Regex.Matches(thisProtocolBlock, @"(?<=to )[\d\.]{0,99}", RegexOptions.Compiled);
+								string routeTag = Regex.Match(thisProtocolBlock, @"(?<=tag )[\d\.]{0,99}", RegexOptions.Compiled)?.Value;
+								MatchCollection outInterfaces = Regex.Matches(thisProtocolBlock, @"(?<=via ).*", RegexOptions.Compiled);
+								try
+								{
+									for (int matchIndex = 0; matchIndex < outInterfaces.Count; matchIndex++)
+									{
+										RouteTableEntry re = new RouteTableEntry();
+										// Protocol
+										re.Protocol = thisProtocolName.ToUpperInvariant();
+										// RouterID : get the router ID corresponding to protocol, or get the router ID for the most preferred routing protocol
+										if (_routerID.ContainsKey(thisRoutingProtocol)) re.RouterID = _routerID[thisRoutingProtocol];
+										else re.RouterID = _routerID[_routerID.Keys.OrderBy(k => (int)k).First()];
+										// Prefix and Mask length
+										string[] prefixAndMask = thisNetwork.Split('/');
+										re.Prefix = prefixAndMask[0];
+										re.MaskLength = int.Parse(prefixAndMask[1]);
+										// OutInterface
+										Match thisOutInterface = outInterfaces[matchIndex];
+										re.OutInterface = thisOutInterface.Value.TrimEnd('\r');
+										// NexthopAddress
+										if (nextHopAddresses.Count > matchIndex) re.NextHop = nextHopAddresses[matchIndex].Value;
+										else re.NextHop = "";
+										// prefix parameters
+										re.AD = routePreference;
+										re.Metric = "";
+										re.Best = isBestRoute;
+										re.Tag = routeTag;
+										parsedRoutes.Add(re);
+									}
+								}
+								catch (Exception Ex)
+								{
+									string msg = string.Format("JunOS IRouter : error processing route table : {0}", Ex.Message);
+									DebugEx.WriteLine(msg);
+								}
 							}
 						}
 					}
+				}
+				catch (CommandTimeoutException Ex)
+				{
+					DebugEx.WriteLine("JunioerEX.RoutingTable() : Command timed out while gathering route table : " + Ex.Message);
+					throw;
+				}
+				catch (Exception Ex)
+				{
+					DebugEx.WriteLine("JuniperEX.RoutingTable() :  thrown an unexpected error while gathering route table : " + Ex.Message);
 				}
 				return parsedRoutes.ToArray();
 			}
