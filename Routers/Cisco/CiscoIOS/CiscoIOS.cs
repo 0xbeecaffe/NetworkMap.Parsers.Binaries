@@ -476,11 +476,48 @@ namespace L3Discovery.Routers.CiscoIOS
 				List<RouteTableEntry> parsedRoutes = new List<RouteTableEntry>();
 				try
 				{
-					string routes = _session.ExecCommand("show ip route");
-					string[] routeLines = routes.SplitByLine();
-					if (Version.Contains("ASR"))
+					string routes = "";
+					#region Get route table
+					string routeSummary = _session.ExecCommand("show ip route summary");
+					// 
+					// Example output
+					//
+					// xyz#sh ip route summary 
+					// IP routing table name is default(0x0)
+					// IP routing table maximum-paths is 32
+					// Route Source    Networks Subnets     Replicates Overhead    Memory(bytes)
+					// connected       0           6           0           528         1728
+					// static          1           6           0           616         2016
+					// application     0           0           0           0           0
+					// bgp 199563      190399      501894      0           60921784    199380384
+
+					//	External: 690892 Internal: 1401 Local: 0
+					// internal        7047                                            53772096
+					// Total           197447      501906      0           60922928    253156224
+					// xyz#
+					string routeTotals = routeSummary.SplitByLine().FirstOrDefault(l => l.ToLowerInvariant().StartsWith("total"));
+					if (routeTotals != null)
 					{
-						// Parsing output for Cisco ASR series routers
+						string[] w = routeTotals.SplitBySpace();
+						if (w.Length >= 2 && int.TryParse(w[1], out int nCount))
+						{
+							if (nCount > 30000)
+							{
+								// this would be too much to retrieve via terminal connection, get only default route
+								routes = _session.ExecCommand("show ip route 0.0.0.0");
+							}
+							else routes = _session.ExecCommand("show ip route");
+						}
+					}
+					else
+					{
+						routes = _session.ExecCommand("show ip route");
+					}
+					#endregion
+					string[] routeLines = routes.SplitByLine();
+					if (Version.ToLowerInvariant().Contains("ios-xe software"))
+					{
+						// Parsing output for Cisco IOS-XE Software
 						if (routeLines.Length > 0)
 						{
 							// insert actual routes
@@ -488,6 +525,8 @@ namespace L3Discovery.Routers.CiscoIOS
 							bool expectingNextHop = false;
 							string prefix = "";
 							int maskLength = -1;
+							string subnettedPrefix = "";
+							int subnettedMaskLength = -1;
 							string nextHop = "";
 							string adminDistance = "";
 							string routeMetric = "";
@@ -495,6 +534,22 @@ namespace L3Discovery.Routers.CiscoIOS
 							string outInterface = "";
 							foreach (string rLine in routeLines.Select(l => l.Trim()))
 							{
+								// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
+								if (rLine.Contains("subnetted"))
+								{
+									// lets check if we find an ipAddress/MaskLength combination in the line
+									Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+									if (prefixFound.Success)
+									{
+										string[] prefixAndMask = prefixFound.Value.Split('/');
+										if (prefixAndMask.Length == 2 && int.TryParse(prefixAndMask[1], out subnettedMaskLength))
+										{
+											subnettedPrefix = prefixAndMask[0];
+										}
+									}
+									// proceed to next rLine
+									continue;
+								}
 								if (rLine.StartsWith("B"))
 								{
 									thisProtocol = RoutingProtocol.BGP;
@@ -552,12 +607,27 @@ namespace L3Discovery.Routers.CiscoIOS
 									if (thisProtocol == RoutingProtocol.LOCAL || thisProtocol == RoutingProtocol.CONNECTED)
 									{
 										// we expect only one ip addresses in these lines which is the prefix
+										Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+										if (m.Success)
+										{
+											string s = m.Value;
+											string[] prefixAndMask = s.Split('/');
+											prefix = prefixAndMask[0];
+											maskLength = int.Parse(prefixAndMask[1]);
+											expectingNextHop = true;
+											// this line should also contain the out interface as the last word
+											string[] words = rLine.SplitByComma();
+											outInterface = words[words.Length - 1];
+											expectingNextHop = false;
+											parserSuccess = true;
+										}
 									}
 									else
 									{
 										if (!expectingNextHop)
 										{
 											// we expect two ip addresses in these lines, first is the prefix and second is next-hop
+											// check for the prefix first
 											Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
 											if (m.Success)
 											{
@@ -566,6 +636,28 @@ namespace L3Discovery.Routers.CiscoIOS
 												prefix = prefixAndMask[0];
 												maskLength = int.Parse(prefixAndMask[1]);
 												expectingNextHop = true;
+											}
+											else
+											{
+												// check if we find an ip address in line and if it was a subnet of last prefix
+
+												// unfortunately logic seems to be broken in cas of some IOS-XE, like below route table entry is totally crap :
+												//     159.63.0.0 / 27 is subnetted, 2 subnets
+												// S        159.63.248.32[1 / 0] via 212.162.30.89
+												// S        159.63.248.96[1 / 0] via 212.162.30.89
+
+											  m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+												
+												// Due to above issue , below check does not work and we need to trust the subnettedPrefix value anyhow
+												// if (m.Success && IPOperations.IsIPAddressInNetwork(m.Value, subnettedPrefix, subnettedMaskLength))
+
+												if (m.Success)
+												{
+													// the maskLength is still valid for this prefix
+													prefix = m.Value;
+													maskLength = subnettedMaskLength;
+													expectingNextHop = true;
+												}
 											}
 										}
 										if (expectingNextHop)
@@ -587,7 +679,12 @@ namespace L3Discovery.Routers.CiscoIOS
 												}
 												// this line should also contain the out interface
 												string[] words = rLine.SplitByComma();
-												outInterface = words[words.Length - 1];
+												if (words.Length > 1)
+												{
+													outInterface = words[words.Length - 1];
+													// discard outInterface if not a real interface name, like matches date pattern
+													if (Regex.IsMatch(outInterface, @"(\d{1,2}w\d{1,2}d)|(\d{1,2}d\d{1,2}h)", RegexOptions.Compiled)) outInterface = "";
+												}
 											}
 											else expectingNextHop = true; // only for debugging
 										}
@@ -599,7 +696,7 @@ namespace L3Discovery.Routers.CiscoIOS
 									try
 									{
 										RouteTableEntry re = new RouteTableEntry();
-										re.RouterID = _routerID[thisProtocol];
+										re.RouterID = RouterID(thisProtocol);
 										re.Prefix = prefix;
 										re.MaskLength = maskLength;
 										re.Protocol = thisProtocol.ToString();
@@ -613,7 +710,7 @@ namespace L3Discovery.Routers.CiscoIOS
 									}
 									catch (Exception Ex)
 									{
-										string msg = string.Format("CiscoIOS router says : error processing route table : {0}", Ex.Message);
+										string msg = string.Format("CiscoIOSRouter.RoutingTable() : error processing route table : {0}", Ex.Message);
 										DebugEx.WriteLine(msg);
 									}
 								}
@@ -622,7 +719,7 @@ namespace L3Discovery.Routers.CiscoIOS
 					}
 					else
 					{
-						// Parsing output for Non-ASR  routers
+						// Parsing output for non IOS-XE Software
 						if (routeLines.Length > 0)
 						{
 							// insert actual routes
@@ -744,7 +841,7 @@ namespace L3Discovery.Routers.CiscoIOS
 										}
 										catch (Exception Ex)
 										{
-											string msg = string.Format("CiscoIOS router says : error processing route table : {0}", Ex.Message);
+											string msg = string.Format("CiscoIOSRouter.RoutingTable() : error processing route table : {0}", Ex.Message);
 											DebugEx.WriteLine(msg);
 										}
 									}
