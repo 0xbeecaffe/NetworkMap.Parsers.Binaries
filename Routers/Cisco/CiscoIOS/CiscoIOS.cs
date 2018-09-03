@@ -36,7 +36,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
-		private const string _internalClassVersion = "v1.01";
+		private const string _internalClassVersion = "v2.00";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 		// There is no global router ID settings in IOS. Therefore, we will prefer BGP then OSPF RouterID, but 
 		// we still need to determine a default routerID in case no dynamic routing protocol is running only STATIC.
@@ -52,7 +52,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Router ID keyed by routing protocol
 		/// </summary>
-		private Dictionary<RoutingProtocol, string> _routerID = new Dictionary<RoutingProtocol, string>();
+		private Dictionary<NeighborProtocol, string> _routerID = new Dictionary<NeighborProtocol, string>();
 
 		/// <summary>
 		/// Used as an internal cache for interface configurations to speed up subsequent queries for the same interface config
@@ -62,7 +62,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// The list of routing protocols active on this router
 		/// </summary>
-		private List<RoutingProtocol> _runningRoutingProtocols;
+		private List<NeighborProtocol> _runningNeighborProtocols;
 		#endregion
 
 		#region Constructors
@@ -85,9 +85,9 @@ namespace L3Discovery.Routers.CiscoIOS
 		{
 			get
 			{
-				if (_runningRoutingProtocols == null)
+				if (_runningNeighborProtocols == null)
 				{
-					_runningRoutingProtocols = new List<L3Discovery.RoutingProtocol>();
+					_runningNeighborProtocols = new List<L3Discovery.NeighborProtocol>();
 
 
 					string response = _session.ExecCommand("show ip protocols");
@@ -96,22 +96,22 @@ namespace L3Discovery.Routers.CiscoIOS
 						var protocolLines = response.SplitByLine().Where(l => l.Trim().ToLowerInvariant().StartsWith("routing protocol is"));
 						foreach (string thisprotocolLine in protocolLines)
 						{
-							foreach (RoutingProtocol thisProtocol in Enum.GetValues(typeof(RoutingProtocol)))
+							foreach (NeighborProtocol thisProtocol in Enum.GetValues(typeof(NeighborProtocol)))
 							{
 								if (thisprotocolLine.Contains(thisProtocol.ToString().ToLowerInvariant()))
 								{
-									_runningRoutingProtocols.Add(thisProtocol);
+									_runningNeighborProtocols.Add(thisProtocol);
 									break;
 								}
 							}
 						}
 					}
 					response = _session.ExecCommand("show ip route static");
-					if (!string.IsNullOrEmpty(response)) _runningRoutingProtocols.Add(RoutingProtocol.STATIC);
+					if (!string.IsNullOrEmpty(response)) _runningNeighborProtocols.Add(NeighborProtocol.STATIC);
 
 				}
-				DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningRoutingProtocols.Select(p => p.ToString()))), DebugLevel.Full);
-				return _runningRoutingProtocols.Cast<Enum>().ToArray();
+				DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningNeighborProtocols.Select(p => p.ToString()))), DebugLevel.Full);
+				return _runningNeighborProtocols.Cast<Enum>().ToArray();
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace L3Discovery.Routers.CiscoIOS
 			_bgpASNumber = null;
 			_interfaces.Clear();
 			_routerID.Clear();
-			_runningRoutingProtocols.Clear();
+			_runningNeighborProtocols.Clear();
 		}
 
 		/// <summary>
@@ -458,7 +458,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public string RouterID(RoutingProtocol protocol)
+		public string RouterID(NeighborProtocol protocol)
 		{
 			if (_routerID.Count == 0) CalculateRouterIDAndASNumber();
 			return (_routerID.ContainsKey(protocol)) ? _routerID[protocol] : defaultlRouterID;
@@ -521,7 +521,7 @@ namespace L3Discovery.Routers.CiscoIOS
 						if (routeLines.Length > 0)
 						{
 							// insert actual routes
-							RoutingProtocol thisProtocol = RoutingProtocol.UNKNOWN;
+							NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
 							bool expectingNextHop = false;
 							string prefix = "";
 							int maskLength = -1;
@@ -552,43 +552,43 @@ namespace L3Discovery.Routers.CiscoIOS
 								}
 								if (rLine.StartsWith("B"))
 								{
-									thisProtocol = RoutingProtocol.BGP;
+									thisProtocol = NeighborProtocol.BGP;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
 								{
-									thisProtocol = RoutingProtocol.OSPF;
+									thisProtocol = NeighborProtocol.OSPF;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
 								{
-									thisProtocol = RoutingProtocol.EIGRP;
+									thisProtocol = NeighborProtocol.EIGRP;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("R"))
 								{
-									thisProtocol = RoutingProtocol.RIP;
+									thisProtocol = NeighborProtocol.RIP;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("L"))
 								{
-									thisProtocol = RoutingProtocol.LOCAL;
+									thisProtocol = NeighborProtocol.LOCAL;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("C"))
 								{
-									thisProtocol = RoutingProtocol.CONNECTED;
+									thisProtocol = NeighborProtocol.CONNECTED;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("S"))
 								{
-									thisProtocol = RoutingProtocol.STATIC;
+									thisProtocol = NeighborProtocol.STATIC;
 									expectingNextHop = false;
 								}
 								else if (rLine.StartsWith("[") && expectingNextHop) ; // this is an empty statement on purpose !
 								else
 								{
-									thisProtocol = RoutingProtocol.UNKNOWN;
+									thisProtocol = NeighborProtocol.UNKNOWN;
 									expectingNextHop = false;
 								}
 								// reset variables if current line is not a continuation
@@ -602,9 +602,9 @@ namespace L3Discovery.Routers.CiscoIOS
 									parserSuccess = false;
 									outInterface = "";
 								}
-								if (thisProtocol != RoutingProtocol.UNKNOWN)
+								if (thisProtocol != NeighborProtocol.UNKNOWN)
 								{
-									if (thisProtocol == RoutingProtocol.LOCAL || thisProtocol == RoutingProtocol.CONNECTED)
+									if (thisProtocol == NeighborProtocol.LOCAL || thisProtocol == NeighborProtocol.CONNECTED)
 									{
 										// we expect only one ip addresses in these lines which is the prefix
 										Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
@@ -723,7 +723,7 @@ namespace L3Discovery.Routers.CiscoIOS
 						if (routeLines.Length > 0)
 						{
 							// insert actual routes
-							RoutingProtocol thisProtocol = RoutingProtocol.UNKNOWN;
+							NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
 							string prefix = "";
 							int maskLength = -1;
 							string nextHop = "";
@@ -790,37 +790,37 @@ namespace L3Discovery.Routers.CiscoIOS
 								// here we already know a mask length and the actual routed prefix, so check the protocol
 								if (rLine.StartsWith("B"))
 								{
-									thisProtocol = RoutingProtocol.BGP;
+									thisProtocol = NeighborProtocol.BGP;
 								}
 								else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
 								{
-									thisProtocol = RoutingProtocol.OSPF;
+									thisProtocol = NeighborProtocol.OSPF;
 								}
 								else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
 								{
-									thisProtocol = RoutingProtocol.EIGRP;
+									thisProtocol = NeighborProtocol.EIGRP;
 								}
 								else if (rLine.StartsWith("R"))
 								{
-									thisProtocol = RoutingProtocol.RIP;
+									thisProtocol = NeighborProtocol.RIP;
 								}
 								else if (rLine.StartsWith("L"))
 								{
-									thisProtocol = RoutingProtocol.LOCAL;
+									thisProtocol = NeighborProtocol.LOCAL;
 								}
 								else if (rLine.StartsWith("C"))
 								{
-									thisProtocol = RoutingProtocol.CONNECTED;
+									thisProtocol = NeighborProtocol.CONNECTED;
 								}
 								else if (rLine.StartsWith("S"))
 								{
-									thisProtocol = RoutingProtocol.STATIC;
+									thisProtocol = NeighborProtocol.STATIC;
 								}
 								else
 								{
-									thisProtocol = RoutingProtocol.UNKNOWN;
+									thisProtocol = NeighborProtocol.UNKNOWN;
 								}
-								if (thisProtocol != RoutingProtocol.UNKNOWN)
+								if (thisProtocol != NeighborProtocol.UNKNOWN)
 								{
 									if (parserSuccess)
 									{
@@ -953,7 +953,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v1.0";
+		public string SupportTag => "Cisco, IOS Router support module v2.0";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
@@ -1048,11 +1048,11 @@ namespace L3Discovery.Routers.CiscoIOS
 
 			#region  get routerID for all routing protocols this router is running
 			// ordering is important to ensure that BGP and OSPF precedes STATIC
-			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p => p is RoutingProtocol).OrderBy(p => p))
+			foreach (NeighborProtocol thisPprotocol in ActiveProtocols.Where(p => p is NeighborProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
-					case RoutingProtocol.BGP:
+					case NeighborProtocol.BGP:
 						{
 							string bgpSummary = _session.ExecCommand("show ip bgp summary");
 							Match m = Regex.Match(bgpSummary, @"(?<=BGP router identifier )[\d.]{0,99}", RegexOptions.Compiled);
@@ -1066,7 +1066,7 @@ namespace L3Discovery.Routers.CiscoIOS
 							if (m.Success) _bgpASNumber = m.Value;
 							break;
 						}
-					case RoutingProtocol.OSPF:
+					case NeighborProtocol.OSPF:
 						{
 							string ospfGeneral = _session.ExecCommand("show ip ospf | i ID");
 							// expecting output like this:
@@ -1090,7 +1090,7 @@ namespace L3Discovery.Routers.CiscoIOS
 							}
 							break;
 						}
-					case RoutingProtocol.EIGRP:
+					case NeighborProtocol.EIGRP:
 						{
 							string eigrpTopologyInfo = _session.ExecCommand("show ip eigrp topology | i ID");
 							// expecting output like this:
@@ -1114,8 +1114,8 @@ namespace L3Discovery.Routers.CiscoIOS
 							}
 							break;
 						}
-					case RoutingProtocol.RIP:
-					case RoutingProtocol.STATIC:
+					case NeighborProtocol.RIP:
+					case NeighborProtocol.STATIC:
 						{
 							_routerID[thisPprotocol] = defaultlRouterID; // fall back to default RID
 							break;

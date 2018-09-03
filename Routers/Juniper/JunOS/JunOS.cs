@@ -36,13 +36,13 @@ namespace L3Discovery.Routers.JunOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
-		private const string _internalClassVersion = "v1.01";
+		private const string _internalClassVersion = "v2.00";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 
 		/// <summary>
 		/// Router ID keyed by routing protocol
 		/// </summary>
-		private Dictionary<RoutingProtocol, string> _routerID = new Dictionary<RoutingProtocol, string>();
+		private Dictionary<NeighborProtocol, string> _routerID = new Dictionary<NeighborProtocol, string>();
 
 		/// <summary>
 		/// Used as an internal cache for interface configurations to speed up subsequent queries for the same interface config
@@ -52,7 +52,7 @@ namespace L3Discovery.Routers.JunOS
 		/// <summary>
 		/// The list of routing protocols active on this router
 		/// </summary>
-		private List<RoutingProtocol> _runningRoutingProtocols;
+		private List<NeighborProtocol> _runningNeighborProtocols;
 		#endregion
 
 		#region Constructors
@@ -72,34 +72,34 @@ namespace L3Discovery.Routers.JunOS
 		{
 			get
 			{
-				if (_runningRoutingProtocols == null)
+				if (_runningNeighborProtocols == null)
 				{
-					_runningRoutingProtocols = new List<L3Discovery.RoutingProtocol>();
+					_runningNeighborProtocols = new List<L3Discovery.NeighborProtocol>();
 					string response = _session.ExecCommand("show ospf overview");
 					if (!response.Contains("not running") && !response.Contains("not valid"))
 					{
-						_runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF);
+						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.OSPF);
 					}
 
 					response = _session.ExecCommand("show rip neighbor");
 					if (!response.Contains("not running") && !response.Contains("not valid"))
 					{
-						_runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP);
+						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.RIP);
 					}
 
 					response = _session.ExecCommand("show bgp neighbor");
 					if (!response.Contains("not running") && !response.Contains("not valid"))
 					{
-						_runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP);
+						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.BGP);
 					}
 
 					response = _session.ExecCommand("show configuration routing-options static ");
 					if (response != "")
 					{
-						_runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC);
+						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.STATIC);
 					}
 				}
-				return _runningRoutingProtocols.Cast<Enum>().ToArray();
+				return _runningNeighborProtocols.Cast<Enum>().ToArray();
 			}
 		}
 
@@ -325,10 +325,10 @@ namespace L3Discovery.Routers.JunOS
 			_bgpASNumber = null;
 			_interfaces.Clear();
 			_routerID.Clear();
-			_runningRoutingProtocols.Clear();
+			_runningNeighborProtocols.Clear();
 		}
 
-		public string RouterID(RoutingProtocol protocol)
+		public string RouterID(NeighborProtocol protocol)
 		{
 			if (_routerID.Count == 0) CalculateRouterIDAndASNumber();
 			return _routerID.ContainsKey(protocol) ? _routerID[protocol] : "";
@@ -363,7 +363,7 @@ namespace L3Discovery.Routers.JunOS
 								string thisProtocolName = Regex.Match(thisProtocolBlockHeader, @"[a-zA-Z,-]+", RegexOptions.Compiled)?.Value;
 								string routePreference = Regex.Match(thisProtocolBlockHeader, @"[0-9]+", RegexOptions.Compiled)?.Value;
 								thisProtocolName = thisProtocolName.Replace("-", ""); // access-internal -> accessinternal
-								if (!Enum.TryParse<RoutingProtocol>(thisProtocolName.ToUpperInvariant(), true, out RoutingProtocol thisRoutingProtocol))
+								if (!Enum.TryParse<NeighborProtocol>(thisProtocolName.ToUpperInvariant(), true, out NeighborProtocol thisNeighborProtocol))
 								{
 									DebugEx.WriteLine("JunOS router is unable to parse routing protocol name : " + thisProtocolName);
 									continue;
@@ -379,7 +379,7 @@ namespace L3Discovery.Routers.JunOS
 										// Protocol
 										re.Protocol = thisProtocolName.ToUpperInvariant();
 										// RouterID : get the router ID corresponding to protocol, or get the router ID for the most preferred routing protocol
-										if (_routerID.ContainsKey(thisRoutingProtocol)) re.RouterID = _routerID[thisRoutingProtocol];
+										if (_routerID.ContainsKey(thisNeighborProtocol)) re.RouterID = _routerID[thisNeighborProtocol];
 										else re.RouterID = _routerID[_routerID.Keys.OrderBy(k => (int)k).First()];
 										// Prefix and Mask length
 										string[] prefixAndMask = thisNetwork.Split('/');
@@ -498,7 +498,7 @@ namespace L3Discovery.Routers.JunOS
 			}
 		}
 
-		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v1.0";
+		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v2.0";
 
 		public string SystemSerial
 		{
@@ -552,11 +552,11 @@ namespace L3Discovery.Routers.JunOS
 			#endregion
 
 			#region  get routerID for all routing protocols this router is running
-			foreach (RoutingProtocol thisPprotocol in ActiveProtocols.Where(p => p is RoutingProtocol).OrderBy(p => p))
+			foreach (NeighborProtocol thisPprotocol in ActiveProtocols.Where(p => p is NeighborProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
-					case RoutingProtocol.BGP:
+					case NeighborProtocol.BGP:
 						{
 							string bgpNeighbors = _session.ExecCommand("show bgp neighbor");
 							m = Regex.Match(bgpNeighbors, @"(?<=Local ID: )[\d.]{0,99}");
@@ -572,7 +572,7 @@ namespace L3Discovery.Routers.JunOS
 							}
 							break;
 						}
-					case RoutingProtocol.OSPF:
+					case NeighborProtocol.OSPF:
 						{
 							string ospfStatus = _session.ExecCommand("show ospf overview");
 							m = Regex.Match(ospfStatus, @"(?<=Router ID: )[\d.]{0,99}");
@@ -580,8 +580,8 @@ namespace L3Discovery.Routers.JunOS
 							else _routerID[thisPprotocol] = globalRouterID; // fall back to global
 							break;
 						}
-					case RoutingProtocol.RIP:
-					case RoutingProtocol.STATIC:
+					case NeighborProtocol.RIP:
+					case NeighborProtocol.STATIC:
 						{
 							_routerID[thisPprotocol] = globalRouterID; // fall back to global
 							break;

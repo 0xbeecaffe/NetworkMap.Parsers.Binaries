@@ -27,7 +27,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
     public bool Initilize(IRouter router, Enum protocol)
     {
       _router = router;
-      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.STATIC)
+      if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.STATIC)
       {
         return router?.Vendor == "JunOS";
       }
@@ -95,12 +95,12 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
 
 		public ISpecializedProtocolParser ProtocolDependentParser(Enum protocol)
     {
-      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.STATIC) return this;
+      if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.STATIC) return this;
       else return null;
     }
 
-    public Enum[] SupportedProtocols => new Enum[] { RoutingProtocol.STATIC };
+    public Enum[] SupportedProtocols => new Enum[] { NeighborProtocol.STATIC };
 
-    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v1.0";
+    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v2.0";
   }
 }

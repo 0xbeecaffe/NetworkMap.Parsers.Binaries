@@ -33,7 +33,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
     public bool Initilize(IRouter router, Enum protocol)
     {
       _router = router;
-      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.BGP)
+      if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.BGP)
       {
         return router?.Vendor == "JunOS";
       }
@@ -128,7 +128,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
                   Match m = Regex.Match(line, @"(?<=Peer ID: )[\d.]{0,99}", RegexOptions.Compiled);
                   if (!m.Success) throw new InvalidOperationException("Cannot parse BGP output : unable to retrieve peer router ID.");
                   peerRouterID = m.Value;
-                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(RoutingProtocol.BGP), _router.BGPAutonomousSystem, peerRouterID, remoteAS), DebugLevel.Informational);
+                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(NeighborProtocol.BGP), _router.BGPAutonomousSystem, peerRouterID, remoteAS), DebugLevel.Informational);
                   continue;
                 }
                 #endregion
@@ -172,7 +172,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
               _OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
               RouterInterface ri = _router.GetInterfaceByName(localInterfaceName);
               _OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
-              registry.RegisterL3Neighbor(_router, RoutingProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+              registry.RegisterL3Neighbor(_router, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
               // now all is done for this peer, skip lines until next peer is found
               skipRestOfLines = true;
             }
@@ -209,13 +209,13 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 
 		public ISpecializedProtocolParser ProtocolDependentParser(Enum protocol)
     {
-      if (protocol is RoutingProtocol && (RoutingProtocol)protocol == RoutingProtocol.BGP) return this;
+      if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.BGP) return this;
       else return null;
     }
 
-    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v1.0";
+    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v2.0";
 
-    public Enum[] SupportedProtocols => new Enum[] { RoutingProtocol.BGP };
+    public Enum[] SupportedProtocols => new Enum[] { NeighborProtocol.BGP };
 
     internal enum BGPType { eBGP, iBGP, undetermined };
   }
