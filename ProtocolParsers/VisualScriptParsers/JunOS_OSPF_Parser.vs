@@ -191,7 +191,7 @@ for line in ospf_lines:
         neighborState = words[2]
         description = ""
         OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-        nRegistry.RegisterNeighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
+        nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
         
   except Exception as Ex:
     msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -206,7 +206,7 @@ for line in ospf_lines:
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -297,12 +297,15 @@ global Session</MainCode>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
-    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by AREA IDs. The internal dictinary is then keyed by LSAType - like Router, or Network.
+    <Variables># OSPFAreaLSAs contains OSPFLSA dictionaries entries keyed by OSPFArea objects. The internal dictinary is then keyed by LSAType - like Router, or Network.
 OSPFAreaLSAs = {}
 # example content :
 # LSAs = [item1, item2]
 # OSPFLSAs = {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}
-# OSPFAreaLSAs = {"0.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}</Variables>
+# OSPFAreaLSAs = {"0.0.0.0, Backone" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0, Normal" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}
+
+# OSPFAreaInfo will contain the output of "show ip ospf" command and is used to find Area related informations
+OSPFAreInfo = ""</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock>"""Query and Process the OSPF Database"""
@@ -311,56 +314,73 @@ def ProcessDatabase(self):
   self.OSPFAreaLSAs = {}
   # query OSPF database
   ospfAreaDatabase = Session.ExecCommand("show ospf database")
-  currentAreaID = ""
-  currentLSType = ""
+  currentArea = None
+  currentLSATypeName = ""
   # LSAs = [item1, item2]
   LSAs = []
-  # OSPFLSAs = {"Router" : [item1, item2], "Network" : [item1, item2]}
-  OSPFLSAs = {}
+  # OSPFLSAdict = {"Router" : [item1, item2], "Network" : [item1, item2]}
+  OSPFLSAdict = {}
   lines = [str.lower(thisLine.strip()) for thisLine in ospfAreaDatabase.splitlines()]
   for thisLine in lines:
     # header       : Type ID               Adv Rtr           Seq Age  Opt Cksum  Len
     # thisLine is like :Router   10.93.1.200      10.93.1.200      0x800005af  1113  0x8  0x6280  60   
     try:
+      if thisLine.StartsWith("{master:"):
+        continue
       if thisLine.startswith("ospf database"):
         # thisLine is like : OSPF database, Area 10.72.0.0
-        if currentAreaID != "" : 
-          # Area ID is changing
-          self.OSPFAreaLSAs[currentAreaID] = OSPFLSAs
-        # reset temporary lists
-        OSPFLSAs = {}
-        LSAs = []
-        # get currentAreaID
         o = filter(None, thisLine.split(","))
         a = filter(None, o[1].split(" "))
-        if len(a) &gt;= 2 : currentAreaID = a[1]
+        thisAreaID = a[1].strip()
+        if currentArea == None:
+          currentArea = L3Discovery.OSPFArea()
+          currentArea.AreaID = thisAreaID
+          currentArea.AreaType = self.GetAreaType(currentArea.AreaID)
+        elif thisAreaID != currentArea.AreaID :
+          # Area ID is changing
+          self.OSPFAreaLSAs[currentArea] = OSPFLSAdict
+          # reset temporary lists
+          OSPFLSAdict = {}
+          LSAs = []
+          currentArea = L3Discovery.OSPFArea()
+          currentArea.AreaID = thisAreaID
+          currentArea.AreaType = self.GetAreaType(currentArea.AreaID)         
+
       else:
         r = filter(None, thisLine.split(" "))
         # Tha LSA Type should be the first word in thisLine
         LSAType = r[0]
         # if we get "type" then this must be a header line, just skip it
         if LSAType != "type":
-          if LSAType != currentLSType:
+          if LSAType != currentLSATypeName:
             #LSAType is changing
-            if (currentLSType != ""):
-              OSPFLSAs[currentLSType] = LSAs
+            if (currentLSATypeName != ""):
+              OSPFLSAdict[currentLSATypeName] = LSAs
               LSAs = []
-            currentLSType = LSAType
+            currentLSATypeName = LSAType
             
           if len(r) &gt;= 3 :           
             LSAID = r[1].strip("*")
             AdvRouter = r[2]
             newLSA = L3Discovery.OSPFLSA()
-            newLSA.LSAType = currentLSType
+            newLSA.LSAType = currentLSATypeName
             newLSA.LSAID = LSAID
             newLSA.AdvRouter = AdvRouter
             LSAs.Add(newLSA)
-    except:
-      pass 
+    except Exception as Ex:
+      msg = "JunOS OSPF vScript Parser : Error while processing ospf database. Error is : {0}".format(str(Ex))
+      System.Diagnostics.DebugEx.WriteLine(msg) 
       
   # add the last area router ID-s
-  if currentAreaID != "": self.OSPFAreaLSAs[currentAreaID] = OSPFLSAs
+  if currentArea != None: 
+    self.OSPFAreaLSAs[currentArea] = OSPFLSAdict
   
+"""Return all the Areas the router belongs to """  
+def GetAreas(self):
+  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
+  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
+  Areas = self.OSPFAreaLSAs.keys()
+  return Areas  
   
     
 """Return the list of LSAs for the requested Type and Area """  
@@ -374,8 +394,43 @@ def GetAreaLSAs(self, ospfArea, lsaTypeName):
   if AreaLSAs != None : RequestesAreaLSAs = AreaLSAs.get(lsaTypeName)
   return RequestesAreaLSAs
   
-  
-
+"""Return the OSPFAreaType for the requested AREA ID """
+def GetAreaType(self, ospfAreaID):
+  if ospfAreaID == "0.0.0.0" :
+    return L3Discovery.OSPFAreaType.Backbone
+  if self.OSPFAreInfo == "" :
+    self.OSPFAreInfo = Session.ExecCommand("show ospf overview")
+  #	parsing as per https://www.juniper.net/documentation/en_US/junos/topics/reference/command-summary/show-ospf-ospf3-overview.html  
+  try:
+    lines = [str.lower(thisLine.strip()) for thisLine in self.OSPFAreInfo.splitlines()]
+    OperationStatusLabel = "Processing OSPF Area information..."
+    inDesiredAreaSection = False
+    # parse OSPFAreInfo to get the ext block related to the requested areaID
+    for thisLine in lines:
+      if thisLine.startswith("area {0}".format(ospfAreaID)):
+        if inDesiredAreaSection:
+          break
+        else:
+          inDesiredAreaSection = True
+          continue
+      if inDesiredAreaSection:
+        # No we are desired section
+        if thisLine.startswith("stub type:") :
+          typeDesc = thisLine.split(":")
+          if "normal stub" in typeDesc[1] : 
+            return L3Discovery.OSPFAreaType.Stub
+          if "not stub" in typeDesc[1] : 
+            return L3Discovery.OSPFAreaType.Normal
+          if "not so stubby" in typeDesc[1] or "nssa" in typeDesc[1] : 
+            return L3Discovery.OSPFAreaType.NSSA
+      
+    return L3Discovery.OSPFAreaType.Unknown
+    
+  except Exception as Ex:
+    msg = "JunOS OSPF vScript Parser : Error while processing ospf area block. Error is : {0}".format(str(Ex))
+    System.Diagnostics.DebugEx.WriteLine(msg)
+    return L3Discovery.OSPFAreaType.Unknown  
+ 
 """Return all of the LSA Type Names for the specified Area """
 def GetLSATypeNames(self, ospfArea):
   # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
@@ -387,24 +442,15 @@ def GetLSATypeNames(self, ospfArea):
   return LSATypeNames
   
   
-
-"""Return all the Areas the router belongs to """  
-def GetAreas(self):
-  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
-  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
-  Areas = self.OSPFAreaLSAs.keys()
-  return Areas
-  
-
-  
+"""Reset object state """
 def Reset(self):
-  # old code self.OSPFAreaRouterID = {}
-  self.OSPFAreaLSAs = {}</CustomCodeBlock>
+  self.OSPFAreaLSAs = {}
+  self.OSPFAreInfo = ""</CustomCodeBlock>
     <DemoMode>false</DemoMode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>953:704</EditorSize>
+    <EditorSize>854:1017</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -426,7 +472,7 @@ ActionResult = OSPFProcessor.GetAreas()
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -690,7 +736,7 @@ Router = None</MainCode>
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <GlobalCode>ScriptVersion = "1.0"
 ModuleName =  "Juniper, JunOS OSPF Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
 OperationStatusLabel = "Working"
@@ -715,15 +761,15 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>false</DebuggingAllowed>
+    <DebuggingAllowed>true</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>1.096</EditorScaleFactor>
+    <EditorScaleFactor>0.8440002</EditorScaleFactor>
     <Description>This Protocol Parser can handle JunOS routers 
 and switches running OSPF protocol.</Description>
-    <EditorSize>{Width=854, Height=535}</EditorSize>
+    <EditorSize>{Width=1932, Height=977}</EditorSize>
   </Parameters>
 </vScriptDS>

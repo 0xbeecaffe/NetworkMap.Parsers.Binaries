@@ -235,7 +235,7 @@ for line in bgp_lines:
         ri = Router.GetInterfaceByName(localIfName)
       registeredNeighborCount += 1
       OperationStatusLabel = "Registering neighbor {0} in state {1}".format(remoteRID, bgpState)
-      nRegistry.RegisterNeighbor(Router, L3Discovery.RoutingProtocol.BGP, remoteRID, remoteAS, "", neighborIP, ri, bgpState)
+      nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.BGP, remoteRID, remoteAS, "", neighborIP, ri, bgpState)
     except: 
       pass
     
@@ -262,7 +262,7 @@ System.Diagnostics.DebugEx.WriteLine("BGP neighbors on {0} : discovered : {1}, r
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1325:857</EditorSize>
+    <EditorSize>1103:794</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -467,8 +467,8 @@ global BreakExecution</MainCode>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>CiscoIOS_BGPParser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <ScriptName>Cisco_IOS_BGPParser</ScriptName>
+    <GlobalCode>ScriptVersion = "1.0"
 # Describe the Module Name
 ModuleName = "Cisco IOS BGP Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
@@ -505,6 +505,6 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=771, Height=571}</EditorSize>
+    <EditorSize>{Width=1932, Height=977}</EditorSize>
   </Parameters>
 </vScriptDS>

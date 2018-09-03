@@ -463,7 +463,7 @@ Router = None</MainCode>
   </vScriptConnector>
   <Parameters>
     <ScriptName>PaloAlto_STATIC_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.90"
+    <GlobalCode>ScriptVersion = "1.0"
 # Describe the Module Name
 ModuleName = "PaloAlto STATIC Protocol Parser Support Module - Python vScript Parser"
 # Describes current operation status. The name of this variable is fixed !
@@ -501,6 +501,6 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=599, Height=544}</EditorSize>
+    <EditorSize>{Width=1932, Height=977}</EditorSize>
   </Parameters>
 </vScriptDS>

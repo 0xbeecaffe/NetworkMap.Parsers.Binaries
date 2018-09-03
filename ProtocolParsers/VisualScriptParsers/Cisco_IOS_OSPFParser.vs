@@ -195,7 +195,7 @@ for line in ospf_lines:
         remoteNeighboringIP = str(nIP.Value)
         description = ""
         OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-        nRegistry.RegisterNeighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
+        nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
         
   except Exception as Ex:
     msg = "Cisco IOS OSPF vScript Parser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -756,7 +756,7 @@ Router = None</MainCode>
   </vScriptConnector>
   <Parameters>
     <ScriptName>Cisco_IOS_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <GlobalCode>ScriptVersion = "1.0"
 # Describe the Module Name
 ModuleName = "Cisco IOS OSPF Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
@@ -790,6 +790,6 @@ import System.Net</CustomNameSpaces>
     <IsRepository>false</IsRepository>
     <EditorScaleFactor>0.9159999</EditorScaleFactor>
     <Description />
-    <EditorSize>{Width=701, Height=766}</EditorSize>
+    <EditorSize>{Width=1932, Height=977}</EditorSize>
   </Parameters>
 </vScriptDS>

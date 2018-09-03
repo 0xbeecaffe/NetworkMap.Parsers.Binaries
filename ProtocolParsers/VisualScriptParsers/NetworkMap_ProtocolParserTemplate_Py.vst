@@ -417,13 +417,15 @@ OSPFAreaLSAs = {}
 # LSAs = [item1, item2]
 # OSPFLSAs = {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}
 # OSPFAreaLSAs = {"0.0.0.0, Backone" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}, "10.0.0.0, Normal" : {"Router" : [OSPFLSA1, OSPFLSA2], "Network" : [OSPFLSA1, OSPFLSA2]}}
-</Variables>
+
+# OSPFAreaInfo will contain the output of "show ip ospf" command and is used to find Area related informations
+OSPFAreInfo = ""</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock>"""Query and Process the OSPF Database"""
 def ProcessDatabase(self): 
   #
-  # Override this 
+  # Override this part
   #
   # Execute necessary commands on the device to get the OSPF database and process it
   # to popolate self.OSPFAreaLSAs dictionary
@@ -431,6 +433,12 @@ def ProcessDatabase(self):
   #
   pass  
   
+"""Return all the Areas the router belongs to """  
+def GetAreas(self):
+  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
+  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
+  Areas = self.OSPFAreaLSAs.keys()
+  return Areas
     
 """Return the list of LSAs for the requested Type and Area """  
 def GetAreaLSAs(self, ospfArea, lsaTypeName):
@@ -443,7 +451,41 @@ def GetAreaLSAs(self, ospfArea, lsaTypeName):
   if AreaLSAs != None : RequestedAreaLSAs = AreaLSAs.get(lsaTypeName)
   return RequestedAreaLSAs
   
-  
+"""Return the OSPFAreaType for the requested AREA ID """
+def GetAreaType(self, ospfAreaID):
+  if ospfAreaID == "0.0.0.0" :
+    return L3Discovery.OSPFAreaType.Backbone
+  if self.OSPFAreInfo == "" :
+    #
+    # Implement this part
+    #
+    # Execute necessary commands on the device to get the OSPF Area information and process it
+    # to popolate self.OSPFAreInfo text
+    #
+    #
+    pass
+
+  try:
+    lines = [str.lower(thisLine.strip()) for thisLine in self.OSPFAreInfo.splitlines()]
+    OperationStatusLabel = "Processing OSPF Area information..."
+    # parse OSPFAreInfo to get the ext block related to the requested areaID
+    for thisLine in lines:
+      #
+      # Implement this part
+      #
+      # Execute necessary commands on the device to get the OSPF Area information and process it
+      # to popolate self.OSPFAreInfo text
+      #
+      #    
+      pass 
+    
+    # If did not returned the correct type so far, return Unknown 
+    return L3Discovery.OSPFAreaType.Unknown
+    
+  except Exception as Ex:
+    msg = "{0} : Error while processing ospf area block. Error is : {1}".format(Name, str(Ex))
+    System.Diagnostics.DebugEx.WriteLine(msg)
+    return L3Discovery.OSPFAreaType.Unknown 
 
 """Return all of the LSA Type Names for the specified Area """
 def GetLSATypeNames(self, ospfArea):
@@ -455,14 +497,6 @@ def GetLSATypeNames(self, ospfArea):
   if AreaLSAs != None : LSATypeNames = AreaLSAs.keys()
   return LSATypeNames
   
-  
-
-"""Return all the Areas the router belongs to """  
-def GetAreas(self):
-  # if OSPF datbase was not yet processed, do it now. It will populate self.OSPFAreaLSAs
-  if len(self.OSPFAreaLSAs) == 0 : self.ProcessDatabase()
-  Areas = self.OSPFAreaLSAs.keys()
-  return Areas
   
 """Return the OSPF Area Type name for the requested AREA ID """
 def GetAreaType(self, ospfAreaID):
@@ -485,7 +519,7 @@ def Reset(self):
     <Description>Process OSPF Database in order to collect Area IDs and different LSAs</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1172:768</EditorSize>
+    <EditorSize>854:1017</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -684,7 +718,7 @@ global BreakExecution</MainCode>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>VSProtocolParser_Template</ScriptName>
+    <ScriptName>NetworkMap_VSProtocolParser_Template</ScriptName>
     <GlobalCode>ScriptVersion = "0.0"
 # Describe the Module Name
 ModuleName = "TEMPLATE Protocol Parser Support Module - Python vScript Parser"
@@ -718,10 +752,8 @@ import System.Net</CustomNameSpaces>
     <IsTemplate>true</IsTemplate>
     <IsRepository>false</IsRepository>
     <EditorScaleFactor>0.6519994</EditorScaleFactor>
-    <Description>This vScript template can be used as a starting point for
-creating a new routing protocol Parser Module for Network Map.
-This is required to add support for a new routing protocol to a
-vendor already supported. See also Router Module template.</Description>
+    <Description>This vScript template can be used as a starting point for creating a new routing protocol Parser Module for Network Map.
+This is typically required to add support for a new routing protocol to a vendor already supported. See also Router Module template.</Description>
     <EditorSize>{Width=636, Height=646}</EditorSize>
   </Parameters>
 </vScriptDS>

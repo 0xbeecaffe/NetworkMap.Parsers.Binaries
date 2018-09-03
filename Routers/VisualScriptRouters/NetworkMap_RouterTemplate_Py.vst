@@ -1562,7 +1562,7 @@ def Reset(self) :
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>NetworkMonitor_VSRouter_Template</ScriptName>
+    <ScriptName>NetworkMap_VSRouter_Template</ScriptName>
     <GlobalCode># last changed : 
 scriptVersion = "0.01"
 templateVersion = "1.00"
@@ -1590,8 +1590,8 @@ import System.Net</CustomNameSpaces>
     <IsTemplate>true</IsTemplate>
     <IsRepository>false</IsRepository>
     <EditorScaleFactor>0.7599999</EditorScaleFactor>
-    <Description>This vScript implements a NetworkMap Router Module
-capable of handling Juniper EX/MX/SRX devices runing JunOS.</Description>
+    <Description>This vScript template can be used as a starting point for creating a new Router Module for Network Map.
+This is typically required to add support for a new vendor. See also Protocol Parser template.</Description>
     <EditorSize>{Width=817, Height=779}</EditorSize>
   </Parameters>
 </vScriptDS>

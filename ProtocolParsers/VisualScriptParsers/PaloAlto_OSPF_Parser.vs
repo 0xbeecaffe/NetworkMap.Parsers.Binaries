@@ -203,7 +203,7 @@ for line in ospf_lines:
             # add the areaID
             ri.OSPFArea = areaID
             OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-            nRegistry.RegisterNeighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)   
+            nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)   
           else:
             msg = "PAloAlto.OSPFarser : cannot find RouterInterface for interface name : {0}".format(outInterfaceName)
             System.Diagnostics.DebugEx.WriteLine(msg) 
@@ -685,7 +685,7 @@ Router = None</MainCode>
   </vScriptConnector>
   <Parameters>
     <ScriptName>PaloAlto_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <GlobalCode>ScriptVersion = "1.0"
 # Describe the Module Name
 ModuleName = "PaloAlto OSPF Protocol Parser Support Module - Python vScript Parser"
 # Describes current operation status. The name of this variable is fixed !
@@ -723,6 +723,6 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=825, Height=621}</EditorSize>
+    <EditorSize>{Width=1932, Height=977}</EditorSize>
   </Parameters>
 </vScriptDS>

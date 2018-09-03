@@ -168,6 +168,7 @@ nRegistry = ConnectionInfo.aParam
 cToken = ConnectionInfo.bParam
 
 OperationStatusLabel = "Identifying router..."
+isIOSXE = "IOS-XE" in Router.Version
 #--  
 TextToParse = Session.ExecCommand("show ip route static")
 cToken.ThrowIfCancellationRequested()
@@ -185,20 +186,42 @@ for line in static_lines:
       nexthop = foundNexthop[0]
       # get the outgoing interface
       OperationStatusLabel = "Finding egress interface for {0}...".format(nexthop)
-      cefEntry = Session.ExecCommand("show ip cef {0} | i via".format(nexthop))
-      # Exaple output 1 : via 172.18.145.82, FastEthernet0/0, 0 dependencies
-      # Exaple output 2 : via FastEthernet0/0, 0 dependencies
-      cefwords = filter(None, cefEntry.split())
-      outInterfaceName = ""
-      ri = None
-      if len(cefwords) &gt;= 4 :
-        outInterfaceName = cefwords[len(cefwords) - 3]
-        outInterfaceName = outInterfaceName.strip(",")
-        OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
-        ri = Router.GetInterfaceByName(outInterfaceName)
-        if ri != None:
-          OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
-          nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);
+      cefResponse = Session.ExecCommand("show ip cef {0}".format(nexthop)).splitlines()
+     
+      if isIOSXE:
+        cefEntry = next((thisCEFEntry for thisCEFEntry in cefResponse if ("nexthop" in thisCEFEntry or "attached to" in thisCEFEntry)), None)
+        # Exaple cefEntry output :   attached to TenGigabitEthernet0/1/0.3805
+        if cefEntry != None:
+          cefwords = filter(None, cefEntry.split())
+          outInterfaceName = ""
+          ri = None
+          if len(cefwords) &gt;= 3 :
+            outInterfaceName = cefwords[len(cefwords)-1]
+            outInterfaceName = outInterfaceName.strip(",")
+            OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
+            ri = Router.GetInterfaceByName(outInterfaceName)
+            if ri != None:
+              OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
+              nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);        
+      else:
+        cefEntry = next((thisCEFEntry for thisCEFEntry in cefResponse if ("via" in thisCEFEntry or "attached to" in thisCEFEntry)), None)
+        # Exaple cefEntry output 1 : via 172.18.145.82, FastEthernet0/0, 0 dependencies
+        # Exaple cefEntry output 2 : via FastEthernet0/0, 0 dependencies
+        if cefEntry != None:
+          cefwords = filter(None, cefEntry.split())
+          outInterfaceName = ""
+          ri = None
+          if "via" in cefEntry and len(cefwords) &gt;= 4 :
+            outInterfaceName = cefwords[len(cefwords) - 3]
+            outInterfaceName = outInterfaceName.strip(",")
+          elif "attached" in cefEntry and len(cefwords) &gt;= 3 :
+            outInterfaceName = cefwords[len(cefwords) - 1] 
+          if outInterfaceName != "":
+            OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
+            ri = Router.GetInterfaceByName(outInterfaceName)
+            if ri != None:
+              OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
+              nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);
 #
 # No need to return anything via ActionResult
 #</MainCode>
@@ -211,7 +234,7 @@ for line in static_lines:
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -219,7 +242,7 @@ for line in static_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1932:975</EditorSize>
+    <EditorSize>1550:991</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -424,8 +447,8 @@ global BreakExecution</MainCode>
     <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>CiscoIOS_STATICParser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.92"
+    <ScriptName>Cisco_IOS_STATIC_Parser</ScriptName>
+    <GlobalCode>ScriptVersion = "1.0"
 # Describe the Module Name
 ModuleName = "Cisco IOS STATIC Protocol Parser Module - Python vScript Parser"
 # Describes current operation status

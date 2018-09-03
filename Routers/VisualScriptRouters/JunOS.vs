@@ -35,7 +35,7 @@
     <MainCode>global ActionResult
 
 ActionResult = None
-raise ValueError("Junos Router received an unhandled Command request : {0}".format(ConnectionInfo.CustomActionID))</MainCode>
+raise ValueError("Junos Router received an unhandled Command request : {0}".format(ConnectionInfo.Command))</MainCode>
     <Origin_X>570</Origin_X>
     <Origin_Y>79</Origin_Y>
     <Size_Width>146</Size_Width>
@@ -444,24 +444,32 @@ for thisNetworkMatch in networkBlockIterator:
         outInterfaces = re.findall(r"(?&lt;=via ).*", thisProtocolBlock)
         routePreference = re.findall(r"[0-9]+", protocolBlockHeader)
         
-        rte = L3Discovery.RouteTableEntry()
-        if len(thisProtocolNames) == 1 : rte.Protocol = thisProtocolNames[0]
-        else : rte.Protocol = "UNKNOWN"
-        rte.RouterID = RouterIDAndASNumber.GetRouterID(rte.Protocol)
-        prefixAndMask = thisNetwork.split("/")
-        rte.Prefix = prefixAndMask[0]
-        rte.MaskLength = int(prefixAndMask[1])
-        if len(nextHopAddresses) == 1 : rte.NextHop = nextHopAddresses[0]
-        else : rte.NextHop = ""
-        rte.Best = isBestRoute
-        if len(routeTags) == 1 : rte.Tag = routeTags[0]
-        else : rte.Tag = ""
-        if len(outInterfaces) == 1 : rte.OutInterface = outInterfaces[0]
-        else : rte.OutInterface = ""
-        if len(routePreference) == 1 : rte.AD = routePreference[0]
-        else : rte.AD = ""
-        rte.Metric = ""
-        parsedRoutes.Add(rte)
+        matchIndex = 0
+        for thisOutInterface in outInterfaces:
+          rte = L3Discovery.RouteTableEntry()
+          # Protocol
+          if len(thisProtocolNames) == 1 : rte.Protocol = thisProtocolNames[0]
+          else : rte.Protocol = "UNKNOWN"
+          # RouterID
+          rte.RouterID = RouterIDAndASNumber.GetRouterID(rte.Protocol)
+          # Prefix and Mask length
+          prefixAndMask = thisNetwork.split("/")
+          rte.Prefix = prefixAndMask[0]
+          rte.MaskLength = int(prefixAndMask[1])
+          # OutInterface
+          rte.OutInterface = thisOutInterface
+          # NextHop address
+          if len(nextHopAddresses) &gt; matchIndex : rte.NextHop = nextHopAddresses[matchIndex]
+          else : rte.NextHop = ""
+          # Prefix parameters
+          rte.Best = isBestRoute
+          if len(routeTags) == 1 : rte.Tag = routeTags[0]
+          else : rte.Tag = ""
+          if len(routePreference) == 1 : rte.AD = routePreference[0]
+          else : rte.AD = ""
+          rte.Metric = ""
+          parsedRoutes.Add(rte)
+          matchIndex += 1
                
         protocolMatchIndex += 1
       except Exception as Ex:
@@ -490,7 +498,7 @@ ActionResult = parsedRoutes</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>921:748</EditorSize>
+    <EditorSize>921:852</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -569,19 +577,19 @@ global _runningRoutingProtocols
 
 if len(_runningRoutingProtocols) == 0 :
   response = Session.ExecCommand("show ospf overview")
-  if (not ("not running" in response)): 
+  if (not ("not running" in response or "not valid" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF)
     
   response = Session.ExecCommand("show rip neighbor")
-  if (not ("not running" in response)): 
+  if (not ("not running" in response or "not valid" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP)  
   
   response = Session.ExecCommand("show bgp neighbor")
-  if (not ("not running" in response)): 
+  if (not ("not running" in response or "not valid" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP)
     
   response = Session.ExecCommand("show configuration routing-options static")
-  if (not ("not running" in response)): 
+  if (not ("not running" in response or "not valid" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC)  
 
 ActionResult = _runningRoutingProtocols</MainCode>
@@ -703,7 +711,7 @@ v = Version.GetVersion()
 modelLine = next((line for line in v.splitlines() if "Model:" in line), None)
 if modelLine != None:
    model = modelLine.split(":")[1].strip()
-   if model.startswith("ex") :
+   if model.startswith("ex") or model.startswith("qfx"):
      ActionResult = "Switch"
    elif model.startswith("srx") :
      ActionResult = "Firewall"
@@ -730,7 +738,7 @@ else:
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>834:634</EditorSize>
+    <EditorSize>1104:685</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1105,7 +1113,7 @@ if ri != None and VIPAddress != "" and GroupID != "" :
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -1140,7 +1148,7 @@ def ParseInterfaces(self) :
   from System.Net import IPAddress
   # Query the device for inet interfaces
   inetInterfaces = Session.ExecCommand("show interfaces terse | match inet").splitlines()
-  # Becuse JunOS reports the VRRP VIP addresses in "show interface terse" output, it is necessary to 
+  # Because JunOS reports the VRRP VIP addresses in "show interface terse" output, it is necessary to 
   # check interface ip of VRRP enabled interfaces
   vrrpSummary = Session.ExecCommand("show vrrp summary | match lcl").splitlines()
   # Parse the result and fill up self.RouterInterfaces list
@@ -1402,16 +1410,16 @@ def Reset(self) :
     <cID>12</cID>
     <ConnectorID />
     <Name>SwitchTask_Return_ActiveRoutingProtocols</Name>
-    <DisplayLabel>Ge tActive Routing Protocols</DisplayLabel>
+    <DisplayLabel>Ge tActive Protocols</DisplayLabel>
     <Left>2</Left>
     <Right>15</Right>
-    <Condition>return ConnectionInfo.Command == "GetActiveRoutingProtocols"</Condition>
+    <Condition>return ConnectionInfo.Command == "GetActiveProtocols"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>12</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
+    <EditorSize>1306:855</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>13</cID>
@@ -1565,8 +1573,8 @@ def Reset(self) :
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS</ScriptName>
-    <GlobalCode># last changed : 2018.04.26
-scriptVersion = "0.98"
+    <GlobalCode># last changed : 2018.05.10
+scriptVersion = "1.0"
 #--
 _hostName = None
 _stackCount = -1
@@ -1591,9 +1599,9 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.7599999</EditorScaleFactor>
+    <EditorScaleFactor>0.7157495</EditorScaleFactor>
     <Description>This vScript implements a NetworkMap Router Module
 capable of handling Juniper EX/MX/SRX devices runing JunOS.</Description>
-    <EditorSize>{Width=781, Height=779}</EditorSize>
+    <EditorSize>{Width=815, Height=728}</EditorSize>
   </Parameters>
 </vScriptDS>

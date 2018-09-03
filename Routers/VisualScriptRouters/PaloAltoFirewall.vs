@@ -348,7 +348,7 @@ for thisLine in routeLines:
               protocolType = words[4]
               thisLineProtocol = L3Discovery.RoutingProtocol.UNKNOWN
               if protocolType == "C" : thisLineProtocol = L3Discovery.RoutingProtocol.CONNECTED
-              elif protocolType.startswith("O") : thisLineProtocol = L3Discovery.RoutingProtocol.CONNECTED
+              elif protocolType.startswith("O") : thisLineProtocol = L3Discovery.RoutingProtocol.OSPF
               elif protocolType == "H" : thisLineProtocol = L3Discovery.RoutingProtocol.DIRECT
               elif protocolType == "S" : thisLineProtocol = L3Discovery.RoutingProtocol.STATIC
               elif protocolType == "R" : thisLineProtocol = L3Discovery.RoutingProtocol.RIP
@@ -384,14 +384,14 @@ ActionResult = parsedRoutes</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
     <Description>This call should be able to return the full routing table of the device</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1733:938</EditorSize>
+    <EditorSize>1137:959</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -420,7 +420,7 @@ ScriptSuccess = True
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -1478,10 +1478,10 @@ global BreakExecution</MainCode>
     <cID>12</cID>
     <ConnectorID />
     <Name>SwitchTask_Return_ActiveRoutingProtocols</Name>
-    <DisplayLabel>Ge tActive Routing Protocols</DisplayLabel>
+    <DisplayLabel>Ge tActive Protocols</DisplayLabel>
     <Left>2</Left>
     <Right>12</Right>
-    <Condition>return ConnectionInfo.Command == "GetActiveRoutingProtocols"</Condition>
+    <Condition>return ConnectionInfo.Command == "GetActiveProtocols"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>12</Order>
@@ -1646,7 +1646,7 @@ global BreakExecution</MainCode>
 # Declare global variables here   #
 #                                 #
 ###################################
-scriptVersion = "v0.97"
+scriptVersion = "1.0"
 VersionInfo = ""
 HostName = ""
 
