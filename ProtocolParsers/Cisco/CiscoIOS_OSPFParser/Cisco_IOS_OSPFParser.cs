@@ -108,7 +108,7 @@ namespace L3Discovery.ProtocolParsers.CiscoIOS.OSPF
 								neighborState = words[2];
 								description = "";
 								_OperationStatusLabel = string.Format("Registering OSPF neighbor {0}...", neighborRouterID);
-								registry.RegisterL3Neighbor(_router, NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
+								registry.RegisterNeighbor(_router, NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
 							}
 						}
 					}

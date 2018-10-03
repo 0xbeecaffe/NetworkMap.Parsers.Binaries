@@ -172,7 +172,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
               _OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
               RouterInterface ri = _router.GetInterfaceByName(localInterfaceName);
               _OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
-              registry.RegisterL3Neighbor(_router, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+              registry.RegisterNeighbor(_router, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
               // now all is done for this peer, skip lines until next peer is found
               skipRestOfLines = true;
             }

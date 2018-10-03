@@ -23,7 +23,6 @@
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>0:0</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStart</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -67,7 +66,6 @@ is capable of handling the Router and the requested
 routing protocol  it has been invoked for.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>805:729</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -94,7 +92,6 @@ routing protocol  it has been invoked for.</Description>
 which action to take.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:556</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -125,7 +122,6 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
 the current Protocol Parser</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1131:817</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -191,7 +187,7 @@ for line in ospf_lines:
         neighborState = words[2]
         description = ""
         OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-        nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
+        nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
         
   except Exception as Ex:
     msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -213,7 +209,6 @@ for line in ospf_lines:
     <Description>Discover OSPF adjacencies and register peers for discovery</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1259:1057</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -243,7 +238,6 @@ ActionResult = ParsingForProtocols</MainCode>
 this module can support</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -273,7 +267,6 @@ raise ValueError("Junos OSPF protocol parser module has received an unhandled Co
 that is not handled. This is an ERROR condition.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1131:817</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -450,7 +443,6 @@ def Reset(self):
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>854:1017</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -479,7 +471,6 @@ ActionResult = OSPFProcessor.GetAreas()
     <Description>Returns the OSPF Areas the current router is member of</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>980:771</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -510,7 +501,6 @@ ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
     <Description>Returns the list of existing LSA Types for the requested OSPF Area</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>672:617</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -544,7 +534,6 @@ ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
 for the requested Area ID</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>667:514</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -581,7 +570,6 @@ Router = None</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -597,7 +585,6 @@ Router = None</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>0:0</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>1</cID>
@@ -612,7 +599,6 @@ Router = None</MainCode>
     <Order>1</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>2</cID>
@@ -627,7 +613,6 @@ Router = None</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>3</cID>
@@ -642,7 +627,6 @@ Router = None</MainCode>
     <Order>3</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>4</cID>
@@ -657,7 +641,6 @@ Router = None</MainCode>
     <Order>4</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>1131:817</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>5</cID>
@@ -672,7 +655,6 @@ Router = None</MainCode>
     <Order>8</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>1131:817</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>6</cID>
@@ -687,7 +669,6 @@ Router = None</MainCode>
     <Order>5</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>7</cID>
@@ -702,7 +683,6 @@ Router = None</MainCode>
     <Order>6</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>8</cID>
@@ -717,7 +697,6 @@ Router = None</MainCode>
     <Order>7</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>9</cID>
@@ -732,18 +711,17 @@ Router = None</MainCode>
     <Order>2</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS_OSPF_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "1.0"
+    <GlobalCode>ScriptVersion = "2.0"
 ModuleName =  "Juniper, JunOS OSPF Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
 OperationStatusLabel = "Working"
 # The Router instance associated to this parser. Set in Initialize
 Router = None
 #This is the protocol supported by this module
-ParsingForProtocols = [L3Discovery.RoutingProtocol.OSPF]
+ParsingForProtocols = [L3Discovery.NeighborProtocol.OSPF]
 #This is the vendor name supported by this module
 ParsingForVendor = "JunOS"</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
@@ -761,7 +739,7 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
@@ -771,5 +749,6 @@ import System.Net</CustomNameSpaces>
     <Description>This Protocol Parser can handle JunOS routers 
 and switches running OSPF protocol.</Description>
     <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

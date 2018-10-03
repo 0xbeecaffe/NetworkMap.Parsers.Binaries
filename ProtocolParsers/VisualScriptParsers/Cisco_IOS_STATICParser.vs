@@ -23,7 +23,6 @@
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>0:0</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStart</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -73,7 +72,6 @@ else:
 for the specified protocol using the given Router instance.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>753:728</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -105,7 +103,6 @@ pass</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>717:547</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -140,7 +137,6 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
     <Description>SupportTag should return a descriptive text for this Protocol Parser Module</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>866:576</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -242,7 +238,6 @@ for line in static_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1550:991</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -272,7 +267,6 @@ raise ValueError("{0} has received an unhandled Command request : {1}".format(Mo
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1059:530</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -308,7 +302,6 @@ ActionResult = ParsingForProtocols</MainCode>
 this module can support</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>873:514</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -338,7 +331,6 @@ global BreakExecution</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -354,7 +346,6 @@ global BreakExecution</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>0:0</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>1</cID>
@@ -369,7 +360,6 @@ global BreakExecution</MainCode>
     <Order>1</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>2</cID>
@@ -384,7 +374,6 @@ global BreakExecution</MainCode>
     <Order>2</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>3</cID>
@@ -399,7 +388,6 @@ global BreakExecution</MainCode>
     <Order>3</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>4</cID>
@@ -414,7 +402,6 @@ global BreakExecution</MainCode>
     <Order>4</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>5</cID>
@@ -429,7 +416,6 @@ global BreakExecution</MainCode>
     <Order>8</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>6</cID>
@@ -444,11 +430,10 @@ global BreakExecution</MainCode>
     <Order>6</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
     <ScriptName>Cisco_IOS_STATIC_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "1.0"
+    <GlobalCode>ScriptVersion = "2.0"
 # Describe the Module Name
 ModuleName = "Cisco IOS STATIC Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
@@ -456,7 +441,7 @@ OperationStatusLabel = "Init"
 # The Router instance associated to this parser. Set in Initialize
 Router = None
 #This is the protocol supported by this module
-ParsingForProtocols = [L3Discovery.RoutingProtocol.STATIC]
+ParsingForProtocols = [L3Discovery.NeighborProtocol.STATIC]
 #This is the vendor name supported by this module
 ParsingForVendor = "Cisco"</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
@@ -474,7 +459,7 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
@@ -486,5 +471,6 @@ creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
     <EditorSize>{Width=838, Height=612}</EditorSize>
+    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

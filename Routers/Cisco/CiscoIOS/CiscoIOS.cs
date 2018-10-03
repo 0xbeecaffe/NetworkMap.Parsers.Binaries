@@ -106,9 +106,12 @@ namespace L3Discovery.Routers.CiscoIOS
 							}
 						}
 					}
+
 					response = _session.ExecCommand("show ip route static");
 					if (!string.IsNullOrEmpty(response)) _runningNeighborProtocols.Add(NeighborProtocol.STATIC);
 
+					response = _session.ExecCommand("show cdp");
+					if (!response.ToLowerInvariant().Contains("not enabled")) _runningNeighborProtocols.Add(NeighborProtocol.CDP);
 				}
 				DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningNeighborProtocols.Select(p => p.ToString()))), DebugLevel.Full);
 				return _runningNeighborProtocols.Cast<Enum>().ToArray();
@@ -1052,6 +1055,11 @@ namespace L3Discovery.Routers.CiscoIOS
 			{
 				switch (thisPprotocol)
 				{
+					case NeighborProtocol.CDP:
+						{
+							_routerID[thisPprotocol] = defaultlRouterID;
+							break;
+						}
 					case NeighborProtocol.BGP:
 						{
 							string bgpSummary = _session.ExecCommand("show ip bgp summary");

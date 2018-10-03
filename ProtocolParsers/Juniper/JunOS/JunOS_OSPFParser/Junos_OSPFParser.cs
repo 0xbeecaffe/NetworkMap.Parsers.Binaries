@@ -105,7 +105,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.OSPF
 								remoteNeighboringIP = nIP.ToString();
 								description = "";
 								_OperationStatusLabel = string.Format("Registering OSPF neighbor {0}...", neighborRouterID);
-								registry.RegisterL3Neighbor(_router, NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
+								registry.RegisterNeighbor(_router, NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState);
 							}
 						}
 					}

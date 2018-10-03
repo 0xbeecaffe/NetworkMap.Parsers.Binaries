@@ -23,7 +23,6 @@
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>0:0</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStart</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -52,7 +51,6 @@ raise ValueError("Junos Router received an unhandled Command request : {0}".form
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>967:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -78,7 +76,6 @@ raise ValueError("Junos Router received an unhandled Command request : {0}".form
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:875</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -106,7 +103,6 @@ ActionResult = "Juniper, JunOS, Router Module for EX/QFX/MX/SRX- Python vScript 
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>767:541</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -133,7 +129,6 @@ ActionResult = Inventory.GetInventory()</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -160,7 +155,6 @@ ActionResult = Version.GetVersion()</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -187,7 +181,6 @@ ActionResult = SystemSerial.GetSystemSerial()</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>823:676</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -219,7 +212,6 @@ def Reset(self):
 if it has not yet been collected.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>738:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -257,7 +249,6 @@ def Reset(self):
 if it has not yet been collected.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>676:628</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -322,7 +313,6 @@ def Reset(self):
 if it has not yet been collected.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>846:740</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -349,7 +339,6 @@ ActionResult = SystemSerial.GetModelNumber()</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -382,7 +371,6 @@ ActionResult = _stackCount;</MainCode>
     <Description />
     <WatchVariables>;self</WatchVariables>
     <Initializer />
-    <EditorSize>742:599</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -491,14 +479,13 @@ ActionResult = parsedRoutes</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>921:852</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -533,7 +520,6 @@ ScriptSuccess = True</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1138:910</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -563,7 +549,6 @@ ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -577,19 +562,19 @@ global _runningRoutingProtocols
 
 if len(_runningRoutingProtocols) == 0 :
   response = Session.ExecCommand("show ospf overview")
-  if (not ("not running" in response or "not valid" in response)): 
+  if (not ("not running" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF)
     
   response = Session.ExecCommand("show rip neighbor")
-  if (not ("not running" in response or "not valid" in response)): 
+  if (not ("not running" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP)  
   
   response = Session.ExecCommand("show bgp neighbor")
-  if (not ("not running" in response or "not valid" in response)): 
+  if (not ("not running" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP)
     
   response = Session.ExecCommand("show configuration routing-options static")
-  if (not ("not running" in response or "not valid" in response)): 
+  if (not ("not running" in response)): 
     _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC)  
 
 ActionResult = _runningRoutingProtocols</MainCode>
@@ -609,7 +594,6 @@ ActionResult = _runningRoutingProtocols</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1011:842</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -638,7 +622,6 @@ ActionResult = RouterIDAndASNumber.GetBGPASNumber()
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -667,7 +650,6 @@ ActionResult = _hostName</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -695,7 +677,6 @@ ActionResult = "JunOS"</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -738,7 +719,6 @@ else:
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1104:685</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -766,7 +746,6 @@ ActionResult = "JunOS"</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -804,7 +783,6 @@ ActionResult = GetInterfaces.GetInterfaceByName(ifName)</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>839:833</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -841,7 +819,6 @@ ActionResult = GetInterfaces.GetInterfaceNameByAddress(ifAddress)</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1150:775</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -883,7 +860,6 @@ except:
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1058:714</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -967,7 +943,6 @@ def Reset(self):
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1001:876</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1001,7 +976,6 @@ else :
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>781:563</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1043,7 +1017,6 @@ GetInterfaces.Reset()</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>637:523</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1113,7 +1086,7 @@ if ri != None and VIPAddress != "" and GroupID != "" :
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>false</Break>
+    <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -1121,7 +1094,6 @@ if ri != None and VIPAddress != "" and GroupID != "" :
 and will register VIP addresses</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1484:998</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1223,7 +1195,6 @@ def Reset(self) :
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>1036:892</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -1239,7 +1210,6 @@ def Reset(self) :
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>1</cID>
@@ -1254,7 +1224,6 @@ def Reset(self) :
     <Order>23</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>2</cID>
@@ -1269,7 +1238,6 @@ def Reset(self) :
     <Order>2</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>3</cID>
@@ -1284,7 +1252,6 @@ def Reset(self) :
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>4</cID>
@@ -1299,7 +1266,6 @@ def Reset(self) :
     <Order>9</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>5</cID>
@@ -1314,7 +1280,6 @@ def Reset(self) :
     <Order>10</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>6</cID>
@@ -1329,7 +1294,6 @@ def Reset(self) :
     <Order>7</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>7</cID>
@@ -1344,7 +1308,6 @@ def Reset(self) :
     <Order>6</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>8</cID>
@@ -1359,7 +1322,6 @@ def Reset(self) :
     <Order>11</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>9</cID>
@@ -1374,7 +1336,6 @@ def Reset(self) :
     <Order>16</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>10</cID>
@@ -1389,7 +1350,6 @@ def Reset(self) :
     <Order>15</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>11</cID>
@@ -1404,7 +1364,6 @@ def Reset(self) :
     <Order>8</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>12</cID>
@@ -1419,7 +1378,6 @@ def Reset(self) :
     <Order>12</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>1306:855</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>13</cID>
@@ -1434,7 +1392,6 @@ def Reset(self) :
     <Order>14</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>14</cID>
@@ -1449,7 +1406,6 @@ def Reset(self) :
     <Order>13</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>15</cID>
@@ -1464,7 +1420,6 @@ def Reset(self) :
     <Order>3</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>16</cID>
@@ -1479,7 +1434,6 @@ def Reset(self) :
     <Order>4</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>17</cID>
@@ -1494,7 +1448,6 @@ def Reset(self) :
     <Order>5</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>18</cID>
@@ -1509,7 +1462,6 @@ def Reset(self) :
     <Order>17</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>19</cID>
@@ -1524,7 +1476,6 @@ def Reset(self) :
     <Order>18</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>20</cID>
@@ -1539,7 +1490,6 @@ def Reset(self) :
     <Order>19</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>21</cID>
@@ -1554,7 +1504,6 @@ def Reset(self) :
     <Order>1</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>22</cID>
@@ -1569,12 +1518,11 @@ def Reset(self) :
     <Order>22</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS</ScriptName>
-    <GlobalCode># last changed : 2018.05.10
-scriptVersion = "1.0"
+    <GlobalCode># last changed : 2018.09.03
+scriptVersion = "2.0"
 #--
 _hostName = None
 _stackCount = -1
@@ -1593,15 +1541,16 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.7157495</EditorScaleFactor>
+    <EditorScaleFactor>0.6984365</EditorScaleFactor>
     <Description>This vScript implements a NetworkMap Router Module
 capable of handling Juniper EX/MX/SRX devices runing JunOS.</Description>
-    <EditorSize>{Width=815, Height=728}</EditorSize>
+    <EditorSize>{Width=820, Height=763}</EditorSize>
+    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

@@ -23,6 +23,7 @@
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>0:0</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStart</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -37,9 +38,9 @@
 #                                                                                  #
 ####################################################################################
 
-raise ValueError("{0} vScripot Router received an unhandled Command request : {1}".format(Name, ConnectionInfo.Command))</MainCode>
-    <Origin_X>543</Origin_X>
-    <Origin_Y>112</Origin_Y>
+raise ValueError("Junos Router received an unhandled Command request : {0}".format(ConnectionInfo.CustomActionID))</MainCode>
+    <Origin_X>607</Origin_X>
+    <Origin_Y>56</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -54,6 +55,7 @@ raise ValueError("{0} vScripot Router received an unhandled Command request : {1
     <Description>This call should never executre if Router Module is implemented in a correct way</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>800:602</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -87,10 +89,97 @@ pass</MainCode>
 Take care of connector ordering !   </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>618:818</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>3</vsID>
+    <CommandID>8efdee9c-4bd5-4c8d-9188-bbc2cbe9e79f</CommandID>
+    <Name>Initialite</Name>
+    <DisplayLabel>Initialize</DisplayLabel>
+    <Commands />
+    <MainCode>##############################################################################
+#                                                                            #
+# Initialize must decide whether this module can handle the connected device #
+#                                                                            #
+##############################################################################
+global ActionResult
+global HostName
+global Registry
+
+# ConnectionInfo.aParam will contain the NeighborReegistry object
+# that can be used later to register NHRP peers for example
+
+Registry = ConnectionInfo.aParam
+
+#
+# It is a good practice to update some global variables here.
+#
+# VersionInfo = Session.ExecCommand("show version")
+#
+# HostName can typically queried in this call
+#
+HostName = Session.GetHostName()
+
+# Now we must decide if the current implementation can support the connected device
+# and return a boolean value accordingly. This can be based on any device parameter.
+#
+# Example :
+#
+# _versionInfo = Session.ExecCommand("show version")
+# isSupported = "junos" in _versionInfo.lower()
+#
+
+IsSupported = False
+
+ActionResult = IsSupported</MainCode>
+    <Origin_X>384</Origin_X>
+    <Origin_Y>133</Origin_Y>
+    <Size_Width>100</Size_Width>
+    <Size_Height>50</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description>Initialize must decide whether this module can handle the connected device</Description>
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>851:703</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>4</vsID>
+    <CommandID>6eee32a1-679c-4dfa-aaea-5694d8caa7d4</CommandID>
+    <Name>Done</Name>
+    <DisplayLabel>Done</DisplayLabel>
+    <Commands />
+    <MainCode />
+    <Origin_X>427</Origin_X>
+    <Origin_Y>57</Origin_Y>
+    <Size_Width>149</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description>All Done</Description>
+    <WatchVariables />
+    <Initializer />
+    <EditorSize>831:460</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>5</vsID>
     <CommandID>02a4f2cf-e075-4253-b497-b17b410522d3</CommandID>
     <Name>ReturnSupportTag</Name>
     <DisplayLabel>Support Tag</DisplayLabel>
@@ -102,7 +191,7 @@ Take care of connector ordering !   </Description>
 ##############################################################################
 global ActionResult
 
-ActionResult = "{0} Router Support Module - Python vScript Parser v{1}".format(Name, scriptVersion)</MainCode>
+ActionResult = "TEMPLATE Router Support Module - Python vScript Parser " + scriptVersion</MainCode>
     <Origin_X>647</Origin_X>
     <Origin_Y>177</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -119,10 +208,11 @@ ActionResult = "{0} Router Support Module - Python vScript Parser v{1}".format(N
     <Description>This call should return a descriptive text for this Router software module</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>808:559</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>4</vsID>
+    <vsID>6</vsID>
     <CommandID>6cf97c54-143f-44b3-9676-36be7032e63b</CommandID>
     <Name>ReturnInventory</Name>
     <DisplayLabel>Inventory</DisplayLabel>
@@ -134,7 +224,11 @@ ActionResult = "{0} Router Support Module - Python vScript Parser v{1}".format(N
 ################################################################
 global ActionResult
 
-ActionResult = Version.GetVersion()</MainCode>
+Inventory = "n/a"
+#
+# Implement required logic to get the device inventory
+#
+ActionResult = Inventory</MainCode>
     <Origin_X>645</Origin_X>
     <Origin_Y>651</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -151,10 +245,11 @@ ActionResult = Version.GetVersion()</MainCode>
     <Description>This call should be able to return device inventory string </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>771:618</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>5</vsID>
+    <vsID>7</vsID>
     <CommandID>843c946b-980d-456a-b9d8-61b59b14d2ac</CommandID>
     <Name>ReturnVersion</Name>
     <DisplayLabel>Version</DisplayLabel>
@@ -168,8 +263,7 @@ global ActionResult
 
 # Initialize element has already updated the VersionInfo global variable
 # so return that one.
-
-ActionResult = Version.GetVersion()</MainCode>
+ActionResult = VersionInfo</MainCode>
     <Origin_X>761</Origin_X>
     <Origin_Y>513</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -186,10 +280,11 @@ ActionResult = Version.GetVersion()</MainCode>
     <Description>This call should be able to return device version information</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>812:639</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>6</vsID>
+    <vsID>8</vsID>
     <CommandID>17c60dc8-aa02-445f-bb02-2b908fcd5e2b</CommandID>
     <Name>ReturnSerial</Name>
     <DisplayLabel>System Serial</DisplayLabel>
@@ -201,15 +296,13 @@ ActionResult = Version.GetVersion()</MainCode>
 ############################################################################
 global ActionResult
 
-global ActionResult
-
-_s = re.findall(r"(?&lt;=serial: ).*", Version.GetVersion())
-if len(_s) &gt; 0:
- ActionResult = _s[0]
-else:
-  ActionResult = "n/a"</MainCode>
-    <Origin_X>563</Origin_X>
-    <Origin_Y>725</Origin_Y>
+Serial = "n/a"
+#
+# Implement required logic to get the correct serial number
+#
+ActionResult = Serial</MainCode>
+    <Origin_X>512</Origin_X>
+    <Origin_Y>713</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -224,10 +317,11 @@ else:
     <Description>This call should be able to return the serial numnber(s) of the device </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>823:676</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>7</vsID>
+    <vsID>9</vsID>
     <CommandID>0a008a33-b4ea-4606-a86a-6b4806b37469</CommandID>
     <Name>ReturnModelNumber</Name>
     <DisplayLabel>Model Number</DisplayLabel>
@@ -239,11 +333,11 @@ else:
 #####################################################################
 global ActionResult
 
-_m = re.findall(r"(?&lt;=model: ).*", Version.GetVersion())
-if len(_m) &gt; 0:
- ActionResult = _m[0]
-else:
-  ActionResult = "n/a"</MainCode>
+ModelNumber = ""
+#
+# Implement required logic to get the actual ModelNumber
+#
+ActionResult = ModelNumber</MainCode>
     <Origin_X>785</Origin_X>
     <Origin_Y>436</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -260,10 +354,11 @@ else:
     <Description>This call should be able to return Model number of this device</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>735:574</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>8</vsID>
+    <vsID>10</vsID>
     <CommandID>6c275d41-4db4-49f3-8e1f-354ac2d0c456</CommandID>
     <Name>ReturnStackCount</Name>
     <DisplayLabel>Stack Count</DisplayLabel>
@@ -280,8 +375,8 @@ stackCount == 1
 # Implement required logic to get the correct number
 #
 ActionResult = stackCount;</MainCode>
-    <Origin_X>319</Origin_X>
-    <Origin_Y>716</Origin_Y>
+    <Origin_X>332</Origin_X>
+    <Origin_Y>713</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -296,10 +391,11 @@ ActionResult = stackCount;</MainCode>
     <Description>This call should be able to return the number of devices stacked together</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>695:562</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>9</vsID>
+    <vsID>11</vsID>
     <CommandID>6dd1d716-8ad6-40b6-87a7-ea75cc145a18</CommandID>
     <Name>Return_RoutingTable</Name>
     <DisplayLabel>Routing Table</DisplayLabel>
@@ -310,62 +406,31 @@ ActionResult = stackCount;</MainCode>
 #                                                                           #
 #############################################################################
 global ActionResult
-from System.Net import IPAddress
 
-parsedRoutes = []
-# query full route table
-routeLines = Session.ExecCommand("show routing route").splitlines()
-# iterate through the network blocks
-for thisLine in routeLines:
-  try:
-    words = filter(None, thisLine.split(" "))
-    if len(words) &gt; 0:
-      firstWord = words[0]
-      # The line that contains a / character int he first word is a good candidate to check
-      if "/" in firstWord:
-        ipAdressAndMask = firstWord.split("/")
-        prefixAddress = ipAdressAndMask[0]
-        prefixLength = ipAdressAndMask[1]
-        # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
-        ipa = clr.Reference[IPAddress]()
-        # check if the last word is a valid ip address
-        if IPAddress.TryParse(prefixAddress, ipa) and str(ipa.Value) == prefixAddress:    
-          try:
-            # the 4th word is the flag telling us the protocol type
-            # flags: A:active, ?:loose, C:connect, H:host, S:static, ~:internal, R:rip, O:ospf, B:bgp, 
-            #        Oi:ospf intra-area, Oo:ospf inter-area, O1:ospf ext-type-1, O2:ospf ext-type-2, E:ecmp
-            isActiveRoute = words[3] == "A"
-            if isActiveRoute:
-              protocolType = words[4]
-              thisLineProtocol = L3Discovery.RoutingProtocol.UNKNOWN
-              if protocolType == "C" : thisLineProtocol = L3Discovery.RoutingProtocol.CONNECTED
-              elif protocolType.startswith("O") : thisLineProtocol = L3Discovery.RoutingProtocol.OSPF
-              elif protocolType == "H" : thisLineProtocol = L3Discovery.RoutingProtocol.DIRECT
-              elif protocolType == "S" : thisLineProtocol = L3Discovery.RoutingProtocol.STATIC
-              elif protocolType == "R" : thisLineProtocol = L3Discovery.RoutingProtocol.RIP
-              elif protocolType == "B" : thisLineProtocol = L3Discovery.RoutingProtocol.BGP
-              rte = L3Discovery.RouteTableEntry()
-              rte.Protocol = str(thisLineProtocol)
-              rte.RouterID = RouterIDAndASNumber.GetRouterID(rte.Protocol)
-              rte.Prefix = prefixAddress
-              rte.MaskLength = int(prefixLength)
-              rte.NextHop = words[1]
-              rte.Best = False # don't know actually
-              rte.Tag = ""
-              if len(words) &gt;= 6 : rte.OutInterface = words[5]
-              rte.AD = ""
-              rte.Metric = words[2]
-              parsedRoutes.Add(rte)
-
-          except Exception as Ex:
-            message = "PaloAlto Router Module Error : could not parse a route table line because : " + str(Ex)
-            System.Diagnostics.DebugEx.WriteLine(message)   
-
-  except Exception as Ex:
-    message = "PaloAlto Router Module Error : could not parse a route table line because : " + str(Ex)
-    System.Diagnostics.DebugEx.WriteLine(message)
-  
-ActionResult = parsedRoutes</MainCode>
+# The routing table should be returned as a list, consiting of RouteTableEntry objects
+routingTable = []
+#
+# Implement required logic to query the route table and construct RouteTebleEntry objects
+#
+#try:
+#  rte = L3Discovery.RouteTableEntry()
+#  rte.Protocol = "OSPF"
+#  rte.RouterID = GetRouterID(rte.Protocol)
+#  rte.Prefix = "192.168.0.0"
+#  rte.MaskLength = 32
+#  rte.NextHop = "10.0.0.1"
+#  rte.Best = True
+#  rte.AD = "110"
+#  rte.Metric = "100"
+#  rte.Tag = ""
+#  rte.OutInterface = "ge-0/0/47"
+#  routingTable.Add(rte)
+#                
+#except Exception as Ex:
+#  message = "Router Module Error : could not parse a route table Network block because : " + str(Ex)
+#  System.Diagnostics.DebugEx.WriteLine(message)
+# 
+ActionResult = routingTable</MainCode>
     <Origin_X>95</Origin_X>
     <Origin_Y>368</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -375,17 +440,18 @@ ActionResult = parsedRoutes</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
     <Description>This call should be able to return the full routing table of the device</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>971:818</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>10</vsID>
+    <vsID>12</vsID>
     <CommandID>db87cfaa-046f-4ab9-b6aa-3880066309e7</CommandID>
     <Name>Return_RoutedInterfaces</Name>
     <DisplayLabel>Routed Interfaces</DisplayLabel>
@@ -396,13 +462,22 @@ ActionResult = parsedRoutes</MainCode>
 #                                                                    #
 ######################################################################
 global ActionResult
-global ScriptSuccess
 
-ActionResult = GetInterfaces.GetRoutedInterfaces()
-ScriptSuccess = True
-</MainCode>
+# This is going to be the result we pass back
+routedInterfaces = []
+#
+# Implement required logic to query for routed interfaces and construct RouterInterface objects
+#
+#ri = L3Discovery.RouterInterface()
+#ri.Name = "ge-0/0/10"
+#ri.Address = "192.168.1.1"
+#ri.Status =  "up up"
+#ri.MaskLength = "32"
+#routedInterfaces.Add(ri)
+
+ActionResult = routedInterfaces </MainCode>
     <Origin_X>91</Origin_X>
-    <Origin_Y>434</Origin_Y>
+    <Origin_Y>436</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -417,10 +492,11 @@ ScriptSuccess = True
     <Description>This call should be able to return the list of routed interfaces </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>874:670</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>11</vsID>
+    <vsID>13</vsID>
     <CommandID>a2abda9f-20ed-4889-8e64-ac82f8cb2ade</CommandID>
     <Name>Return_RouterID</Name>
     <DisplayLabel>RouterID</DisplayLabel>
@@ -434,6 +510,9 @@ ScriptSuccess = True
 #################################################################
 global ActionResult
 
+RouterID = {}
+#
+# Example : RouterID = {"OSPF":"10.0.0.254", "BGP":"20.0.0.254"}
 #
 # Implement required logic to get the actual RouterID
 # Consider some caching mechanism to speed up execution.
@@ -441,11 +520,11 @@ global ActionResult
 
 # The protocol for which to get the RouterID
 protocol = ConnectionInfo.aParam
-ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
+ActionResult = RouterID[protocol]</MainCode>
     <Origin_X>716</Origin_X>
-    <Origin_Y>586</Origin_Y>
+    <Origin_Y>583</Origin_Y>
     <Size_Width>147</Size_Width>
-    <Size_Height>47</Size_Height>
+    <Size_Height>50</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -458,10 +537,11 @@ ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
     <Description> This call should be able to return RouterID of this device</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>12</vsID>
+    <vsID>14</vsID>
     <CommandID>fa1c0cc6-5d9c-49c5-8671-fd7aa4948f63</CommandID>
     <Name>Return_ActiveRoutingProtocols</Name>
     <DisplayLabel>Routing Protocols</DisplayLabel>
@@ -472,31 +552,19 @@ ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
 #                                                                                          #
 ############################################################################################
 global ActionResult
-global _runningRoutingProtocols
 
-if len(_runningRoutingProtocols) == 0 :
-  response = Session.ExecCommand("show routing protocol ospf summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF)
-    
-  response = Session.ExecCommand("show routing protocol rip summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP)  
-  
-  response = Session.ExecCommand("show routing protocol bgp summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP)
-    
-  response = Session.ExecCommand("show routing route type static count 1")
-  _staticRouteCount = re.findall(r"(?&lt;=total routes shown: ).*", response)
-  if len(_staticRouteCount) &gt; 0 : _staticRouteCount = _staticRouteCount[0]
-  _sc = 0
-  
-  try:
-    _sc = int(_staticRouteCount)
-  except:
-    _sc = -1
-  
-  if _sc &gt; 0 : _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC)  
-
-ActionResult = _runningRoutingProtocols</MainCode>
+runningRoutingProtocols = []
+#
+# the List should contain elements of L3Discovery.RoutingProtocols enumeration
+#
+# Implement required logic to check for running protocols and add the respective element
+#
+# if OSPFRunning : runningRoutingProtocols.Add(L3Discovery.RoutingProtocols.OSPF)
+# if RIPRunning :runningRoutingProtocols.Add(L3Discovery.RoutingProtocols.RIP)  
+# if BGPRunning :runningRoutingProtocols.Add(L3Discovery.RoutingProtocols.BGP)
+# if STATICExists :runningRoutingProtocols.Add(L3Discovery.RoutingProtocols.STATIC)  
+#
+ActionResult = runningRoutingProtocols</MainCode>
     <Origin_X>216</Origin_X>
     <Origin_Y>648</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -513,10 +581,11 @@ ActionResult = _runningRoutingProtocols</MainCode>
     <Description>This call should be able to return the list of RoutingProtocols running on nthis router</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>1011:842</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>13</vsID>
+    <vsID>15</vsID>
     <CommandID>999b46d8-1847-4a34-ab60-3e2ca74ceea0</CommandID>
     <Name>Return_BGPASNumber</Name>
     <DisplayLabel>BGP AS Number</DisplayLabel>
@@ -550,10 +619,11 @@ ActionResult = ASN
     <Description>This call should be able to return BGP AS number for this router</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>14</vsID>
+    <vsID>16</vsID>
     <CommandID>b1e6cdc1-9376-441f-9758-93a7c38d178e</CommandID>
     <Name>Return_HostName</Name>
     <DisplayLabel>Host Name</DisplayLabel>
@@ -564,7 +634,6 @@ ActionResult = ASN
 #                                                               #
 #################################################################
 global ActionResult
-global HstName
 
 # Initialize element has already updated the HostName global variable
 # so return that one.
@@ -585,10 +654,11 @@ ActionResult = HostName</MainCode>
     <Description>This call should be able to return host name of this router</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>15</vsID>
+    <vsID>17</vsID>
     <CommandID>dfdd4171-2a1b-4428-8463-d0dcaca9e22e</CommandID>
     <Name>Return_Platform</Name>
     <DisplayLabel>Platform</DisplayLabel>
@@ -600,7 +670,7 @@ ActionResult = HostName</MainCode>
 #################################################################
 global ActionResult
 
-Platform = "PaloAlto"
+Platform = ""
 #
 # Platform is typically connected to the vendor name
 # This values serves as information only and does not influence
@@ -623,10 +693,11 @@ ActionResult = Platform</MainCode>
     <Description>This call should be able to return Platform of this device </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>16</vsID>
+    <vsID>18</vsID>
     <CommandID>f1ac0ff6-d637-4a5d-b87d-e060ca2986f3</CommandID>
     <Name>Return_Type</Name>
     <DisplayLabel>Type</DisplayLabel>
@@ -638,7 +709,7 @@ ActionResult = Platform</MainCode>
 #############################################################
 global ActionResult
 
-DeviceType = "Firewall"
+DeviceType = "Router"
 #
 # DeviceTyper is typically "Router" or "Switch"
 # This values serves as information only and does not influence
@@ -661,10 +732,11 @@ ActionResult = DeviceType</MainCode>
     <Description>This call should be able to return Type of this device </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:588</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>17</vsID>
+    <vsID>19</vsID>
     <CommandID>d509949e-d797-4299-9345-678e3d60dd3b</CommandID>
     <Name>Return_Vendor</Name>
     <DisplayLabel>Vendor</DisplayLabel>
@@ -676,7 +748,7 @@ ActionResult = DeviceType</MainCode>
 #####################################################################
 global ActionResult
 
-Vendor = "PaloAlto"
+Vendor = ""
 #
 # WARNING !
 #
@@ -702,10 +774,11 @@ ActionResult = Vendor</MainCode>
     <Description>This call should be able to returnVendor name of this device  </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>644:658</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>18</vsID>
+    <vsID>20</vsID>
     <CommandID>bba6338e-bb3c-4577-b739-dbfa543f4de5</CommandID>
     <Name>Return_InterfaceByName</Name>
     <DisplayLabel>Interface By Name</DisplayLabel>
@@ -718,12 +791,21 @@ ActionResult = Vendor</MainCode>
 global ActionResult
 
 # the interface name to be queried is received in ConnectionInfo.aParam
-# strip any leading or trailing spaces, otherwise command execution will fail
-ifName = ConnectionInfo.aParam.strip()
-
+ifName = ConnectionInfo.aParam
+# this is the RouterInterface object to be returned
+ri = L3Discovery.RouterInterface()
+#
+# Implement required logic to update all interface fields
+#
+# ri.Configuration = ""
+# ri.Description = ""
+# ri.Address = ""
+# ri.MaskLength = 32
+#
 #return the interface
-ActionResult = GetInterfaces.GetInterfaceByName(ifName)</MainCode>
-    <Origin_X>112</Origin_X>
+#
+ActionResult = ri</MainCode>
+    <Origin_X>116</Origin_X>
     <Origin_Y>301</Origin_Y>
     <Size_Width>147</Size_Width>
     <Size_Height>50</Size_Height>
@@ -739,10 +821,11 @@ ActionResult = GetInterfaces.GetInterfaceByName(ifName)</MainCode>
     <Description>This call should be able to return the RouterInterface object for the desired interface </Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>839:705</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>19</vsID>
+    <vsID>21</vsID>
     <CommandID>0649a39e-13e2-4ff5-8b22-5e00775917cd</CommandID>
     <Name>Return_InterfaceNameByIPAddress</Name>
     <DisplayLabel>Interface Name By IP</DisplayLabel>
@@ -756,9 +839,11 @@ global ActionResult
 
 # the interface ip address to be queried is received in ConnectionInfo.aParam
 ifAddress = ConnectionInfo.aParam
-
-#return the interface name
-ActionResult = GetInterfaces.GetInterfaceNameByAddress(ifAddress)</MainCode>
+ifName= ""
+#
+# Implement required logic to get interface name, then return it
+#
+ActionResult = ifName.strip()</MainCode>
     <Origin_X>152</Origin_X>
     <Origin_Y>237</Origin_Y>
     <Size_Width>147</Size_Width>
@@ -775,10 +860,11 @@ ActionResult = GetInterfaces.GetInterfaceNameByAddress(ifAddress)</MainCode>
     <Description>This call should be able to return an interface name based on its IP address</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>756:775</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>20</vsID>
+    <vsID>22</vsID>
     <CommandID>bd4bb60a-dbe1-4da9-ae35-bdf41a8c5959</CommandID>
     <Name>Return_InterfaceConfiguration</Name>
     <DisplayLabel>Interface configuration</DisplayLabel>
@@ -787,17 +873,24 @@ ActionResult = GetInterfaces.GetInterfaceNameByAddress(ifAddress)</MainCode>
 #                                                                           #
 # This call should be able to update the interface configuration field      #
 # of a given RouterInterface object.                                        #
-# A returned bool value should indicate whether the update was successful   #                                      
+# A returned bool value should indicate whether the update was successful   #                                      #
 #                                                                           #
 #############################################################################
 
 global ActionResult
 
-# the interface to be queried is received in ConnectionInfo.aParam
+# the interface object is received in ConnectionInfo.aParam
 queryInterface = ConnectionInfo.aParam
 
 try:
-  queryInterface.Configuration = GetInterfaces.GetInterfaceConfiguration(queryInterface.Name)
+  ifConfig =  ""
+  #
+  # Implement required logic to get interface configuration from device
+  # Consider using an internal cache for configurations to speed up
+  # repetitive queries for the same interface.
+  #
+  # ...then update the Configuration field of the object and return True
+  queryInterface.Configuration = ifConfig
   ActionResult = True
 except:
   ActionResult = False</MainCode>
@@ -818,441 +911,29 @@ except:
 A returned bool value should indicate whether the update was successful.</Description>
     <WatchVariables />
     <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>21</vsID>
-    <CommandID>6122cc1d-1453-4454-8a3c-cad171fdc84c</CommandID>
-    <Name>Copy_of_Initialize</Name>
-    <DisplayLabel>Initialize</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-global HostName
-
-_versionInfo = Version.GetVersion()
-HostName = Session.GetHostName()
-
-if "paloaltonetworks" in _versionInfo.lower():
-  prompt = Session.GetFullPrompt()
-  if "active" in prompt :
-    ActionResult = True
-  else:
-    # Current parser and object module do not support working with the passive firewall
-    ActionResult = False
-else :
-  ActionResult = False</MainCode>
-    <Origin_X>345</Origin_X>
-    <Origin_Y>113</Origin_Y>
-    <Size_Width>122</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description />
-    <WatchVariables />
-    <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>22</vsID>
-    <CommandID>75e1f93c-a59b-419b-b685-9e1f1016ef36</CommandID>
-    <Name>Reset</Name>
-    <DisplayLabel>Reset</DisplayLabel>
-    <Commands />
-    <MainCode>global _versionInfo
-global _hostName
-global _stackCount
-global _runningRoutingProtocols
-global _interfaceConfigurations
-
-_versionInfo = ""
-_hostName = ""
-_stackCount = -1
-_runningRoutingProtocols = []
-_interfaceConfigurations = {}
-
-Version.Reset()
-RouterIDAndASNumber.Reset()
-GetInterfaces.Reset()</MainCode>
-    <Origin_X>441</Origin_X>
-    <Origin_Y>65</Origin_Y>
-    <Size_Width>121</Size_Width>
-    <Size_Height>40</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables />
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
-    <DemoMode>false</DemoMode>
-    <Description>This object should reset the vScript to its original state by 
-clearing any and variables populated during a previous run</Description>
-    <WatchVariables />
-    <Initializer />
+    <EditorSize>684:753</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>23</vsID>
-    <CommandID>99c284e2-0e84-4007-9024-91457aabf7d9</CommandID>
-    <Name>Version</Name>
-    <DisplayLabel />
+    <CommandID>30454073-24c3-46bb-ab9e-08ea554d79f4</CommandID>
+    <Name>Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
     <Commands />
-    <MainCode>global ActionResult
-global ConnectionDropped
-global ScriptSuccess
-global ConnectionInfo
-global BreakExecution
-global ScriptExecutor
-global Session</MainCode>
-    <Origin_X>248</Origin_X>
-    <Origin_Y>849</Origin_Y>
-    <Size_Width>149</Size_Width>
+    <MainCode>#####################################################
+#                                                   #
+# Reset must reset the module to its original state #
+#                                                   #
+#####################################################
+
+global ActionResult
+ActionResult = None
+HostName = ""
+VersionInfo = ""</MainCode>
+    <Origin_X>526</Origin_X>
+    <Origin_Y>135</Origin_Y>
+    <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables>DeviceVersion = None</Variables>
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock>def GetVersion(self):
-  if self.DeviceVersion == None : self.DeviceVersion = Session.ExecCommand("show system info")
-  return self.DeviceVersion
-  
-def Reset(self):
-  self.DeviceVersion = None</CustomCodeBlock>
-    <DemoMode>false</DemoMode>
-    <Description>Collects version information from connected device
-if it has not yet been collected.</Description>
-    <WatchVariables />
-    <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>24</vsID>
-    <CommandID>19abb8f3-af0d-4d28-b21f-dfce56ff784e</CommandID>
-    <Name>RouterIDAndASNumber</Name>
-    <DisplayLabel>Router ID + BGP AS</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-global ConnectionDropped
-global ScriptSuccess
-global ConnectionInfo
-global BreakExecution
-global ScriptExecutor
-global Session</MainCode>
-    <Origin_X>642</Origin_X>
-    <Origin_Y>849</Origin_Y>
-    <Size_Width>150</Size_Width>
-    <Size_Height>50</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables># RouterID is a dictionary keyed by RoutingProtocol as a string
-RouterID = {}
-BGPASNumber = ""
-# static Router ID is used for STATIC routing
-staticRouterID = ""</Variables>
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock>def GetRouterID(self, protocol):
-  if len(self.RouterID) == 0 : self.CalculateRouterIDAndASNumber()
-  rid = self.RouterID.get(str(protocol), "")
-  return rid
-  
-def GetBGPASNumber(self):
-  if self.BGPASNumber == None : self.CalculateRouterIDAndASNumber()
-  return self.BGPASNumber
-  
-def CalculateRouterIDAndASNumber(self):
-  global _runningRoutingProtocols
- 
-  # first get the ip address from system info, we will use it when dynamic routing protocol is in use
-  response = Session.ExecCommand("show system info | match ip-address:")
-  words = filter(None, response.split(":"))
-  if  len(words) == 2 : self.staticRouterID = words[1].strip()
-  
-  # sort the routing protocols by preference (its integer value)
-  sRoutingProtocols = sorted(_runningRoutingProtocols, key=lambda p: int(p))
-  for thisProtocol in sRoutingProtocols:  
-    if thisProtocol == L3Discovery.RoutingProtocol.BGP:
-      bgpSummary = Session.ExecCommand("show routing protocol bgp summary")
-      rid = re.findall(r"(?&lt;=router id: )[\ ,d.]{0,99}", bgpSummary)
-      if len(rid) &gt; 0 : 
-        self.RouterID[str(thisProtocol)] = rid[0].strip()
-        if self.staticRouterID == "" : self.staticRouterID = rid[0]
-      # get AS number
-      #
-      # TODO : this is not tested and is most probably INCORRECT way to get the AS number !
-      #
-      ASes = re.findall(r"(?&lt;=autonomous-system: )[\ ,\d.]{0,99}",  bgpNeighbors)
-      if len(ASes) &gt;= 0 : self.BGPASNumber = ASes[0]
-      
-    elif thisProtocol == L3Discovery.RoutingProtocol.OSPF:
-      ospfStatus = Session.ExecCommand("show routing protocol ospf summary")
-      rid = re.findall(r"(?&lt;=router id: )[\ ,\d.]{0,99}", ospfStatus)
-      if len(rid) &gt; 0 : 
-        self.RouterID[str(thisProtocol)] = rid[0].strip()
-        if self.staticRouterID == "" : self.staticRouterID = rid[0]
-
-    elif thisProtocol == L3Discovery.RoutingProtocol.RIP:
-      ripfStatus = Session.ExecCommand("show routing protocol rip summary")
-      rid = re.findall(r"(?&lt;=router id: )[\ ,\d.]{0,99}", ripStatus)
-      if len(rid) &gt; 0 : 
-        self.RouterID[str(thisProtocol)] = rid[0].strip()
-        if self.staticRouterID == "" : self.staticRouterID = rid[0]
-      
-    elif thisProtocol == L3Discovery.RoutingProtocol.STATIC:
-      self.RouterID[str(thisProtocol)] = self.staticRouterID
-      
-    else :
-      self.RouterID[str(thisProtocol)] = self.staticRouterID
-        
-def Reset(self):
-  self.RouterID = {}
-  self.BGPASNumber = ""
-  self.staticRouterID = ""</CustomCodeBlock>
-    <DemoMode>false</DemoMode>
-    <Description>This object is responsible to retrieve protocol
-dependent RouterID and parse BGP AS number</Description>
-    <WatchVariables />
-    <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>25</vsID>
-    <CommandID>99d17b29-26fb-40f8-a24b-9b9547aabe6e</CommandID>
-    <Name>GetInterfaces</Name>
-    <DisplayLabel>Get interface details</DisplayLabel>
-    <Commands />
-    <MainCode />
-    <Origin_X>449</Origin_X>
-    <Origin_Y>853</Origin_Y>
-    <Size_Width>144</Size_Width>
-    <Size_Height>50</Size_Height>
-    <isStart>false</isStart>
-    <isStop>false</isStop>
-    <isSimpleCommand>false</isSimpleCommand>
-    <isSimpleDecision>false</isSimpleDecision>
-    <Variables># List of FWInterface objects
-FWInterfaces = []   </Variables>
-    <Break>false</Break>
-    <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock># Add your custom methods to object like below
-class FWInterface(object):
-  def __init__(self):
-    self.Name = ""
-    self.ID = ""    
-    self.Speed = ""
-    self.Duplex = ""
-    self.State = ""
-    self.MAC = ""
-    self.VSYS = ""
-    self.Zone = ""
-    self.Forwarding = ""
-    self.Tag = ""
-    self.Address = ""
-    self.MaskLength = ""
-
-"""Collects interface details for all interfaces """
-def ParseInterfaces(self) :
-  from  PGT.Common import IPOperations
-  # get all interface data
-  response = Session.ExecCommand("show interface all")
-  interfaceBlock = False
-  currentHeaderFields = []
-  currentHeaderLine = ""
-  tunnelMAC = ""
-  loopbackMAC = ""
-  intf_lines = [str.lower(thisLine.strip()) for thisLine in response.splitlines()]
-  for thisLine in intf_lines:  
-    try:
-      # a line with dashes is just a separator, skip it
-      if thisLine.startswith("------"): 
-        continue
-      
-      # a line with the first word of "name " signals an interface block, and gives us the header
-      if thisLine.startswith("name "):
-        currentHeaderLine = thisLine
-        currentHeaderFields = filter(None, currentHeaderLine.split(" "))
-        interfaceBlock = True
-        continue
-      
-      # skip the rest
-      if thisLine.startswith("aggregation"):
-        interfaceBlock = False
-        continue
-        
-      # an empty line can also signal the end of an interface block   
-      if interfaceBlock and thisLine == "":
-        interfaceBlock = False
-        continue
-      
-      # parse interface data in block
-      if interfaceBlock:
-        lineWords = filter(None, thisLine.split(" "))
-        # the first item is interface name in each block
-        ifName = lineWords[0]
-        thisFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
-        if thisFWInterface == None:
-          # interface not found by name, create new one
-          thisFWInterface = self.FWInterface()
-          thisFWInterface.Name = ifName
-          if ifName.startswith("tunnel."):
-            thisFWInterface.MAC = tunnelMAC
-          if ifName.startswith("loopback."):
-            thisFWInterface.MAC = loopbackMAC
-            
-          self.FWInterfaces.Add(thisFWInterface)
-        
-        # the length of currentHeaderFields can guide us, which block we are in now
-        if len(currentHeaderFields) == 5:
-          # this is the physical IF parameters block
-          # header :name,id,speed/duplex/state,mac,address    
-          # ID        
-          s = currentHeaderLine.index("id")
-          e = currentHeaderLine.index("speed/duplex/state")
-          thisFWInterface.ID = thisLine[s:e].strip() 
-          # speed/duplex/state
-          s = currentHeaderLine.index("speed/duplex/state")
-          e = currentHeaderLine.index("mac")
-          SDS = thisLine[s:e].strip().split("/")
-          thisFWInterface.Speed = SDS[0]
-          if len(SDS) &gt;= 2 : thisFWInterface.Duplex = SDS[1]
-          if len(SDS) &gt;= 3 : thisFWInterface.State = SDS[2]
-          # MAC
-          s = currentHeaderLine.index("mac")
-          e = len(thisLine)  
-          thisFWInterface.MAC = thisLine[s:e].strip()
-          # memorize MAC address for cloned interfaces
-          if ifName == "tunnel":
-            tunnelMAC = thisFWInterface.MAC
-          if ifName == "loopback":
-            loopbackMAC = thisFWInterface.MAC
-          
-        elif len(currentHeaderFields) == 7 :
-          # this is the logical IF parameters block
-          # header : name,id,vsys,zone,forwarding,tag,address  
-          # vsys
-          s = currentHeaderLine.index("vsys")
-          e = currentHeaderLine.index("zone")
-          thisFWInterface.VSYS = thisLine[s:e].strip()
-          # zone
-          s = currentHeaderLine.index("zone")
-          e = currentHeaderLine.index("forwarding")           
-          thisFWInterface.Zone = thisLine[s:e].strip()
-          # forwarding
-          s = currentHeaderLine.index("forwarding")
-          e = currentHeaderLine.index("tag")
-          thisFWInterface.Forwarding = thisLine[s:e].strip()
-          # tag
-          s = currentHeaderLine.index("tag")
-          e = currentHeaderLine.index("address")        
-          thisFWInterface.Tag = thisLine[s:e].strip()
-          # address
-          s = currentHeaderLine.index("address")
-          e = len(thisLine)
-          addr = thisLine[s:e].strip()
-          if addr != "n/a":
-            addressAndMask = addr.split('/')
-            thisFWInterface.Address = addressAndMask[0]
-            thisFWInterface.MaskLength = addressAndMask[1]
-    except Exception as Ex:
-      msg = "PaloAltoFirewall vScript Parser : Error while processing interface information. Error is : {0}".format(str(Ex))
-      System.Diagnostics.DebugEx.WriteLine(msg) 
-      
-  # --- Get management interface details ---
-  response = Session.ExecCommand("show interface management")
-  if response != "":
-    MGMTInterface = self.FWInterface()
-    intf_lines = [str.lower(thisLine.strip()) for thisLine in response.splitlines()]
-    for thisLine in intf_lines:   
-      if thisLine.startswith("ip address"): 
-        words = thisLine.split(":")
-        MGMTInterface.Address = words[1].strip()
-      if thisLine.startswith("netmask"): 
-        words = thisLine.split(":")
-        netMask = words[1]
-        MGMTInterface.MaskLength = str(IPOperations.GetMaskLength(netMask))
-        MGMTInterface.Name = "Management"
-        self.FWInterfaces.Add(MGMTInterface)
-        break        
-            
-
-"""Returns a RouterInterface object for the interface specified by its name"""        
-def GetInterfaceByName(self, ifName):
-  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
-  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
-  return self.FWInterface2RouterInterface(foundFWInterface)
-  
-""" Returns a RouterInterface object for the interface specified by its ip address """    
-def GetInterfaceNameByAddress(self, ipAddress):
-  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
-  ifName = ""
-  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Address == ipAddress), None)
-  if foundFWInterface != None:
-    ifName = foundFWInterface.Name
-  return ifName     
-
-""" Return a synthetic configuration of an interface """
-def GetInterfaceConfiguration(self, ifName):
-  if len(self.FWInterfaces) == 0 : self.ParseInterfaces()
-  ifConfig = ""
-  foundFWInterface = next((intf for intf in self.FWInterfaces if intf.Name == ifName), None)
-  if foundFWInterface != None:
-    ifConfig = "{0}{\r\n  ID={1}\r\n  Address={2}/{3}\r\n}".format(foundFWInterface.Name, foundFWInterface.ID, foundFWInterface.Address, foundFWInterface.MaskLength )
-  return ifConfig 
-
-"""  Map an FWInterface object to L3Discovery.RouterInterface object"""
-def FWInterface2RouterInterface(self, fwInterface):
-  if fwInterface == None : return None
-  # -- 
-  ri = L3Discovery.RouterInterface()
-  ri.Name = fwInterface.Name
-  ri.Address = fwInterface.Address
-  ri.Status =  fwInterface.State
-  ri.MaskLength = fwInterface.MaskLength
-  ri.Description = " ".join([fwInterface.Name, fwInterface.ID, fwInterface.VSYS, fwInterface.Zone])
-  return ri
-  
-""" Return interfaces in the form of list of RouterInterface"""
-def GetRoutedInterfaces(self):
-  if len(self.FWInterfaces) == 0 : self.ParseInterfaces() 
-  routedInterfaces = filter(lambda x: x.Address != "", self.FWInterfaces)
-  return map(self.FWInterface2RouterInterface, routedInterfaces)
-  
-def Reset(self):
-  self.FWInterfaces = []</CustomCodeBlock>
-    <DemoMode>false</DemoMode>
-    <Description>This object will parse interface details</Description>
-    <WatchVariables />
-    <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
-  </vScriptCommands>
-  <vScriptCommands>
-    <vsID>26</vsID>
-    <CommandID>82bc327f-ca2d-48d0-ba65-7f952d80492f</CommandID>
-    <Name>RegisterNHRP</Name>
-    <DisplayLabel>Register NHRP</DisplayLabel>
-    <Commands />
-    <MainCode>global ActionResult
-global ConnectionDropped
-global ScriptSuccess
-global ConnectionInfo
-global BreakExecution</MainCode>
-    <Origin_X>442</Origin_X>
-    <Origin_Y>775</Origin_Y>
-    <Size_Width>139</Size_Width>
-    <Size_Height>43</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -1262,10 +943,11 @@ global BreakExecution</MainCode>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
-    <Description />
+    <Description>Reset must reset the module to its original state</Description>
     <WatchVariables />
     <Initializer />
-    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+    <EditorSize>826:631</EditorSize>
+    <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
     <cID>0</cID>
@@ -1280,6 +962,7 @@ global BreakExecution</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>1</cID>
@@ -1294,6 +977,7 @@ global BreakExecution</MainCode>
     <Order>23</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>2</cID>
@@ -1301,311 +985,342 @@ global BreakExecution</MainCode>
     <Name>SwitchTask_SupportTag</Name>
     <DisplayLabel>GetSupportTag</DisplayLabel>
     <Left>2</Left>
-    <Right>3</Right>
-    <Condition>return ConnectionInfo.Command == "GetSupportTag"</Condition>
+    <Right>5</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetSupportTag"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>2</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>3</cID>
     <ConnectorID />
-    <Name>SwitchTask_Copy_of_Initialize</Name>
+    <Name>SwitchTask_Initialize</Name>
     <DisplayLabel>Initialize</DisplayLabel>
     <Left>2</Left>
-    <Right>21</Right>
-    <Condition>return ConnectionInfo.Command == "Initialize"</Condition>
+    <Right>3</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "Initialize"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>0</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>4</cID>
     <ConnectorID />
-    <Name>SwitchTask_ReturnInventory</Name>
-    <DisplayLabel>Get Inventory</DisplayLabel>
-    <Left>2</Left>
+    <Name>Initialite_Done</Name>
+    <DisplayLabel />
+    <Left>3</Left>
     <Right>4</Right>
-    <Condition>return ConnectionInfo.Command == "GetInventory"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>9</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>5</cID>
-    <ConnectorID />
-    <Name>SwitchTask_GetSystemSerial</Name>
-    <DisplayLabel>Get Serial</DisplayLabel>
-    <Left>2</Left>
-    <Right>6</Right>
-    <Condition>return ConnectionInfo.Command == "GetSystemSerial"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>10</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>6</cID>
-    <ConnectorID />
-    <Name>SwitchTask_ReturnVersion</Name>
-    <DisplayLabel>Get version</DisplayLabel>
-    <Left>2</Left>
-    <Right>5</Right>
-    <Condition>return ConnectionInfo.Command == "GetVersion"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>7</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>7</cID>
-    <ConnectorID />
-    <Name>SwitchTask_ReturnModelNumber</Name>
-    <DisplayLabel>Get Model Number</DisplayLabel>
-    <Left>2</Left>
-    <Right>7</Right>
-    <Condition>return ConnectionInfo.Command == "GetModelNumber"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>6</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>8</cID>
-    <ConnectorID />
-    <Name>SwitchTask_ReturnStackCount</Name>
-    <DisplayLabel>Get Stack Count</DisplayLabel>
-    <Left>2</Left>
-    <Right>8</Right>
-    <Condition>return ConnectionInfo.Command == "GetStackCount"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>11</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>9</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_RoutingTable</Name>
-    <DisplayLabel>Get Routing Table</DisplayLabel>
-    <Left>2</Left>
-    <Right>9</Right>
-    <Condition>return ConnectionInfo.Command == "GetRoutingTable"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>16</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>10</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_RoutedInterfaces</Name>
-    <DisplayLabel>Get Routed Interfaces</DisplayLabel>
-    <Left>2</Left>
-    <Right>10</Right>
-    <Condition>return ConnectionInfo.Command == "GetRoutedInterfaces"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>15</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>11</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_RouterID</Name>
-    <DisplayLabel>Get Router ID</DisplayLabel>
-    <Left>2</Left>
-    <Right>11</Right>
-    <Condition>return ConnectionInfo.Command == "GetRouterID"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>8</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>12</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_ActiveRoutingProtocols</Name>
-    <DisplayLabel>Ge tActive Protocols</DisplayLabel>
-    <Left>2</Left>
-    <Right>12</Right>
-    <Condition>return ConnectionInfo.Command == "GetActiveProtocols"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>12</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>13</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_BGPASNumber</Name>
-    <DisplayLabel>Get BGP AS</DisplayLabel>
-    <Left>2</Left>
-    <Right>13</Right>
-    <Condition>return ConnectionInfo.Command == "GeBGPASNumber"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>14</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>14</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_HostName</Name>
-    <DisplayLabel>Get HostName</DisplayLabel>
-    <Left>2</Left>
-    <Right>14</Right>
-    <Condition>return ConnectionInfo.Command == "GetHostName"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>13</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>15</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_Platform</Name>
-    <DisplayLabel>Get Platform</DisplayLabel>
-    <Left>2</Left>
-    <Right>15</Right>
-    <Condition>return ConnectionInfo.Command == "GetPlatform"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>3</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>16</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_Type</Name>
-    <DisplayLabel>Get Type</DisplayLabel>
-    <Left>2</Left>
-    <Right>16</Right>
-    <Condition>return ConnectionInfo.Command == "GetType"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>4</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>17</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_Vendor</Name>
-    <DisplayLabel>Get Vendor</DisplayLabel>
-    <Left>2</Left>
-    <Right>17</Right>
-    <Condition>return ConnectionInfo.Command == "GetVendor"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>5</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>18</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_InterfaceByName</Name>
-    <DisplayLabel>Get If By Name</DisplayLabel>
-    <Left>2</Left>
-    <Right>18</Right>
-    <Condition>return ConnectionInfo.Command == "GetInterfaceByName"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>17</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>19</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_InterfaceByIPAddress</Name>
-    <DisplayLabel>Get If Bí IP</DisplayLabel>
-    <Left>2</Left>
-    <Right>19</Right>
-    <Condition>return ConnectionInfo.Command == "GetInterfaceNameByIPAddress"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>18</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>20</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Return_InterfaceConfiguration</Name>
-    <DisplayLabel>Get If Config</DisplayLabel>
-    <Left>2</Left>
-    <Right>20</Right>
-    <Condition>return ConnectionInfo.Command == "GetInterfaceConfiguration"</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>19</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>21</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Copy_of_Stop_2</Name>
-    <DisplayLabel>Reset</DisplayLabel>
-    <Left>2</Left>
-    <Right>22</Right>
-    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
+    <Condition>return True</Condition>
     <Variables />
     <Break>false</Break>
     <Order>1</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>5</cID>
+    <ConnectorID />
+    <Name>SwitchTask_ReturnInventory</Name>
+    <DisplayLabel>Get Inventory</DisplayLabel>
+    <Left>2</Left>
+    <Right>6</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetInventory"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>9</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>6</cID>
+    <ConnectorID />
+    <Name>SwitchTask_GetSystemSerial</Name>
+    <DisplayLabel>Get Serial</DisplayLabel>
+    <Left>2</Left>
+    <Right>8</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetSystemSerial"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>10</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>7</cID>
+    <ConnectorID />
+    <Name>SwitchTask_ReturnVersion</Name>
+    <DisplayLabel>Get version</DisplayLabel>
+    <Left>2</Left>
+    <Right>7</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetVersion"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>7</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>8</cID>
+    <ConnectorID />
+    <Name>SwitchTask_ReturnModelNumber</Name>
+    <DisplayLabel>Get Model Number</DisplayLabel>
+    <Left>2</Left>
+    <Right>9</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetModelNumber"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>6</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>9</cID>
+    <ConnectorID />
+    <Name>SwitchTask_ReturnStackCount</Name>
+    <DisplayLabel>Get Stack Count</DisplayLabel>
+    <Left>2</Left>
+    <Right>10</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetStackCount"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>11</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>10</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_RoutingTable</Name>
+    <DisplayLabel>Get Routing Table</DisplayLabel>
+    <Left>2</Left>
+    <Right>11</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetRoutingTable"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>16</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>11</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_RoutedInterfaces</Name>
+    <DisplayLabel>Get Routed Interfaces</DisplayLabel>
+    <Left>2</Left>
+    <Right>12</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetRoutedInterfaces"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>15</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>12</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_RouterID</Name>
+    <DisplayLabel>Get Router ID</DisplayLabel>
+    <Left>2</Left>
+    <Right>13</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetRouterID"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>8</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>13</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_ActiveRoutingProtocols</Name>
+    <DisplayLabel>Ge tActive Routing Protocols</DisplayLabel>
+    <Left>2</Left>
+    <Right>14</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetActiveRoutingProtocols"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>12</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>14</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_BGPASNumber</Name>
+    <DisplayLabel>Get BGP AS</DisplayLabel>
+    <Left>2</Left>
+    <Right>15</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GeBGPASNumber"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>14</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>15</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_HostName</Name>
+    <DisplayLabel>Get HostName</DisplayLabel>
+    <Left>2</Left>
+    <Right>16</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetHostName"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>13</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>16</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_Platform</Name>
+    <DisplayLabel>Get Platform</DisplayLabel>
+    <Left>2</Left>
+    <Right>17</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetPlatform"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>3</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>17</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_Type</Name>
+    <DisplayLabel>Get Type</DisplayLabel>
+    <Left>2</Left>
+    <Right>18</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetType"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>4</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>18</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_Vendor</Name>
+    <DisplayLabel>Get Vendor</DisplayLabel>
+    <Left>2</Left>
+    <Right>19</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetVendor"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>5</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>19</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_InterfaceByName</Name>
+    <DisplayLabel>Get If By Name</DisplayLabel>
+    <Left>2</Left>
+    <Right>20</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetInterfaceByName"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>17</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>20</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_InterfaceByIPAddress</Name>
+    <DisplayLabel>Get If Bí IP</DisplayLabel>
+    <Left>2</Left>
+    <Right>21</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetInterfaceNameByIPAddress"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>18</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>21</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Return_InterfaceConfiguration</Name>
+    <DisplayLabel>Get If Config</DisplayLabel>
+    <Left>2</Left>
+    <Right>22</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "GetInterfaceConfiguration"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>19</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>22</cID>
     <ConnectorID />
-    <Name>SwitchTask_RegisterNHRP</Name>
-    <DisplayLabel>Register NHRP</DisplayLabel>
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
     <Left>2</Left>
-    <Right>26</Right>
-    <Condition>return ConnectionInfo.Command == "RegisterNHRP"</Condition>
+    <Right>23</Right>
+    <Condition>return ConnectionInfo.CustomActionID == "Reset"</Condition>
     <Variables />
     <Break>false</Break>
-    <Order>22</Order>
+    <Order>1</Order>
     <Description />
     <WatchVariables />
+    <EditorSize>671:460</EditorSize>
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>23</cID>
+    <ConnectorID />
+    <Name>Reset_Done</Name>
+    <DisplayLabel />
+    <Left>23</Left>
+    <Right>4</Right>
+    <Condition>return True</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>1</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
-    <ScriptName>PaloAltoFirewall</ScriptName>
+    <ScriptName>Cisco_ASA</ScriptName>
     <GlobalCode>###################################
 #                                 #
 # Declare global variables here   #
 #                                 #
 ###################################
-scriptVersion = "2.0"
+scriptVersion = "v2.0"
 VersionInfo = ""
 HostName = ""
-
-# The routing protocols run by this router
-_runningRoutingProtocols = []
-# Interface config cache, keyed by Interface Name
-_interfaceConfigurations = {}
-# Routed interfaces
-_routedInterfaces = []</GlobalCode>
+# This will be the NeighborRegistry object passed in Initialize
+Registry = None</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
     <CustomNameSpaces>############################################################
 #                                                          #
@@ -1627,10 +1342,12 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6160002</EditorScaleFactor>
-    <Description>This vScript is responsible to parse configuration
-items from a Palo Alto PAN firewall</Description>
-    <EditorSize>{Width=735, Height=677}</EditorSize>
-    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
+    <EditorScaleFactor>0.8680001</EditorScaleFactor>
+    <Description>This vScript template can be used as a starting point for creating a 
+new Router  module for Network Map. This is required to add support
+for a new vendor. 
+You will also need to add routing protocol Parser Module to fully support 
+network discovery fo that vendor.</Description>
+    <EditorSize>{Width=941, Height=772}</EditorSize>
   </Parameters>
 </vScriptDS>

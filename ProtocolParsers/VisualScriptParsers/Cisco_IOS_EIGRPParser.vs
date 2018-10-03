@@ -23,7 +23,6 @@
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>0:0</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStart</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -71,7 +70,6 @@ is capable of handling the Router and the requested
 routing protocol  it has been invoked for.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>626:572</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -98,7 +96,6 @@ routing protocol  it has been invoked for.</Description>
 which action to take.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:875</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -129,7 +126,6 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
 the current Protocol Parser</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>866:576</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -183,7 +179,7 @@ for line in eigrp_lines:
         remoteNeighboringIP = str(nIP.Value)
         description = ""
         OperationStatusLabel = "Registering EIGRP neighbor {0}...".format(remoteNeighboringIP)
-        nRegistry.RegisterL3Neighbor(Router, L3Discovery.RoutingProtocol.EIGRP, remoteNeighboringIP, "", description, remoteNeighboringIP, ri, "established")
+        nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.EIGRP, remoteNeighboringIP, "", description, remoteNeighboringIP, ri, "established")
         
   except Exception as Ex:
     msg = "Cisco IOS EIGRP vScript Parser : Error while parsing eigrp output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -205,7 +201,6 @@ for line in eigrp_lines:
     <Description>Discover EIGRP adjacencies and register peers for discovery</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>1339:813</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -235,7 +230,6 @@ ActionResult = ParsingForProtocols</MainCode>
 that are actively running on the router</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>642:586</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -265,7 +259,6 @@ raise ValueError("CiscoIOS OSPF Parser module has received an unhandled Command 
 that is not handled. This is an ERROR condition.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>696:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -301,7 +294,6 @@ Router = None</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>568:460</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -317,7 +309,6 @@ Router = None</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>0:0</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>1</cID>
@@ -332,7 +323,6 @@ Router = None</MainCode>
     <Order>1</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>2</cID>
@@ -347,7 +337,6 @@ Router = None</MainCode>
     <Order>0</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>3</cID>
@@ -362,7 +351,6 @@ Router = None</MainCode>
     <Order>3</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>4</cID>
@@ -377,7 +365,6 @@ Router = None</MainCode>
     <Order>2</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>5</cID>
@@ -392,7 +379,6 @@ Router = None</MainCode>
     <Order>8</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <vScriptConnector>
     <cID>6</cID>
@@ -407,11 +393,10 @@ Router = None</MainCode>
     <Order>7</Order>
     <Description />
     <WatchVariables />
-    <EditorSize>671:460</EditorSize>
   </vScriptConnector>
   <Parameters>
     <ScriptName>Cisco_IOS_EIGRP_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "1.0"
+    <GlobalCode>ScriptVersion = "2.0"
 # Describe the Module Name
 ModuleName = "Cisco IOS EIGRP Protocol Parser Module - Python vScript Parser"
 # Describes current operation status
@@ -419,7 +404,7 @@ OperationStatusLabel = "Init"
 # The Router instance associated to this parser. Set in Initialize
 Router = None
 #This is the protocol supported by this module
-ParsingForProtocols = [L3Discovery.RoutingProtocol.EIGRP]
+ParsingForProtocols = [L3Discovery.NeighborProtocol.EIGRP]
 #This is the vendor name supported by this module
 ParsingForVendor = "Cisco"</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
@@ -437,7 +422,7 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
@@ -446,5 +431,6 @@ import System.Net</CustomNameSpaces>
     <EditorScaleFactor>0.8679999</EditorScaleFactor>
     <Description />
     <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

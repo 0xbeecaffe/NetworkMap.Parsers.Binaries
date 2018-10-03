@@ -36,7 +36,7 @@ namespace L3Discovery.Routers.JunOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
-		private const string _internalClassVersion = "v2.00";
+		private const string _internalClassVersion = "v2.10";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 
 		/// <summary>
@@ -91,6 +91,13 @@ namespace L3Discovery.Routers.JunOS
 					if (!response.Contains("not running") && !response.Contains("not valid"))
 					{
 						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.BGP);
+					}
+
+					response = _session.ExecCommand("show lldp");
+					Match lldpenabled = Regex.Match(response, @"LLDP\s+:\s+Enabled", RegexOptions.IgnoreCase);
+					if (lldpenabled.Success)
+					{
+						_runningNeighborProtocols.Add(L3Discovery.NeighborProtocol.LLDP);
 					}
 
 					response = _session.ExecCommand("show configuration routing-options static ");
@@ -428,7 +435,7 @@ namespace L3Discovery.Routers.JunOS
 				List<RouterInterface> fi = new List<RouterInterface>();
 				try
 				{
-					string inetInterfaces = _session.ExecCommand("show interfaces terse | match inet");
+					string inetInterfaces = _session.ExecCommand("show interfaces terse");
 					// Because JunOS reports the VRRP VIP addresses in "show interface terse" output, it is necessary to 
 					// check interface ip of VRRP enabled interfaces
 					string vrrpSummary = _session.ExecCommand("show vrrp summary | match lcl");
@@ -438,29 +445,58 @@ namespace L3Discovery.Routers.JunOS
 						try
 						{
 							string[] words = line.SplitBySpace();
-							if (words.Length >= 5)
+							if (words.Length >= 4)
 							{
 								// words should look like : xe-0/0/25.0,up,up,inet,172.20.1.18/31 
 								string ifName = words[0];
-								if (!ifName.StartsWith("bme"))
+								if (IsInterrestingInterface(ifName))
 								{
-									string[] ifIPAndMask = words[4].Split('/');
-									IPAddress ipa;
-									if (IPAddress.TryParse(ifIPAndMask[0], out ipa))
+									string ifProtocol = words[3];
+									if (ifProtocol == "inet" && words.Length >= 5)
 									{
-										RouterInterface ri = new RouterInterface();
-										ri.Name = ifName;
-										// check if VRRP is enabled for interface
-										string vrrpLine = vrrpSummaryLines.FirstOrDefault(l => l.StartsWith(ifName));
-										if (vrrpLine != null)
+										string[] ifIPAndMask = words[4].Split('/');
+										IPAddress ipa;
+										if (IPAddress.TryParse(ifIPAndMask[0], out ipa))
 										{
-											// VRRP is running on interface, use the lcl address. Address should be the last word in line
-											string[] vrrpLineWords = vrrpLine.SplitBySpace();
-											ri.Address = vrrpLineWords[vrrpLineWords.Length - 1];
+											RouterInterface ri = new RouterInterface();
+											ri.Name = ifName;
+											// check if VRRP is enabled for interface
+											string vrrpLine = vrrpSummaryLines.FirstOrDefault(l => l.StartsWith(ifName));
+											if (vrrpLine != null)
+											{
+												// VRRP is running on interface, use the lcl address. Address should be the last word in line
+												string[] vrrpLineWords = vrrpLine.SplitBySpace();
+												ri.Address = vrrpLineWords[vrrpLineWords.Length - 1];
+											}
+											else ri.Address = ifIPAndMask[0];
+											ri.MaskLength = ifIPAndMask.Length >= 2 ? ifIPAndMask[1] : "";
+											ri.Status = string.Format("{0},{1}", words[1], words[2]);
+											if (_interfaces.ContainsKey(ri.Name)) ri.Configuration = _interfaces[ri.Name].Configuration;
+											fi.Add(ri);
 										}
-										else ri.Address = ifIPAndMask[0];
-										ri.MaskLength = ifIPAndMask.Length >= 2 ? ifIPAndMask[1] : "";
+									}
+									else if (ifProtocol == "eth-switch")
+									{
+										// words should look like : ge-3/0/36.0,up,up,eth-switch   
+										RouterInterface ri = new RouterInterface();
+										// store the physical interface name, remove trailing ".0"
+										ri.Name = Regex.Replace(ifName, @"\.0$", "");
+										ri.Address = "";
+										ri.MaskLength = "";
 										ri.Status = string.Format("{0},{1}", words[1], words[2]);
+										if (_interfaces.ContainsKey(ri.Name)) ri.Configuration = _interfaces[ri.Name].Configuration;
+										fi.Add(ri);
+									}
+									else if (ifProtocol == "aenet" && words.Length >= 6)
+									{
+										// words should look like : xe-3/0/44.0,up,up,aenet,-->,ae3.0   
+										RouterInterface ri = new RouterInterface();
+										// store the physical interface name, remove trailing ".0"
+										ri.Name = Regex.Replace(ifName, @"\.0$", "");
+										ri.Address = "";
+										ri.MaskLength = "";
+										ri.Status = string.Format("{0},{1}", words[1], words[2]);
+										ri.AggregateID = words[5];
 										if (_interfaces.ContainsKey(ri.Name)) ri.Configuration = _interfaces[ri.Name].Configuration;
 										fi.Add(ri);
 									}
@@ -471,6 +507,22 @@ namespace L3Discovery.Routers.JunOS
 						{
 							string msg = string.Format("JunOS IRouter : error processing routed interfaces : {0}", Ex.Message);
 							DebugEx.WriteLine(msg);
+						}
+					}
+					// Process descriptions
+					string interfaceDescriptions = _session.ExecCommand("show interfaces descriptions");
+
+					foreach (string line in interfaceDescriptions.SplitByLine())
+					{
+						string[] words = line.SplitBySpace();
+						if (words.Length >= 4)
+						{
+							string ifName = words[0];
+							var foundInterface = fi.FirstOrDefault(i => i.Name == ifName);
+							if (foundInterface != null)
+							{
+								foundInterface.Description = string.Join(" ", words.SkipWhile((string s, int i) => i < 3));
+							}
 						}
 					}
 				}
@@ -498,7 +550,7 @@ namespace L3Discovery.Routers.JunOS
 			}
 		}
 
-		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v2.0";
+		public string SupportTag => "Juniper, JunOS, Router Module for EX/QFX/MX/SRX v2.1";
 
 		public string SystemSerial
 		{
@@ -552,17 +604,17 @@ namespace L3Discovery.Routers.JunOS
 			#endregion
 
 			#region  get routerID for all routing protocols this router is running
-			foreach (NeighborProtocol thisPprotocol in ActiveProtocols.Where(p => p is NeighborProtocol).OrderBy(p => p))
+			foreach (NeighborProtocol thisProtocol in ActiveProtocols.Where(p => p is NeighborProtocol).OrderBy(p => p))
 			{
-				switch (thisPprotocol)
+				switch (thisProtocol)
 				{
 					case NeighborProtocol.BGP:
 						{
 							string bgpNeighbors = _session.ExecCommand("show bgp neighbor");
 							m = Regex.Match(bgpNeighbors, @"(?<=Local ID: )[\d.]{0,99}");
-							if (m.Success) _routerID[thisPprotocol] = m.Value;
-							else _routerID[thisPprotocol] = globalRouterID; // fall back to global
-																															// get also the BGP AS number
+							if (m.Success) _routerID[thisProtocol] = m.Value;
+							else _routerID[thisProtocol] = globalRouterID; // fall back to global
+																														 // get also the BGP AS number
 							var ASes = Regex.Matches(bgpNeighbors, @"(?<=AS )[\d.]{0,99}", RegexOptions.Compiled);
 							if (ASes.Count >= 2) _bgpASNumber = ASes[1].Value;
 							else
@@ -576,17 +628,27 @@ namespace L3Discovery.Routers.JunOS
 						{
 							string ospfStatus = _session.ExecCommand("show ospf overview");
 							m = Regex.Match(ospfStatus, @"(?<=Router ID: )[\d.]{0,99}");
-							if (m.Success) _routerID[thisPprotocol] = m.Value;
-							else _routerID[thisPprotocol] = globalRouterID; // fall back to global
+							if (m.Success) _routerID[thisProtocol] = m.Value;
+							else _routerID[thisProtocol] = globalRouterID; // fall back to global
 							break;
 						}
 					case NeighborProtocol.RIP:
 					case NeighborProtocol.STATIC:
 						{
-							_routerID[thisPprotocol] = globalRouterID; // fall back to global
+							_routerID[thisProtocol] = globalRouterID; // fall back to global
 							break;
 						}
-					default: _routerID[thisPprotocol] = globalRouterID; break;
+					case NeighborProtocol.LLDP:
+						{
+							string lldpInfo = Session.ExecCommand("show lldp local-information");
+							Match lldpStatus = Regex.Match(lldpInfo, @"(?<=Chassis ID\s+: )([0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+)", RegexOptions.IgnoreCase);
+							if (lldpStatus.Success)
+							{
+								_routerID[thisProtocol] = lldpStatus.Value;
+							}
+							break;
+						}
+					default: _routerID[thisProtocol] = globalRouterID; break;
 				}
 			}
 			#endregion
@@ -653,6 +715,16 @@ namespace L3Discovery.Routers.JunOS
 						}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Determines if a given name is an interface name we want to parse
+		/// </summary>
+		/// <param name="intfName"></param>
+		/// <returns></returns>
+		private bool IsInterrestingInterface(string intfName)
+		{
+			return intfName.StartsWith("ge-") || intfName.StartsWith("xe-") || intfName.StartsWith("et-") || intfName.StartsWith("ae") || intfName.StartsWith("irb") || intfName.StartsWith("vlan") || intfName.StartsWith("lo");
 		}
 		#endregion
 	}
