@@ -7,8 +7,8 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>438</Origin_X>
-    <Origin_Y>12</Origin_Y>
+    <Origin_X>24</Origin_X>
+    <Origin_Y>291</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -53,8 +53,8 @@ if Router != None:
     ActionResult = False
 else:
   ActionResult = False</MainCode>
-    <Origin_X>579</Origin_X>
-    <Origin_Y>82</Origin_Y>
+    <Origin_X>359</Origin_X>
+    <Origin_Y>42</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -85,8 +85,8 @@ for the specified protocol using the given Router instance.</Description>
 #                                                         #
 ###########################################################
 pass</MainCode>
-    <Origin_X>439</Origin_X>
-    <Origin_Y>247</Origin_Y>
+    <Origin_X>206</Origin_X>
+    <Origin_Y>284</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -119,8 +119,8 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>699</Origin_X>
-    <Origin_Y>208</Origin_Y>
+    <Origin_X>483</Origin_X>
+    <Origin_Y>227</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -199,7 +199,7 @@ for line in ospf_lines:
             # add the areaID
             ri.OSPFArea = areaID
             OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-            nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)   
+            nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)   
           else:
             msg = "PAloAlto.OSPFarser : cannot find RouterInterface for interface name : {0}".format(outInterfaceName)
             System.Diagnostics.DebugEx.WriteLine(msg) 
@@ -227,8 +227,8 @@ for line in ospf_lines:
     msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
     System.Diagnostics.DebugEx.WriteLine(msg) 
 #</MainCode>
-    <Origin_X>603</Origin_X>
-    <Origin_Y>474</Origin_Y>
+    <Origin_X>489</Origin_X>
+    <Origin_Y>303</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -244,6 +244,7 @@ for line in ospf_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=702, Height=794}|{X=313,Y=203}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -257,8 +258,8 @@ global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>209</Origin_X>
-    <Origin_Y>78</Origin_Y>
+    <Origin_X>401</Origin_X>
+    <Origin_Y>509</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -291,8 +292,8 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>666</Origin_X>
-    <Origin_Y>362</Origin_Y>
+    <Origin_X>458</Origin_X>
+    <Origin_Y>156</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -320,8 +321,8 @@ this module can support</Description>
 
 ActionResult = OSPFProcessor.GetAreas()
 </MainCode>
-    <Origin_X>248</Origin_X>
-    <Origin_Y>482</Origin_Y>
+    <Origin_X>502</Origin_X>
+    <Origin_Y>378</Origin_Y>
     <Size_Width>125</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -350,8 +351,8 @@ ActionResult = OSPFProcessor.GetAreas()
 ospfArea = ConnectionInfo.aParam
 
 ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
-    <Origin_X>116</Origin_X>
-    <Origin_Y>357</Origin_Y>
+    <Origin_X>452</Origin_X>
+    <Origin_Y>449</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -382,8 +383,8 @@ ospfArea = ConnectionInfo.aParam
 LSAType = ConnectionInfo.bParam
 # return the LSAs
 ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
-    <Origin_X>92</Origin_X>
-    <Origin_Y>215</Origin_Y>
+    <Origin_X>346</Origin_X>
+    <Origin_Y>555</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -414,8 +415,8 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>24</Origin_X>
-    <Origin_Y>562</Origin_Y>
+    <Origin_X>45</Origin_X>
+    <Origin_Y>647</Origin_Y>
     <Size_Width>166</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -503,8 +504,8 @@ OperationStatusLabel = "Working"
 OSPFProcessor.Reset()
 ActionResult = None
 Router = None</MainCode>
-    <Origin_X>432</Origin_X>
-    <Origin_Y>558</Origin_Y>
+    <Origin_X>437</Origin_X>
+    <Origin_Y>93</Origin_Y>
     <Size_Width>128</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -701,7 +702,7 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <EditorSize>{Width=710, Height=681}</EditorSize>
     <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

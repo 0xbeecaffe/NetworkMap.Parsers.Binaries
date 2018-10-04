@@ -7,8 +7,8 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>238</Origin_X>
-    <Origin_Y>66</Origin_Y>
+    <Origin_X>45</Origin_X>
+    <Origin_Y>254</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -54,7 +54,7 @@ if Router != None:
 else:
   ActionResult = False</MainCode>
     <Origin_X>393</Origin_X>
-    <Origin_Y>152</Origin_Y>
+    <Origin_Y>71</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -119,8 +119,8 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>378</Origin_X>
-    <Origin_Y>434</Origin_Y>
+    <Origin_X>486</Origin_X>
+    <Origin_Y>216</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -230,8 +230,8 @@ for thisLine in static_lines:
 #
 # No need to return anything via ActionResult
 #</MainCode>
-    <Origin_X>45</Origin_X>
-    <Origin_Y>307</Origin_Y>
+    <Origin_X>484</Origin_X>
+    <Origin_Y>299</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -247,6 +247,7 @@ for thisLine in static_lines:
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=772, Height=617}|{X=52,Y=52}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -260,8 +261,8 @@ global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>77</Origin_X>
-    <Origin_Y>150</Origin_Y>
+    <Origin_X>389</Origin_X>
+    <Origin_Y>448</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -294,8 +295,8 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>159</Origin_X>
-    <Origin_Y>439</Origin_Y>
+    <Origin_X>453</Origin_X>
+    <Origin_Y>135</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>43</Size_Height>
     <isStart>false</isStart>
@@ -330,8 +331,8 @@ global Router
 OperationStatusLabel = "Working"
 ActionResult = None
 Router = None</MainCode>
-    <Origin_X>448</Origin_X>
-    <Origin_Y>306</Origin_Y>
+    <Origin_X>456</Origin_X>
+    <Origin_Y>388</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>39</Size_Height>
     <isStart>false</isStart>
@@ -486,7 +487,7 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <EditorSize>{Width=629, Height=540}</EditorSize>
     <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

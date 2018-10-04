@@ -7,8 +7,8 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>438</Origin_X>
-    <Origin_Y>12</Origin_Y>
+    <Origin_X>72</Origin_X>
+    <Origin_Y>282</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -64,8 +64,8 @@ else:
 
 if ActionResult:
   DebugEx.WriteLine("{0} is active for Router {1}".format(ModuleName, Router.ManagementIP), DebugLevel.Full)</MainCode>
-    <Origin_X>645</Origin_X>
-    <Origin_Y>124</Origin_Y>
+    <Origin_X>460</Origin_X>
+    <Origin_Y>89</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -96,8 +96,8 @@ for the specified protocol using the given Router instance.</Description>
 #                                                         #
 ###########################################################
 pass</MainCode>
-    <Origin_X>437</Origin_X>
-    <Origin_Y>222</Origin_Y>
+    <Origin_X>277</Origin_X>
+    <Origin_Y>278</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -130,8 +130,8 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>646</Origin_X>
-    <Origin_Y>314</Origin_Y>
+    <Origin_X>508</Origin_X>
+    <Origin_Y>158</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -231,7 +231,7 @@ for line in bgp_lines:
         ri = Router.GetInterfaceByName(localIfName)
       registeredNeighborCount += 1
       OperationStatusLabel = "Registering neighbor {0} in state {1}".format(remoteRID, bgpState)
-      nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.BGP, remoteRID, remoteAS, "", neighborIP, ri, bgpState)
+      nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.BGP, remoteRID, remoteAS, "", neighborIP, ri, bgpState)
     except: 
       pass
     
@@ -241,10 +241,10 @@ System.Diagnostics.DebugEx.WriteLine("BGP neighbors on {0} : discovered : {1}, r
 #
 # No need to return anything via ActionResult
 #</MainCode>
-    <Origin_X>143</Origin_X>
-    <Origin_Y>282</Origin_Y>
+    <Origin_X>535</Origin_X>
+    <Origin_Y>323</Origin_Y>
     <Size_Width>172</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Size_Height>38</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -258,6 +258,7 @@ System.Diagnostics.DebugEx.WriteLine("BGP neighbors on {0} : discovered : {1}, r
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=905, Height=766}|{X=182,Y=182}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -271,8 +272,8 @@ global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>160</Origin_X>
-    <Origin_Y>125</Origin_Y>
+    <Origin_X>468</Origin_X>
+    <Origin_Y>474</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -305,8 +306,8 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>290</Origin_X>
-    <Origin_Y>436</Origin_Y>
+    <Origin_X>534</Origin_X>
+    <Origin_Y>238</Origin_Y>
     <Size_Width>172</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -335,8 +336,8 @@ global ConnectionDropped
 global ScriptSuccess
 global ConnectionInfo
 global BreakExecution</MainCode>
-    <Origin_X>568</Origin_X>
-    <Origin_Y>444</Origin_Y>
+    <Origin_X>523</Origin_X>
+    <Origin_Y>403</Origin_Y>
     <Size_Width>153</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -490,7 +491,7 @@ import System.Net</CustomNameSpaces>
 creating a new routing protocol Parser Module for Network Map.
 This is required to add support for a new routing protocol to a
 vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <EditorSize>{Width=842, Height=653}</EditorSize>
     <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

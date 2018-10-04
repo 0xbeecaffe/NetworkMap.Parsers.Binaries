@@ -191,7 +191,7 @@ for line in ospf_lines:
         remoteNeighboringIP = str(nIP.Value)
         description = ""
         OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-        nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
+        nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
         
   except Exception as Ex:
     msg = "Cisco IOS OSPF vScript Parser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -213,6 +213,7 @@ for line in ospf_lines:
     <Description>Discover OSPF adjacencies and register peers for discovery</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=1116, Height=851}|{X=130,Y=130}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>

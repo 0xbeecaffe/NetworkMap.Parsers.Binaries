@@ -179,7 +179,7 @@ for line in eigrp_lines:
         remoteNeighboringIP = str(nIP.Value)
         description = ""
         OperationStatusLabel = "Registering EIGRP neighbor {0}...".format(remoteNeighboringIP)
-        nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.EIGRP, remoteNeighboringIP, "", description, remoteNeighboringIP, ri, "established")
+        nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.EIGRP, remoteNeighboringIP, "", description, remoteNeighboringIP, ri, "established")
         
   except Exception as Ex:
     msg = "Cisco IOS EIGRP vScript Parser : Error while parsing eigrp output line [{0}]. Error is : {1}".format(line, str(Ex))
@@ -201,6 +201,7 @@ for line in eigrp_lines:
     <Description>Discover EIGRP adjacencies and register peers for discovery</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=786, Height=690}|{X=234,Y=234}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -430,7 +431,7 @@ import System.Net</CustomNameSpaces>
     <IsRepository>false</IsRepository>
     <EditorScaleFactor>0.8679999</EditorScaleFactor>
     <Description />
-    <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <EditorSize>{Width=837, Height=565}</EditorSize>
     <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

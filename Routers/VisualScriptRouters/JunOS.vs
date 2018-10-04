@@ -479,7 +479,7 @@ ActionResult = parsedRoutes</MainCode>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -502,7 +502,7 @@ ActionResult = parsedRoutes</MainCode>
 global ActionResult
 global ScriptSuccess
 
-ActionResult = GetInterfaces.GetRoutedInterfaces()
+ActionResult = GetInterfaces.GetAllInterfaces()
 ScriptSuccess = True</MainCode>
     <Origin_X>60</Origin_X>
     <Origin_Y>410</Origin_Y>
@@ -520,6 +520,7 @@ ScriptSuccess = True</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=802, Height=572}|{X=78,Y=78}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -549,13 +550,14 @@ ActionResult = RouterIDAndASNumber.GetRouterID(protocol)</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=904, Height=676}|{X=52,Y=52}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>15</vsID>
     <CommandID>fa1c0cc6-5d9c-49c5-8671-fd7aa4948f63</CommandID>
     <Name>Return_ActiveRoutingProtocols</Name>
-    <DisplayLabel>Routing Protocols</DisplayLabel>
+    <DisplayLabel>Active Protocols</DisplayLabel>
     <Commands />
     <MainCode>global ActionResult
 global _runningRoutingProtocols
@@ -563,19 +565,24 @@ global _runningRoutingProtocols
 if len(_runningRoutingProtocols) == 0 :
   response = Session.ExecCommand("show ospf overview")
   if (not ("not running" in response)): 
-    _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF)
+    _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.OSPF)
     
   response = Session.ExecCommand("show rip neighbor")
   if (not ("not running" in response)): 
-    _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP)  
+    _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.RIP)  
   
   response = Session.ExecCommand("show bgp neighbor")
   if (not ("not running" in response)): 
-    _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP)
+    _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.BGP)
+    
+  response = Session.ExecCommand("show lldp")
+  lldpenabled = re.findall(r"LLDP\s+:\s+Enabled", response)
+  if len(lldpenabled) == 1 : 
+    _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.LLDP)
     
   response = Session.ExecCommand("show configuration routing-options static")
   if (not ("not running" in response)): 
-    _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC)  
+    _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.STATIC)  
 
 ActionResult = _runningRoutingProtocols</MainCode>
     <Origin_X>196</Origin_X>
@@ -594,6 +601,7 @@ ActionResult = _runningRoutingProtocols</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=950, Height=728}|{X=283,Y=176}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -783,6 +791,7 @@ ActionResult = GetInterfaces.GetInterfaceByName(ifName)</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=849, Height=602}|{X=338,Y=338}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -845,7 +854,7 @@ try:
 except:
   ActionResult = False</MainCode>
     <Origin_X>179</Origin_X>
-    <Origin_Y>142</Origin_Y>
+    <Origin_Y>143</Origin_Y>
     <Size_Width>146</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -910,10 +919,11 @@ def CalculateRouterIDAndASNumber(self):
   # sort the routing protocols by preference (its integer value)
   sRoutingProtocols = sorted(_runningRoutingProtocols, key=lambda p: int(p))
   for thisProtocol in sRoutingProtocols:  
-    if thisProtocol == L3Discovery.RoutingProtocol.BGP:
+    if thisProtocol == L3Discovery.NeighborProtocol.BGP:
       bgpNeighbors = Session.ExecCommand("show bgp neighbor")
       rid = re.findall(r"(?&lt;=Local ID: )[\d.]{0,99}", bgpNeighbors)
       if len(rid) &gt; 0 : self.RouterID[str(thisProtocol)] = rid[0]
+      elif globalRouterID != "" : self.RouterID[str(thisProtocol)] = globalRouterID
       # get AS number
       ASes = re.findall(r"(?&lt;=AS )[\d.]{0,99}",  bgpNeighbors)
       if len(ASes) &gt;= 2 : self.BGPASNumber = ASes[1]
@@ -921,16 +931,22 @@ def CalculateRouterIDAndASNumber(self):
         ASes = re.findall(r"(?&lt;=autonomous-system )[\d.]{0,99}", routingOptions)
         if len(ASes) &gt; 0 : self.BGPASNumber = ASes[0]
       
-    elif thisProtocol == L3Discovery.RoutingProtocol.OSPF:
+    elif thisProtocol == L3Discovery.NeighborProtocol.OSPF:
       ospfStatus = Session.ExecCommand("show ospf overview")
       rid = re.findall(r"(?&lt;=Router ID: )[\d.]{0,99}", ospfStatus)
       if len(rid) &gt; 0 : self.RouterID[str(thisProtocol)] = rid[0]
+      elif globalRouterID != "" : self.RouterID[str(thisProtocol)] = globalRouterID
+      
+    elif thisProtocol == L3Discovery.NeighborProtocol.LLDP:
+      lldpInfo = Session.ExecCommand("show lldp local-information")
+      lldpStatus = re.findall(r"(?:Chassis ID\s+: )([0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+)", lldpInfo)
+      if len(lldpStatus) &gt; 0 : self.RouterID[str(thisProtocol)] = lldpStatus[0]
 
 
-    elif thisProtocol == L3Discovery.RoutingProtocol.RIP:
+    elif thisProtocol == L3Discovery.NeighborProtocol.RIP:
       self.RouterID[str(thisProtocol)] = globalRouterID       
       
-    elif thisProtocol == L3Discovery.RoutingProtocol.STATIC:
+    elif thisProtocol == L3Discovery.NeighborProtocol.STATIC:
       self.RouterID[str(thisProtocol)] = globalRouterID 
       
     else :
@@ -943,6 +959,7 @@ def Reset(self):
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=1191, Height=796}|{X=205,Y=77}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -988,13 +1005,11 @@ else :
 global _hostName
 global _stackCount
 global _runningRoutingProtocols
-global _interfaceConfigurations
 
 _versionInfo = None
 _hostName = None
 _stackCount = -1
 _runningRoutingProtocols = []
-_interfaceConfigurations = {}
 
 Inventory.Reset()
 Version.Reset()
@@ -1086,7 +1101,7 @@ if ri != None and VIPAddress != "" and GroupID != "" :
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
@@ -1112,89 +1127,179 @@ and will register VIP addresses</Description>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables># These are the interfaces collected by ParseInterfaces() method
-RouterInterfaces = []</Variables>
+Interfaces = []
+# All interfaces configuration. Unparsed, as returned by CLI command
+AllInterfaceConfiguration = ""
+# Interface config cache, keyed by Interface Name
+_interfaceConfigurations = {}</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock>"""Collects interface details for all inet interfaces """
+    <CustomCodeBlock>"""Collects interface details for all inet interfaces, except the interface configuration """
 def ParseInterfaces(self) :
   from System.Net import IPAddress
-  # Query the device for inet interfaces
-  inetInterfaces = Session.ExecCommand("show interfaces terse | match inet").splitlines()
+  # Get the interfaces configuration
+  if self.AllInterfaceConfiguration == "" : self.ParseInterfaceConfigurations()
+  # Query the device interfaces
+  interfaces = Session.ExecCommand("show interfaces terse").splitlines()
   # Because JunOS reports the VRRP VIP addresses in "show interface terse" output, it is necessary to 
   # check interface ip of VRRP enabled interfaces
   vrrpSummary = Session.ExecCommand("show vrrp summary | match lcl").splitlines()
-  # Parse the result and fill up self.RouterInterfaces list
-  for line in inetInterfaces:
+  # Parse the result and fill up self.Interfaces list
+  for line in interfaces:  
     words = filter(None, line.split(" "))
-    # words should look like : xe-0/0/25.0,up,up,inet,172.20.1.18/31 
-    if len(words) &gt;= 5:
+    if len(words) &gt;= 4:
       ifName = words[0]
-      if not ifName.startswith("bme"):
-        ifIPAndMask = words[4].Split("/")
-        # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
-        ipa = clr.Reference[IPAddress]()
-        # check if this is a valid ip address
-        if IPAddress.TryParse(ifIPAndMask[0], ipa):
+      if self.IsInterrestingInterface(ifName):
+        ifProtocol = words[3]
+        # ifProtocol could be inet, eth-switch, aenet
+        if ifProtocol == "inet" and len(words) &gt;= 5:
+          # words should look like : xe-0/0/25.0,up,up,inet,172.20.1.18/31 
+          ifIPAndMask = words[4].Split("/")
+          # create a reference variable to pass it to TryParse (this is an out parameter in .Net)
+          ipa = clr.Reference[IPAddress]()
+          # check if this is a valid ip address
+          if IPAddress.TryParse(ifIPAndMask[0], ipa):
+            ri = L3Discovery.RouterInterface()
+            # store the physical interface name, remove trailing ".0"
+            ri.Name = re.sub("\.0$","", ifName)
+            # check if VRRP runs on interface
+            vrrpLine = next((line for line in vrrpSummary if line.startswith(ifName)), None)
+            if vrrpLine != None:
+              # VRRP is running on interface, use the lcl address
+              # Address should be the last word
+              vrrpLineWords = filter(None, vrrpLine.split(" "))
+              ri.Address = vrrpLineWords[len(vrrpLineWords)-1]
+            else :
+              # VRRP is not running on interface, use address from "show interface terse"
+              ri.Address = ifIPAndMask[0]
+            ri.Status =  "{0},{1}".format(words[1], words[2])
+            if len(ifIPAndMask) &gt;= 2 : ri.MaskLength = ifIPAndMask[1]
+            else : ri.MaskLength = ""
+            ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
+            self.Interfaces.Add(ri)           
+        elif ifProtocol == "eth-switch" :
+          # words should look like : ge-3/0/36.0,up,up,eth-switch        
           ri = L3Discovery.RouterInterface()
-          ri.Name = ifName
-          # check if VRRP runs on interface
-          vrrpLine = next((line for line in vrrpSummary if line.startswith(ifName)), None)
-          if vrrpLine != None:
-            # VRRP is running on interface, use the lcl address
-            # Address should be the last word
-            vrrpLineWords = filter(None, vrrpLine.split(" "))
-            ri.Address = vrrpLineWords[len(vrrpLineWords)-1]
-          else :
-            # VRRP is not running on interface, use address from "show interface terse"
-            ri.Address = ifIPAndMask[0]
+          # store the physical interface name, remove trailing ".0"
+          ri.Name = re.sub("\.0$","", ifName)
+          ri.Address = ""
+          ri.MaskLength = ""
           ri.Status =  "{0},{1}".format(words[1], words[2])
-          if len(ifIPAndMask) &gt;= 2 : ri.MaskLength = ifIPAndMask[1]
-          else : ri.MaskLength = ""
-          ri.Configuration = _interfaceConfigurations.get(ri.Name, "")
-          self.RouterInterfaces.Add(ri)
+          ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
+          self.Interfaces.Add(ri)        
+        elif ifProtocol == "aenet" :
+          # words should look like : xe-3/0/44.0,up,up,aenet,--&gt;,ae3.0      
+          ri = L3Discovery.RouterInterface()
+          # store the physical interface name
+          ri.Name = re.sub("\.0$","", ifName)
+          ri.Address = ""
+          ri.MaskLength = ""
+          ri.Status =  "{0},{1}".format(words[1], words[2])
+          ri.AggregateID = words[5]
+          ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
+          self.Interfaces.Add(ri)        
+            
+  # Process descriptions
+  interfaceDescriptions = Session.ExecCommand("show interfaces descriptions").splitlines()     
+  for line in interfaceDescriptions:
+    words = filter(None, line.split(" "))
+    if len(words) &gt;= 4:
+      ifName = words[0]
+      foundInterface = next((intf for intf in self.Interfaces if intf.Name == ifName), None)
+      if foundInterface != None : foundInterface.Description = " ".join([t for t in words if words.index(t) &gt;= 3])
 
 """ Return the list of RouterInterfaces that have a valid IPAddress"""
 def GetRoutedInterfaces(self):
-  if len(self.RouterInterfaces) == 0 : self.ParseInterfaces()
-  routedInterfaces = filter(lambda x: x.Address != "", self.RouterInterfaces)
+  if len(self.Interfaces) == 0 : self.ParseInterfaces()
+  routedInterfaces = filter(lambda x: x.Address != "", self.Interfaces)
   return routedInterfaces
+
+""" Return the list of device interfaces"""
+def GetAllInterfaces(self):
+  if len(self.Interfaces) == 0 : self.ParseInterfaces()
+  return self.Interfaces
   
 """Returns a RouterInterface object for the interface specified by its name"""        
 def GetInterfaceByName(self, ifName):
-  if len(self.RouterInterfaces) == 0 : self.ParseInterfaces()
-  foundInterface = next((intf for intf in self.RouterInterfaces if intf.Name == ifName), None)
+  if len(self.Interfaces) == 0 : self.ParseInterfaces()
+  foundInterface = next((intf for intf in self.Interfaces if intf.Name == ifName), None)
   return foundInterface
   
 """ Returns a RouterInterface object for the interface specified by its ip address """    
 def GetInterfaceNameByAddress(self, ipAddress):
-  if len(self.RouterInterfaces) == 0 : self.ParseInterfaces()
+  if len(self.Interfaces) == 0 : self.ParseInterfaces()
   ifName = ""
-  foundInterface = next((intf for intf in self.RouterInterfaces if intf.Address == ipAddress), None)
+  foundInterface = next((intf for intf in self.Interfaces if intf.Address == ipAddress), None)
   if foundInterface != None:
     ifName = foundInterface.Name
   return ifName 
 
-""" Return a synthetic configuration of an interface """
+""" Return the configuration of an interface """
 def GetInterfaceConfiguration(self, ifName):
-  if len(self.RouterInterfaces) == 0 : self.ParseInterfaces()
-  ifConfig = ""
-  foundInterface = next((intf for intf in self.RouterInterfaces if intf.Name == ifName), None)
-  if foundInterface != None:
-    if foundInterface.Configuration == None:
-      cmd = "show configuration interfaces {0}".format(ifName.strip())
-      ifConfig = Session.ExecCommand(cmd)
-      foundInterface.Configuration = ifConfig
-      foundInterface.Description = re.match(r"(?&lt;=description ).*", ifConfig)
-    else :
-      ifConfig = foundInterface.Configuration 
+  if self.AllInterfaceConfiguration == "" : self.ParseInterfaceConfigurations()
+  ifConfig = _interfaceConfigurations.get(ifName, "")
   return ifConfig 
-  
+
+""" Executes CLI command to query all interfaces configuration from device """  
+def ParseInterfaceConfigurations(self):
+  self.AllInterfaceConfiguration = Session.ExecCommand("show configuration interfaces")
+  # Clear configuration dictionary
+  self._interfaceConfigurations = {}
+  currentIntfName = ""
+  currentConfiguration = []
+  vlanInterfaceConfiguration = []
+  for thisLine in self.AllInterfaceConfiguration.splitlines():
+    if thisLine == "}" :  continue
+    lineindent = len(thisLine) - len(thisLine.strip())
+    if lineindent == 0 :
+      # This should be a new interface
+      if currentIntfName != "":
+        if currentIntfName == "vlan" or currentIntfName == "irb":
+          # Need to separate by units
+          unitName = ""
+          for vlanIntfLine in currentConfiguration:
+            if vlanIntfLine.strip() == "}" : continue
+            if vlanIntfLine.strip().startswith("unit"):
+              # This should be a new unit
+              if unitName != "":
+                # Add current vlan interface to _interfaceConfigurations
+                unitNumber = re.findall(r"\d+", unitName)[0]
+                vlanIntfName = currentIntfName + "." + unitNumber
+                self._interfaceConfigurations[vlanIntfName] = "\r\n".join(vlanInterfaceConfiguration)
+              if "{" in vlanIntfLine:
+                unitName =  vlanIntfLine[0:vlanIntfLine.index("{")].strip()
+              elif ";" in vlanIntfLine:
+                unitName =  vlanIntfLine[0:vlanIntfLine.index(";")].strip()
+              vlanInterfaceConfiguration = []
+            else:
+              vlanInterfaceConfiguration.append(vlanIntfLine.strip())
+        else:
+          self._interfaceConfigurations[currentIntfName] = "\r\n".join(currentConfiguration)
+      if "{" in thisLine:
+        currentIntfName = thisLine[0:thisLine.index("{")].strip()
+      elif ";" in thisLine:
+        currentIntfName = thisLine[0:thisLine.index(";")].strip()
+      # Validate what we got
+      if not self.IsInterrestingInterface(currentIntfName) : 
+        currentIntfName = ""
+      # Clear current configuration
+      currentConfiguration = []
+    else:
+      currentConfiguration.append(thisLine)
+
+""" Determines if a given name is an interface name we want to parse"""
+def IsInterrestingInterface(self, intfName):
+  return intfName.startswith("ge-") or intfName.startswith("xe-") or intfName.startswith("et-") or intfName.startswith("ae") or intfName.startswith("irb") or intfName.startswith("vlan") or intfName.startswith("lo")
+    
 def Reset(self) :
-  self.RouterInterfaces = []</CustomCodeBlock>
+  self.Interfaces = []
+  self.AllInterfaceConfiguration = ""
+</CustomCodeBlock>
     <DemoMode>false</DemoMode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=1067, Height=956}|{X=273,Y=-19}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -1521,16 +1626,14 @@ def Reset(self) :
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS</ScriptName>
-    <GlobalCode># last changed : 2018.09.03
-scriptVersion = "2.0"
+    <GlobalCode># last changed : 2018.10.04
+scriptVersion = "2.2"
 #--
 _hostName = None
 _stackCount = -1
 
 # The routing protocols run by this router
-_runningRoutingProtocols = []
-# Interface config cache, keyed by Interface Name
-_interfaceConfigurations = {}</GlobalCode>
+_runningRoutingProtocols = []</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
     <CustomNameSpaces>import re
 import sys
@@ -1541,16 +1644,16 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>false</DebuggingAllowed>
+    <DebuggingAllowed>true</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6984365</EditorScaleFactor>
+    <EditorScaleFactor>0.3228367</EditorScaleFactor>
     <Description>This vScript implements a NetworkMap Router Module
 capable of handling Juniper EX/MX/SRX devices runing JunOS.</Description>
-    <EditorSize>{Width=820, Height=763}</EditorSize>
-    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
+    <EditorSize>{Width=437, Height=505}</EditorSize>
+    <PropertiesEditorSize>{Width=665, Height=460}|{X=507,Y=275}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

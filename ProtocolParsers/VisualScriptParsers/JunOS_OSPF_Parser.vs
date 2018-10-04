@@ -7,8 +7,8 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>340</Origin_X>
-    <Origin_Y>45</Origin_Y>
+    <Origin_X>19</Origin_X>
+    <Origin_Y>249</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -48,7 +48,7 @@ if Router != None:
     ActionResult = False
 else:
   ActionResult = False</MainCode>
-    <Origin_X>512</Origin_X>
+    <Origin_X>443</Origin_X>
     <Origin_Y>83</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
@@ -75,8 +75,8 @@ routing protocol  it has been invoked for.</Description>
     <DisplayLabel>Switch task</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>341</Origin_X>
-    <Origin_Y>209</Origin_Y>
+    <Origin_X>214</Origin_X>
+    <Origin_Y>246</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>50</Size_Height>
     <isStart>false</isStart>
@@ -105,8 +105,8 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>571</Origin_X>
-    <Origin_Y>167</Origin_Y>
+    <Origin_X>466</Origin_X>
+    <Origin_Y>141</Origin_Y>
     <Size_Width>125</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -187,14 +187,14 @@ for line in ospf_lines:
         neighborState = words[2]
         description = ""
         OperationStatusLabel = "Registering OSPF neighbor {0}...".format(neighborRouterID)
-        nRegistry.RegisterL3Neighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
+        nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.OSPF, neighborRouterID, "", description, remoteNeighboringIP, ri, neighborState)
         
   except Exception as Ex:
     msg = "OSPFarser : Error while parsing ospf output line [{0}]. Error is : {1}".format(line, str(Ex))
     System.Diagnostics.DebugEx.WriteLine(msg) 
 </MainCode>
-    <Origin_X>504</Origin_X>
-    <Origin_Y>401</Origin_Y>
+    <Origin_X>505</Origin_X>
+    <Origin_Y>273</Origin_Y>
     <Size_Width>100</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -221,8 +221,8 @@ for line in ospf_lines:
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>546</Origin_X>
-    <Origin_Y>293</Origin_Y>
+    <Origin_X>482</Origin_X>
+    <Origin_Y>206</Origin_Y>
     <Size_Width>136</Size_Width>
     <Size_Height>38</Size_Height>
     <isStart>false</isStart>
@@ -250,8 +250,8 @@ this module can support</Description>
 
 ActionResult = None
 raise ValueError("Junos OSPF protocol parser module has received an unhandled Command request : {0}".format(ConnectionInfo.Command))</MainCode>
-    <Origin_X>150</Origin_X>
-    <Origin_Y>88</Origin_Y>
+    <Origin_X>360</Origin_X>
+    <Origin_Y>499</Origin_Y>
     <Size_Width>130</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -282,7 +282,7 @@ global ConnectionInfo
 global BreakExecution
 global ScriptExecutor
 global Session</MainCode>
-    <Origin_X>23</Origin_X>
+    <Origin_X>39</Origin_X>
     <Origin_Y>486</Origin_Y>
     <Size_Width>166</Size_Width>
     <Size_Height>50</Size_Height>
@@ -455,8 +455,8 @@ def Reset(self):
 
 ActionResult = OSPFProcessor.GetAreas()
 </MainCode>
-    <Origin_X>152</Origin_X>
-    <Origin_Y>381</Origin_Y>
+    <Origin_X>482</Origin_X>
+    <Origin_Y>339</Origin_Y>
     <Size_Width>125</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -485,8 +485,8 @@ ActionResult = OSPFProcessor.GetAreas()
 ospfArea = ConnectionInfo.aParam
 
 ActionResult = OSPFProcessor.GetLSATypeNames(ospfArea)</MainCode>
-    <Origin_X>72</Origin_X>
-    <Origin_Y>278</Origin_Y>
+    <Origin_X>363</Origin_X>
+    <Origin_Y>36</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -517,8 +517,8 @@ ospfArea = ConnectionInfo.aParam
 LSAType = ConnectionInfo.bParam
 # return the LSAs
 ActionResult = OSPFProcessor.GetAreaLSAs(ospfArea, LSAType)</MainCode>
-    <Origin_X>49</Origin_X>
-    <Origin_Y>176</Origin_Y>
+    <Origin_X>436</Origin_X>
+    <Origin_Y>402</Origin_Y>
     <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -554,8 +554,8 @@ OperationStatusLabel = "Working"
 OSPFProcessor.Reset()
 ActionResult = None
 Router = None</MainCode>
-    <Origin_X>330</Origin_X>
-    <Origin_Y>417</Origin_Y>
+    <Origin_X>421</Origin_X>
+    <Origin_Y>455</Origin_Y>
     <Size_Width>113</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
@@ -745,10 +745,10 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.8440002</EditorScaleFactor>
+    <EditorScaleFactor>0.9953653</EditorScaleFactor>
     <Description>This Protocol Parser can handle JunOS routers 
 and switches running OSPF protocol.</Description>
-    <EditorSize>{Width=1932, Height=977}</EditorSize>
+    <EditorSize>{Width=680, Height=666}</EditorSize>
     <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

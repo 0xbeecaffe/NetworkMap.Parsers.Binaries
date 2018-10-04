@@ -337,13 +337,13 @@ for thisLine in routeLines:
             isActiveRoute = words[3] == "A"
             if isActiveRoute:
               protocolType = words[4]
-              thisLineProtocol = L3Discovery.RoutingProtocol.UNKNOWN
-              if protocolType == "C" : thisLineProtocol = L3Discovery.RoutingProtocol.CONNECTED
-              elif protocolType.startswith("O") : thisLineProtocol = L3Discovery.RoutingProtocol.OSPF
-              elif protocolType == "H" : thisLineProtocol = L3Discovery.RoutingProtocol.DIRECT
-              elif protocolType == "S" : thisLineProtocol = L3Discovery.RoutingProtocol.STATIC
-              elif protocolType == "R" : thisLineProtocol = L3Discovery.RoutingProtocol.RIP
-              elif protocolType == "B" : thisLineProtocol = L3Discovery.RoutingProtocol.BGP
+              thisLineProtocol = L3Discovery.NeighborProtocol.UNKNOWN
+              if protocolType == "C" : thisLineProtocol = L3Discovery.NeighborProtocol.CONNECTED
+              elif protocolType.startswith("O") : thisLineProtocol = L3Discovery.NeighborProtocol.OSPF
+              elif protocolType == "H" : thisLineProtocol = L3Discovery.NeighborProtocol.DIRECT
+              elif protocolType == "S" : thisLineProtocol = L3Discovery.NeighborProtocol.STATIC
+              elif protocolType == "R" : thisLineProtocol = L3Discovery.NeighborProtocol.RIP
+              elif protocolType == "B" : thisLineProtocol = L3Discovery.NeighborProtocol.BGP
               rte = L3Discovery.RouteTableEntry()
               rte.Protocol = str(thisLineProtocol)
               rte.RouterID = RouterIDAndASNumber.GetRouterID(rte.Protocol)
@@ -476,13 +476,16 @@ global _runningRoutingProtocols
 
 if len(_runningRoutingProtocols) == 0 :
   response = Session.ExecCommand("show routing protocol ospf summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.OSPF)
+  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.OSPF)
     
   response = Session.ExecCommand("show routing protocol rip summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.RIP)  
+  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.RIP)  
   
   response = Session.ExecCommand("show routing protocol bgp summary")
-  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.BGP)
+  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.BGP)
+  
+  response = Session.ExecCommand("show lldp neighbors all")
+  if (response != ""): _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.LLDP)
     
   response = Session.ExecCommand("show routing route type static count 1")
   _staticRouteCount = re.findall(r"(?&lt;=total routes shown: ).*", response)
@@ -494,7 +497,7 @@ if len(_runningRoutingProtocols) == 0 :
   except:
     _sc = -1
   
-  if _sc &gt; 0 : _runningRoutingProtocols.Add(L3Discovery.RoutingProtocol.STATIC)  
+  if _sc &gt; 0 : _runningRoutingProtocols.Add(L3Discovery.NeighborProtocol.STATIC)  
 
 ActionResult = _runningRoutingProtocols</MainCode>
     <Origin_X>216</Origin_X>
@@ -984,7 +987,7 @@ def CalculateRouterIDAndASNumber(self):
   # sort the routing protocols by preference (its integer value)
   sRoutingProtocols = sorted(_runningRoutingProtocols, key=lambda p: int(p))
   for thisProtocol in sRoutingProtocols:  
-    if thisProtocol == L3Discovery.RoutingProtocol.BGP:
+    if thisProtocol == L3Discovery.NeighborProtocol.BGP:
       bgpSummary = Session.ExecCommand("show routing protocol bgp summary")
       rid = re.findall(r"(?&lt;=router id: )[\ ,d.]{0,99}", bgpSummary)
       if len(rid) &gt; 0 : 
@@ -997,21 +1000,27 @@ def CalculateRouterIDAndASNumber(self):
       ASes = re.findall(r"(?&lt;=autonomous-system: )[\ ,\d.]{0,99}",  bgpNeighbors)
       if len(ASes) &gt;= 0 : self.BGPASNumber = ASes[0]
       
-    elif thisProtocol == L3Discovery.RoutingProtocol.OSPF:
+    elif thisProtocol == L3Discovery.NeighborProtocol.OSPF:
       ospfStatus = Session.ExecCommand("show routing protocol ospf summary")
       rid = re.findall(r"(?&lt;=router id: )[\ ,\d.]{0,99}", ospfStatus)
       if len(rid) &gt; 0 : 
         self.RouterID[str(thisProtocol)] = rid[0].strip()
         if self.staticRouterID == "" : self.staticRouterID = rid[0]
 
-    elif thisProtocol == L3Discovery.RoutingProtocol.RIP:
+    elif thisProtocol == L3Discovery.NeighborProtocol.RIP:
       ripfStatus = Session.ExecCommand("show routing protocol rip summary")
       rid = re.findall(r"(?&lt;=router id: )[\ ,\d.]{0,99}", ripStatus)
       if len(rid) &gt; 0 : 
         self.RouterID[str(thisProtocol)] = rid[0].strip()
         if self.staticRouterID == "" : self.staticRouterID = rid[0]
+        
+    elif thisProtocol == L3Discovery.NeighborProtocol.LLDP:
+      lldpMAC = Session.ExecCommand("show system info | match mac-address")
+      rid = re.findall(r"[a-fA-F0-9]{2}:[a-fA-F0-9]{2}:[a-fA-F0-9]{2}:[a-fA-F0-9]{2}:[a-fA-F0-9]{2}:[a-fA-F0-9]{2}", lldpMAC)
+      if len(rid) == 1:
+        self.RouterID[str(thisProtocol)] = rid[0].strip()
       
-    elif thisProtocol == L3Discovery.RoutingProtocol.STATIC:
+    elif thisProtocol == L3Discovery.NeighborProtocol.STATIC:
       self.RouterID[str(thisProtocol)] = self.staticRouterID
       
     else :
@@ -1026,6 +1035,7 @@ def Reset(self):
 dependent RouterID and parse BGP AS number</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=1275, Height=851}|{X=26,Y=26}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -1627,7 +1637,7 @@ import System.Net</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.6160002</EditorScaleFactor>
+    <EditorScaleFactor>0.6640003</EditorScaleFactor>
     <Description>This vScript is responsible to parse configuration
 items from a Palo Alto PAN firewall</Description>
     <EditorSize>{Width=735, Height=677}</EditorSize>

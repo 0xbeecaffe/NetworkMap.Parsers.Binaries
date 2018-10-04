@@ -7,9 +7,9 @@
     <DisplayLabel>Start</DisplayLabel>
     <Commands />
     <MainCode />
-    <Origin_X>116</Origin_X>
-    <Origin_Y>225</Origin_Y>
-    <Size_Width>100</Size_Width>
+    <Origin_X>43</Origin_X>
+    <Origin_Y>393</Origin_Y>
+    <Size_Width>134</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -41,8 +41,6 @@ global ActionResult
 global Router
 global ParsingForProtocols
 global ParsingForVendor
-global OperationStatusLabel
-OperationStatusLabel = "Initializing..."
 
 # Router object is passed in ConnectionInfo.aParam
 Router = ConnectionInfo.aParam
@@ -55,9 +53,9 @@ if Router != None:
     ActionResult = False
 else:
   ActionResult = False</MainCode>
-    <Origin_X>454</Origin_X>
-    <Origin_Y>62</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>470</Origin_X>
+    <Origin_Y>199</Origin_Y>
+    <Size_Width>140</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -72,6 +70,7 @@ else:
 for the specified protocol using the given Router instance.</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=743, Height=694}|{X=650,Y=210}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -87,10 +86,10 @@ for the specified protocol using the given Router instance.</Description>
 #                                                         #
 ###########################################################
 pass</MainCode>
-    <Origin_X>286</Origin_X>
-    <Origin_Y>225</Origin_Y>
+    <Origin_X>266</Origin_X>
+    <Origin_Y>393</Origin_Y>
     <Size_Width>100</Size_Width>
-    <Size_Height>50</Size_Height>
+    <Size_Height>47</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -103,6 +102,7 @@ pass</MainCode>
     <Description />
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=568, Height=609}|{X=312,Y=163}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptCommand</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -121,9 +121,9 @@ global ActionResult
 global ModuleName
 
 ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
-    <Origin_X>517</Origin_X>
-    <Origin_Y>279</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>501</Origin_X>
+    <Origin_Y>258</Origin_Y>
+    <Size_Width>164</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -137,10 +137,44 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
     <Description>SupportTag should return a descriptive text for this Protocol Parser Module</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=887, Height=631}|{X=182,Y=182}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
     <vsID>4</vsID>
+    <CommandID>539dfde8-0100-42e5-bf23-625f8241756d</CommandID>
+    <Name>ReturnStatus</Name>
+    <DisplayLabel>Return Status</DisplayLabel>
+    <Commands />
+    <MainCode>########################################################################
+#                                                                      #
+# This call should return a text representing the actual parser status #
+#                                                                      #
+########################################################################
+global ActionResult
+global OperationStatusLabel
+
+ActionResult = OperationStatusLabel</MainCode>
+    <Origin_X>542</Origin_X>
+    <Origin_Y>327</Origin_Y>
+    <Size_Width>136</Size_Width>
+    <Size_Height>40</Size_Height>
+    <isStart>false</isStart>
+    <isStop>false</isStop>
+    <isSimpleCommand>false</isSimpleCommand>
+    <isSimpleDecision>false</isSimpleDecision>
+    <Variables />
+    <Break>false</Break>
+    <ExecPolicy>After</ExecPolicy>
+    <CustomCodeBlock />
+    <DemoMode>false</DemoMode>
+    <Description>Status should return any free text message representing the actual parser status.</Description>
+    <WatchVariables />
+    <Initializer />
+    <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
+  </vScriptCommands>
+  <vScriptCommands>
+    <vsID>5</vsID>
     <CommandID>a9279407-046b-4e50-b4e6-fcd0c543379a</CommandID>
     <Name>ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
@@ -152,8 +186,9 @@ ActionResult =  ModuleName + " v" + ScriptVersion</MainCode>
 # and register the neighbors found by the routing protocol for discovery.    #
 #                                                                            #
 ##############################################################################
+
 global Router
-global OperationStatusLabel
+global ParsingForProtocols
 
 # The neighbor registry object is received in ConnectionInfo.aParam
 # This must be used to register a new neighbor for further discovery.
@@ -164,66 +199,114 @@ nRegistry = ConnectionInfo.aParam
 cToken = ConnectionInfo.bParam
 
 OperationStatusLabel = "Identifying router..."
-isIOSXE = "IOS-XE" in Router.Version
 #--  
-TextToParse = Session.ExecCommand("show ip route static")
 cToken.ThrowIfCancellationRequested()
-
-OperationStatusLabel = "Processing STATIC routes..."
-static_lines = [str.lower(thisLine.strip()) for thisLine in TextToParse.splitlines()]
-for line in static_lines:
-  cToken.ThrowIfCancellationRequested()
-  if line.startswith("s ") or line.startswith("s* "): 
-    # expect two ip addresses in line, first is neighbor RID, second is neighbor IP
-    foundNetwork = re.findall(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", line)
-    foundNexthop = re.findall(r"(?&lt;=via )[\d\.]{0,99}", line)
-    if len(foundNetwork) == 1 and len(foundNexthop) == 1 :
-      routeForNetwork = foundNetwork[0]
-      nexthop = foundNexthop[0]
-      # get the outgoing interface
-      OperationStatusLabel = "Finding egress interface for {0}...".format(nexthop)
-      cefResponse = Session.ExecCommand("show ip cef {0}".format(nexthop)).splitlines()
-     
-      if isIOSXE:
-        cefEntry = next((thisCEFEntry for thisCEFEntry in cefResponse if ("nexthop" in thisCEFEntry or "attached to" in thisCEFEntry)), None)
-        # Exaple cefEntry output :   attached to TenGigabitEthernet0/1/0.3805
-        if cefEntry != None:
-          cefwords = filter(None, cefEntry.split())
-          outInterfaceName = ""
-          ri = None
-          if len(cefwords) &gt;= 3 :
-            outInterfaceName = cefwords[len(cefwords)-1]
-            outInterfaceName = outInterfaceName.strip(",")
-            OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
-            ri = Router.GetInterfaceByName(outInterfaceName)
-            if ri != None:
-              OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
-              nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);        
-      else:
-        cefEntry = next((thisCEFEntry for thisCEFEntry in cefResponse if ("via" in thisCEFEntry or "attached to" in thisCEFEntry)), None)
-        # Exaple cefEntry output 1 : via 172.18.145.82, FastEthernet0/0, 0 dependencies
-        # Exaple cefEntry output 2 : via FastEthernet0/0, 0 dependencies
-        if cefEntry != None:
-          cefwords = filter(None, cefEntry.split())
-          outInterfaceName = ""
-          ri = None
-          if "via" in cefEntry and len(cefwords) &gt;= 4 :
-            outInterfaceName = cefwords[len(cefwords) - 3]
-            outInterfaceName = outInterfaceName.strip(",")
-          elif "attached" in cefEntry and len(cefwords) &gt;= 3 :
-            outInterfaceName = cefwords[len(cefwords) - 1] 
-          if outInterfaceName != "":
-            OperationStatusLabel = "Querying interface {0}...".format(outInterfaceName)
-            ri = Router.GetInterfaceByName(outInterfaceName)
-            if ri != None:
-              OperationStatusLabel = "Registering static neighbor {0}...".format(ri.Address)
-              nRegistry.RegisterSTATICNeighbor(Router, routeForNetwork, nexthop, ri.Address, ri);
 #
-# No need to return anything via ActionResult
-#</MainCode>
-    <Origin_X>520</Origin_X>
-    <Origin_Y>202</Origin_Y>
-    <Size_Width>172</Size_Width>
+# Compiled regex search patters
+repChassisType = re.compile(r"(Chassis type\s+:)(.*)", re.IGNORECASE)
+repChassisID = re.compile(r"(Chassis ID\s+:)(.*)", re.IGNORECASE)
+repSystemName = re.compile(r"(System name\s+:)(.*)", re.IGNORECASE)
+repLocalPortID = re.compile(r"(Local Port ID\s+:)(.*)", re.IGNORECASE)
+repPortID = re.compile(r"(Port ID\s+:)(.*)", re.IGNORECASE)
+repPortDescription = re.compile(r"(Port description\s+:)(.*)", re.IGNORECASE)
+repManagementAddress = re.compile(r"(Address\s+:)(.*)", re.IGNORECASE)
+
+unknownSystemName = "Unknown system"
+unknownChassisType = "Unknown chassis type"
+unknownChassisID = "Unknown chassis id"
+
+lldpNeighbors = Session.ExecCommand("show lldp neighbors")
+# Output is like below:
+# Local Interface    Parent Interface    Chassis Id          Port info          System Name
+# ge-1/0/6           -                   a4:1f:72:cf:bf:04   a4:1f:72:cf:bf:04
+for thisLine in [line.strip() for line in lldpNeighbors.splitlines()]:
+  cToken.ThrowIfCancellationRequested()
+  try:
+    words = filter(None, thisLine.split(" "))
+    if len(words) &gt;= 1 :
+      # only use the physical interface name, remove trailing ".0"
+      localIntfName = re.sub("\.0$","", words[0])     
+      if self.IsInterrestingInterface(localIntfName):  
+        ri = Router.GetInterfaceByName(localIntfName)
+        if ri != None:  
+          # Neighbor registration variables
+          remoteChassisID = ""
+          remoteIntfName = ""
+          remoteSystemName = ""
+          remoteNeighboringIP = ""
+          # Query LLDP details for this interface
+          lldpDetails = Session.ExecCommand("show lldp neighbors interface {0}".format(localIntfName))
+          #-- Local Port ID - The SNMP index of the local interface (used to match remote)
+          x = repLocalPortID.findall(lldpDetails)
+          localPortID = (x[0][1]).strip()  
+          ri.SNMPIndex = localPortID
+          # Build NeighborInformationBlock          
+          niBlock = False
+          niBlockText = []
+          niText = ""
+          for detailLine in lldpDetails.splitlines():         
+            if detailLine.lower().startswith("neighbour information") :
+              niBlock = True
+              continue
+            elif niBlock:
+              # Empty line makrs the end of block
+              if len(detailLine.strip()) == 0 : break
+              niBlockText.append(detailLine)
+          if len(niBlockText) &gt; 0 : niText = "\r\n".join(niBlockText)          
+          # Search for interesting information in niText
+          #-- SystemName - Optional field in LLDP 
+          x = repSystemName.findall(niText)
+          if len(x) &gt; 0 : remoteSystemName = (x[0][1]).strip()
+          else : remoteSystemName = unknownSystemName
+          # -- ChassisID - Mandatory field in LLDP, but VMWare vSwitch does not send this, so be careful
+          x = repChassisID.findall(niText)
+          if len(x) &gt; 0 : remoteChassisID = (x[0][1]).strip()
+          else : remoteChassisID = unknownChassisID
+          #-- PortID - Mandatory field in LLDP
+          x = repPortID.findall(niText)
+          remoteIntfName = (x[0][1]).strip()             
+          #-- ChassisType - Optional field in LLDP 
+          x = repChassisType.findall(niText)
+          if len(x) &gt; 0 : 
+            chassisType = (x[0][1]).strip()
+            if remoteSystemName == unknownSystemName and chassisType.lower() == "mac address" :
+              # Use remoteChassisID as a unique ID
+              if ri.Description != None and ri.Description != "" : remoteSystemName = ri.Description
+              else : remoteSystemName = remoteChassisID  
+            if remoteChassisID == unknownChassisID  and chassisType.lower() == "interface name" :
+              if remoteSystemName != unknownSystemName : 
+                remoteChassisID = remoteSystemName
+          else : chassisType = unknownChassisType
+          # Find management address if present
+          managementBlock = False
+          managementBlockText = []
+          managementText = ""
+          lineIndentLevel = -1
+          for detailLine in lldpDetails.splitlines():      
+            if detailLine.lower().startswith("management address") :
+              managementBlock = True
+              continue
+            elif managementBlock:
+              lineIndentLevel = len(detailLine) - len(detailLine.strip())
+              if lineIndentLevel &gt; 0 :
+                managementBlockText.append(detailLine)
+              pass
+            if lineIndentLevel == 0 : break 
+            
+          if len(managementBlockText) &gt; 0 :
+            managementText = "\r\n".join(managementBlockText)
+            foundIP = repManagementAddress.findall(managementText)
+            if len(foundIP) == 1 :
+              remoteNeighboringIP = (foundIP[0][1]).strip()
+          # Now we have all the data to register the neighbor
+          nRegistry.RegisterNeighbor(Router, L3Discovery.NeighborProtocol.LLDP,  remoteChassisID, "", remoteSystemName, remoteNeighboringIP, ri, "OK", remoteIntfName) 
+        else:
+          DebugEx.WriteLine("Router object failed to provide details for interface &lt; {0} &gt;".format(localIntfName), DebugLevel.Warning)
+  except Exception as Ex:
+    DebugEx.WriteLine("Error in JunOS_LLDPParser while parsine line &lt; {0} &gt;. Error is: {1}".format(thisLine, str(Ex)))</MainCode>
+    <Origin_X>548</Origin_X>
+    <Origin_Y>400</Origin_Y>
+    <Size_Width>144</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -232,46 +315,67 @@ for line in static_lines:
     <Variables />
     <Break>true</Break>
     <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock />
+    <CustomCodeBlock>""" Determines if a given address is formatted as a MAC address"""
+def IsMACAddress(self, address):
+  result = re.findall(r"[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+", address, re.IGNORECASE)
+  return len(result) == 1
+  
+""" Determines if a given address is formatted as an IPV4 address"""
+def IsIPv4Address(self, address):
+  result = re.findall(r"\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", address)
+  return len(result) == 1
+  
+""" Determines if a given name is an interface name we want to parse"""
+def IsInterrestingInterface(self, intfName):
+  return intfName.startswith("ge-") or intfName.startswith("xe-") or intfName.startswith("et-") or intfName.startswith("ae") or intfName.startswith("irb") or intfName.startswith("vlan") or intfName.startswith("lo")
+
+""" Retrieves Juniper switch interface names from text"""
+def GetInterfaceNames(self, text):
+  return re.findall(r"(?:(?:xe|ge|et)-\d+\/\d+\/\d+|ae\d{1,2}|eth[a-z0-9\/]+)", text, re.IGNORECASE)
+  
+""" Verifies if a given text is a valid Juniper switch interface name"""
+def IsInterfaceName(self, text):  
+  matchresult = self.GetInterfaceNames(text)
+  return len(matchresult) == 1 and matchresult[0] == text</CustomCodeBlock>
     <DemoMode>false</DemoMode>
     <Description>Parse is responsible for implementing the logicrequired  to parse a Routing Protocol state
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>{Width=840, Height=678}|{X=286,Y=286}</EditorSize>
+    <EditorSize>{Width=1237, Height=934}|{X=372,Y=32}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>5</vsID>
+    <vsID>6</vsID>
     <CommandID>a236adee-1d6f-4c2a-8e90-c9fd13489289</CommandID>
     <Name>UnknownTask</Name>
-    <DisplayLabel>Unknown task - ERROR</DisplayLabel>
+    <DisplayLabel>Unknown</DisplayLabel>
     <Commands />
     <MainCode>global ActionResult
 global ModuleName
 
 ActionResult = None
 raise ValueError("{0} has received an unhandled Command request : {1}".format(ModuleName, ConnectionInfo.Command))</MainCode>
-    <Origin_X>445</Origin_X>
-    <Origin_Y>414</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>476</Origin_X>
+    <Origin_Y>600</Origin_Y>
+    <Size_Width>128</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
     <isSimpleDecision>false</isSimpleDecision>
     <Variables />
-    <Break>true</Break>
+    <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
     <CustomCodeBlock />
     <DemoMode>false</DemoMode>
-    <Description />
+    <Description>This is an unknown task, report as error</Description>
     <WatchVariables />
     <Initializer />
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>6</vsID>
+    <vsID>7</vsID>
     <CommandID>36370047-eab4-446b-9797-7455b5926e84</CommandID>
     <Name>ReturnProtocols</Name>
     <DisplayLabel>Supported Protocols</DisplayLabel>
@@ -286,9 +390,9 @@ global ParsingForProtocols
 global ActionResult
 
 ActionResult = ParsingForProtocols</MainCode>
-    <Origin_X>497</Origin_X>
-    <Origin_Y>127</Origin_Y>
-    <Size_Width>172</Size_Width>
+    <Origin_X>508</Origin_X>
+    <Origin_Y>541</Origin_Y>
+    <Size_Width>152</Size_Width>
     <Size_Height>40</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
@@ -303,11 +407,12 @@ ActionResult = ParsingForProtocols</MainCode>
 this module can support</Description>
     <WatchVariables />
     <Initializer />
+    <EditorSize>{Width=568, Height=460}|{X=286,Y=286}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
-    <vsID>7</vsID>
-    <CommandID>6b6e4f5b-aab8-463e-a92e-dfb7e99d0242</CommandID>
+    <vsID>8</vsID>
+    <CommandID>93fd708a-d41a-45c1-9862-6ec9b2378ee1</CommandID>
     <Name>Reset</Name>
     <DisplayLabel>Reset</DisplayLabel>
     <Commands />
@@ -316,10 +421,10 @@ global ConnectionDropped
 global ScriptSuccess
 global ConnectionInfo
 global BreakExecution</MainCode>
-    <Origin_X>500</Origin_X>
-    <Origin_Y>353</Origin_Y>
-    <Size_Width>155</Size_Width>
-    <Size_Height>40</Size_Height>
+    <Origin_X>539</Origin_X>
+    <Origin_Y>474</Origin_Y>
+    <Size_Width>142</Size_Width>
+    <Size_Height>38</Size_Height>
     <isStart>false</isStart>
     <isStop>false</isStop>
     <isSimpleCommand>false</isSimpleCommand>
@@ -351,6 +456,20 @@ global BreakExecution</MainCode>
   <vScriptConnector>
     <cID>1</cID>
     <ConnectorID />
+    <Name>SwitchTask_ReturnStatus</Name>
+    <DisplayLabel>Status</DisplayLabel>
+    <Left>2</Left>
+    <Right>4</Right>
+    <Condition>return ConnectionInfo.Command == "GetOperationStatusLabel"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>0</Order>
+    <Description />
+    <WatchVariables />
+  </vScriptConnector>
+  <vScriptConnector>
+    <cID>2</cID>
+    <ConnectorID />
     <Name>SwitchTask_ReturnSupportTag</Name>
     <DisplayLabel>GetSupportTag</DisplayLabel>
     <Left>2</Left>
@@ -363,7 +482,7 @@ global BreakExecution</MainCode>
     <WatchVariables />
   </vScriptConnector>
   <vScriptConnector>
-    <cID>2</cID>
+    <cID>3</cID>
     <ConnectorID />
     <Name>SwitchTask_Initialize</Name>
     <DisplayLabel>Initialize</DisplayLabel>
@@ -377,12 +496,12 @@ global BreakExecution</MainCode>
     <WatchVariables />
   </vScriptConnector>
   <vScriptConnector>
-    <cID>3</cID>
+    <cID>4</cID>
     <ConnectorID />
     <Name>SwitchTask_ParseProtocol</Name>
     <DisplayLabel>Parse</DisplayLabel>
     <Left>2</Left>
-    <Right>4</Right>
+    <Right>5</Right>
     <Condition>return ConnectionInfo.Command == "Parse"</Condition>
     <Variables />
     <Break>false</Break>
@@ -391,12 +510,12 @@ global BreakExecution</MainCode>
     <WatchVariables />
   </vScriptConnector>
   <vScriptConnector>
-    <cID>4</cID>
+    <cID>5</cID>
     <ConnectorID />
     <Name>SwitchTask_ReturnProtocols</Name>
-    <DisplayLabel>GetSupportedProtocols</DisplayLabel>
+    <DisplayLabel>Protocols</DisplayLabel>
     <Left>2</Left>
-    <Right>6</Right>
+    <Right>7</Right>
     <Condition>return ConnectionInfo.Command == "GetSupportedProtocols"</Condition>
     <Variables />
     <Break>false</Break>
@@ -405,46 +524,47 @@ global BreakExecution</MainCode>
     <WatchVariables />
   </vScriptConnector>
   <vScriptConnector>
-    <cID>5</cID>
+    <cID>6</cID>
     <ConnectorID />
     <Name>SwitchTask_UnknownTask</Name>
     <DisplayLabel>Unknown</DisplayLabel>
     <Left>2</Left>
-    <Right>5</Right>
+    <Right>6</Right>
     <Condition>return True</Condition>
-    <Variables />
-    <Break>false</Break>
-    <Order>8</Order>
-    <Description />
-    <WatchVariables />
-  </vScriptConnector>
-  <vScriptConnector>
-    <cID>6</cID>
-    <ConnectorID />
-    <Name>SwitchTask_Reset</Name>
-    <DisplayLabel>Reset</DisplayLabel>
-    <Left>2</Left>
-    <Right>7</Right>
-    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
     <Variables />
     <Break>false</Break>
     <Order>6</Order>
     <Description />
     <WatchVariables />
   </vScriptConnector>
+  <vScriptConnector>
+    <cID>7</cID>
+    <ConnectorID />
+    <Name>SwitchTask_Reset</Name>
+    <DisplayLabel>Reset</DisplayLabel>
+    <Left>2</Left>
+    <Right>8</Right>
+    <Condition>return ConnectionInfo.Command == "Reset"</Condition>
+    <Variables />
+    <Break>false</Break>
+    <Order>5</Order>
+    <Description />
+    <WatchVariables />
+    <EditorSize>{Width=671, Height=460}|{X=286,Y=286}</EditorSize>
+  </vScriptConnector>
   <Parameters>
-    <ScriptName>Cisco_IOS_STATIC_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "2.0"
+    <ScriptName>JunOS_LLDP_Parser</ScriptName>
+    <GlobalCode>ScriptVersion = "0.1"
 # Describe the Module Name
-ModuleName = "Cisco IOS STATIC Protocol Parser Module - Python vScript Parser"
+ModuleName = "JunOS LLDP Parser"
 # Describes current operation status
 OperationStatusLabel = "Init"
 # The Router instance associated to this parser. Set in Initialize
 Router = None
 #This is the protocol supported by this module
-ParsingForProtocols = [L3Discovery.NeighborProtocol.STATIC]
+ParsingForProtocols = [ L3Discovery.NeighborProtocol.LLDP ]
 #This is the vendor name supported by this module
-ParsingForVendor = "Cisco"</GlobalCode>
+ParsingForVendor = "JunOS"</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
     <CustomNameSpaces>############################################################
 #                                                          #
@@ -458,20 +578,20 @@ clr.AddReferenceToFileAndPath("Common.dll")
 clr.AddReferenceToFileAndPath("PGTNetworkMap.dll")
 import PGT.Common
 import L3Discovery
-import System.Net</CustomNameSpaces>
+import System.Net
+from System.Diagnostics import DebugEx
+from System.Diagnostics import DebugLevel</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>false</DebuggingAllowed>
+    <DebuggingAllowed>true</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.8799996</EditorScaleFactor>
-    <Description>This vScript template can be used as a starting point for
-creating a new routing protocol Parser Module for Network Map.
-This is required to add support for a new routing protocol to a
-vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=784, Height=564}</EditorSize>
-    <PropertiesEditorSize>{Width=665, Height=460}|{X=627,Y=350}</PropertiesEditorSize>
+    <EditorScaleFactor>0.5393876</EditorScaleFactor>
+    <Description>This vScript template can be used as a starting point for creating a new routing protocol Parser Module for Network Map.
+This is typically required to add support for a new routing protocol to a vendor already supported. See also Router Module template.</Description>
+    <EditorSize>{Width=548, Height=465}</EditorSize>
+    <PropertiesEditorSize>{Width=775, Height=526}|{X=452,Y=242}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>
