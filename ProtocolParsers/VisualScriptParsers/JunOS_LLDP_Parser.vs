@@ -224,9 +224,10 @@ for thisLine in [line.strip() for line in lldpNeighbors.splitlines()]:
   try:
     words = filter(None, thisLine.split(" "))
     if len(words) &gt;= 1 :
-      # only use the physical interface name, remove trailing ".0"
-      localIntfName = re.sub("\.0$","", words[0])     
+      localIntfName = words[0]
       if self.IsInterrestingInterface(localIntfName):  
+        # Check if logical unit number is specified in localIntfName
+        # localIntfLUN = re.findall(r"\.\d+$", localIntfName)
         ri = Router.GetInterfaceByName(localIntfName)
         if ri != None:  
           # Neighbor registration variables
@@ -342,7 +343,7 @@ def IsInterfaceName(self, text):
 and register the neighbors found by the routing protocol for discovery.</Description>
     <WatchVariables />
     <Initializer />
-    <EditorSize>{Width=1237, Height=934}|{X=372,Y=32}</EditorSize>
+    <EditorSize>{Width=1237, Height=814}|{X=153,Y=5}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptStop</FullTypeName>
   </vScriptCommands>
   <vScriptCommands>
@@ -554,7 +555,7 @@ global BreakExecution</MainCode>
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS_LLDP_Parser</ScriptName>
-    <GlobalCode>ScriptVersion = "0.1"
+    <GlobalCode>ScriptVersion = "0.8"
 # Describe the Module Name
 ModuleName = "JunOS LLDP Parser"
 # Describes current operation status
@@ -588,10 +589,10 @@ from System.Diagnostics import DebugLevel</CustomNameSpaces>
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.5393876</EditorScaleFactor>
+    <EditorScaleFactor>0.6593876</EditorScaleFactor>
     <Description>This vScript template can be used as a starting point for creating a new routing protocol Parser Module for Network Map.
 This is typically required to add support for a new routing protocol to a vendor already supported. See also Router Module template.</Description>
-    <EditorSize>{Width=548, Height=465}</EditorSize>
-    <PropertiesEditorSize>{Width=775, Height=526}|{X=452,Y=242}</PropertiesEditorSize>
+    <EditorSize>{Width=548, Height=570}</EditorSize>
+    <PropertiesEditorSize>{Width=775, Height=526}|{X=380,Y=149}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>

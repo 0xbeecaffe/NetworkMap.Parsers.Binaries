@@ -1131,12 +1131,18 @@ Interfaces = []
 # All interfaces configuration. Unparsed, as returned by CLI command
 AllInterfaceConfiguration = ""
 # Interface config cache, keyed by Interface Name
-_interfaceConfigurations = {}</Variables>
+_interfaceConfigurations = {}
+# List of interface-ranges
+InterfaceRanges = []
+</Variables>
     <Break>false</Break>
     <ExecPolicy>After</ExecPolicy>
-    <CustomCodeBlock>"""Collects interface details for all inet interfaces, except the interface configuration """
+    <CustomCodeBlock>
+"""Collects interface details for all inet interfaces, except the interface configuration """
 def ParseInterfaces(self) :
   from System.Net import IPAddress
+  # Get interface range definitions
+  if len(self.InterfaceRanges) == 0 : self.ParseInterfaceRanges()
   # Get the interfaces configuration
   if self.AllInterfaceConfiguration == "" : self.ParseInterfaceConfigurations()
   # Query the device interfaces
@@ -1147,9 +1153,10 @@ def ParseInterfaces(self) :
   # Parse the result and fill up self.Interfaces list
   for line in interfaces:  
     words = filter(None, line.split(" "))
-    if len(words) &gt;= 4:
-      ifName = words[0]
-      if self.IsInterrestingInterface(ifName):
+    ifName = words[0]
+    intfLun = re.findall(r"\.\d+$", ifName)
+    if self.IsInterrestingInterface(ifName):
+      if len(words) &gt;= 4:
         ifProtocol = words[3]
         # ifProtocol could be inet, eth-switch, aenet
         if ifProtocol == "inet" and len(words) &gt;= 5:
@@ -1160,8 +1167,8 @@ def ParseInterfaces(self) :
           # check if this is a valid ip address
           if IPAddress.TryParse(ifIPAndMask[0], ipa):
             ri = L3Discovery.RouterInterface()
-            # store the physical interface name, remove trailing ".0"
-            ri.Name = re.sub("\.0$","", ifName)
+            ri.Name = ifName
+            ri.PortMode = L3Discovery.RouterInterfacePortMode.Routed
             # check if VRRP runs on interface
             vrrpLine = next((line for line in vrrpSummary if line.startswith(ifName)), None)
             if vrrpLine != None:
@@ -1175,30 +1182,115 @@ def ParseInterfaces(self) :
             ri.Status =  "{0},{1}".format(words[1], words[2])
             if len(ifIPAndMask) &gt;= 2 : ri.MaskLength = ifIPAndMask[1]
             else : ri.MaskLength = ""
-            ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
-            self.Interfaces.Add(ri)           
+            ri.Configuration = self.GetInterfaceConfiguration(ri.Name)
+            self.Interfaces.Add(ri) 
+            # If this is a logical unit, we may be facing with an L3 subinterface
+            if len(intfLun) == 1:
+              phIntfName = re.sub(r"\.\d+$", "", ri.Name)
+              phri = next((intf for intf in self.Interfaces if intf.Name == phIntfName), None)
+              if phri != None:
+                # Lets check if vlan-tagging has been configured on physical interface
+                if phri.Configuration and "vlan-tagging" in phri.Configuration:
+                  phri.PortMode = L3Discovery.RouterInterfacePortMode.L3Subinterface
+                  if phri.VLANS == None : existingVLANs = []
+                  else : existingVLANs = phri.VLANS.split("|")
+                  # Get vlan-id from configuration. If not found, assume lun number equals to the VLAN ID
+                  m_vlanID = re.findall(r"(?&lt;=vlan-id )\d+", ri.Configuration)
+                  if len(m_vlanID) == 1 : 
+                    VLANID = m_vlanID[0]
+                    existingVLANs.append(VLANID)
+                    phri.VLANS = "|".join(existingVLANs) 
+                      
         elif ifProtocol == "eth-switch" :
           # words should look like : ge-3/0/36.0,up,up,eth-switch        
           ri = L3Discovery.RouterInterface()
-          # store the physical interface name, remove trailing ".0"
-          ri.Name = re.sub("\.0$","", ifName)
+          ri.Name = ifName
           ri.Address = ""
           ri.MaskLength = ""
           ri.Status =  "{0},{1}".format(words[1], words[2])
-          ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
-          self.Interfaces.Add(ri)        
+          ri.Configuration = self.GetInterfaceConfiguration(ri.Name)
+          ri.PortMode = L3Discovery.RouterInterfacePortMode.Access
+          if ri.Configuration:
+            # We have explicit port configuration 
+            # First get port mode
+            pm = re.findall(r"(?&lt;=port-mode )[^;]+", ri.Configuration, re.IGNORECASE)
+            if len(pm) == 1:
+              mode = pm[0].strip().lower()
+              if mode == "access" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Access
+              elif mode == "trunk" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Trunk
+            else :
+              pm = re.findall(r"(?&lt;=interface-mode )[^;]+", ri.Configuration, re.IGNORECASE)
+              if len(pm) == 1:
+                mode = pm[0].strip().lower()
+                if mode == "access" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Access
+                elif mode == "trunk" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Trunk
+              else : 
+                # Default to access mode
+                ri.PortMode =  L3Discovery.RouterInterfacePortMode.Access
+            # Then get VLANs
+            vlans = re.findall(r"(?&lt;=members )\[?([\s\w\-]+)", ri.Configuration, re.IGNORECASE)
+            if len(vlans) == 1 : 
+              vlanList = filter(None, vlans[0].strip().split(" "))
+              ri.VLANS = "|".join(vlanList)
+            self.Interfaces.Add(ri)   
+            # If this is a logical unit, let the physical interface inherit properties
+            if len(intfLun) == 1:
+              phIntfName = re.sub(r"\.\d+$", "", ri.Name)
+              phri = next((intf for intf in self.Interfaces if intf.Name == phIntfName), None)
+              if phri != None:
+                phri.PortMode = ri.PortMode
+                phri.VLANS = ri.VLANS
+                phri.Status = ri.Status
+          else:
+            # Do not have explicit port configuration , check InterfaceRanges
+            phIntfName = re.sub(r"\.\d+$", "", ri.Name)
+            ir = next((ir for ir in self.InterfaceRanges if ir.IsInterfaceInRange(phIntfName)), None)
+            if ir != None:
+              # Found the interface in a range, inherit range properties
+              if ir.portMode == "access" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Access
+              elif ir.portMode == "trunk" : ri.PortMode =  L3Discovery.RouterInterfacePortMode.Trunk
+              ri.VLANS = "|".join(ir.vlanMembers)
+            
         elif ifProtocol == "aenet" :
           # words should look like : xe-3/0/44.0,up,up,aenet,--&gt;,ae3.0      
           ri = L3Discovery.RouterInterface()
-          # store the physical interface name
-          ri.Name = re.sub("\.0$","", ifName)
+          ri.Name = ifName
           ri.Address = ""
           ri.MaskLength = ""
           ri.Status =  "{0},{1}".format(words[1], words[2])
           ri.AggregateID = words[5]
-          ri.Configuration = self._interfaceConfigurations.get(ri.Name, "")
-          self.Interfaces.Add(ri)        
-            
+          ri.Configuration = self.GetInterfaceConfiguration(ri.Name)
+          # PortMode and VLANS will be processed later in a second pass
+          self.Interfaces.Add(ri)       
+           
+      elif len(words) == 3:      
+        # This is the physical interface. Might be unconfigured
+        # words should look like : ge-3/0/36.0,up,up        
+        ri = L3Discovery.RouterInterface()
+        ri.Name = ifName
+        ri.Address = ""
+        ri.MaskLength = ""
+        ri.Status =  "{0},{1}".format(words[1], words[2])
+        self.Interfaces.Add(ri)  
+        
+  # Post-process aenet interfaces to inherit VLANs and portMode from aggregate interface
+  aenetInterfaces = [intf for intf in self.Interfaces if intf.AggregateID]
+  for thisAeInterface in aenetInterfaces:
+    aeInterface = next((intf for intf in self.Interfaces if intf.Name == thisAeInterface.AggregateID), None)
+    if aeInterface != None:
+      thisAeInterface.VLANS = aeInterface.VLANS
+      thisAeInterface.PortMode = aeInterface.PortMode
+      # Let the physical interface inherit properties
+      intfLun = re.findall(r"\.\d+$", thisAeInterface.Name)
+      if len(intfLun) == 1:
+        phIntfName = re.sub(r"\.\d+$", "", thisAeInterface.Name)
+        phri = next((intf for intf in self.Interfaces if intf.Name == phIntfName), None)
+        if phri != None:
+          phri.PortMode = thisAeInterface.PortMode
+          phri.VLANS = thisAeInterface.VLANS
+          phri.Status = thisAeInterface.Status
+          phri.AggregateID = thisAeInterface.AggregateID
+      
   # Process descriptions
   interfaceDescriptions = Session.ExecCommand("show interfaces descriptions").splitlines()     
   for line in interfaceDescriptions:
@@ -1207,6 +1299,7 @@ def ParseInterfaces(self) :
       ifName = words[0]
       foundInterface = next((intf for intf in self.Interfaces if intf.Name == ifName), None)
       if foundInterface != None : foundInterface.Description = " ".join([t for t in words if words.index(t) &gt;= 3])
+
 
 """ Return the list of RouterInterfaces that have a valid IPAddress"""
 def GetRoutedInterfaces(self):
@@ -1237,7 +1330,9 @@ def GetInterfaceNameByAddress(self, ipAddress):
 """ Return the configuration of an interface """
 def GetInterfaceConfiguration(self, ifName):
   if self.AllInterfaceConfiguration == "" : self.ParseInterfaceConfigurations()
-  ifConfig = _interfaceConfigurations.get(ifName, "")
+  # Use interface name without unit name to get full configuration
+  # intfName = re.sub(r"\.\d+$", "", ifName)
+  ifConfig = self._interfaceConfigurations.get(ifName, "")
   return ifConfig 
 
 """ Executes CLI command to query all interfaces configuration from device """  
@@ -1247,34 +1342,41 @@ def ParseInterfaceConfigurations(self):
   self._interfaceConfigurations = {}
   currentIntfName = ""
   currentConfiguration = []
-  vlanInterfaceConfiguration = []
   for thisLine in self.AllInterfaceConfiguration.splitlines():
     if thisLine == "}" :  continue
     lineindent = len(thisLine) - len(thisLine.strip())
     if lineindent == 0 :
       # This should be a new interface
       if currentIntfName != "":
-        if currentIntfName == "vlan" or currentIntfName == "irb":
-          # Need to separate by units
-          unitName = ""
-          for vlanIntfLine in currentConfiguration:
-            if vlanIntfLine.strip() == "}" : continue
-            if vlanIntfLine.strip().startswith("unit"):
-              # This should be a new unit
-              if unitName != "":
-                # Add current vlan interface to _interfaceConfigurations
-                unitNumber = re.findall(r"\d+", unitName)[0]
-                vlanIntfName = currentIntfName + "." + unitNumber
-                self._interfaceConfigurations[vlanIntfName] = "\r\n".join(vlanInterfaceConfiguration)
-              if "{" in vlanIntfLine:
-                unitName =  vlanIntfLine[0:vlanIntfLine.index("{")].strip()
-              elif ";" in vlanIntfLine:
-                unitName =  vlanIntfLine[0:vlanIntfLine.index(";")].strip()
-              vlanInterfaceConfiguration = []
+        # Need to separate by units
+        unitName = ""
+        logicalInterfaceConfiguration = []
+        for confLine in currentConfiguration:
+          if confLine.strip().startswith("unit"):
+            # This should be a new unit
+            if unitName == "":
+              # This is the physicyl interface
+              self._interfaceConfigurations[currentIntfName] = "\r\n".join(logicalInterfaceConfiguration)
             else:
-              vlanInterfaceConfiguration.append(vlanIntfLine.strip())
+              # Add current logical interface to _interfaceConfigurations
+              unitNumber = re.findall(r"\d+", unitName)[0]
+              logicalIntfName = currentIntfName + "." + unitNumber
+              self._interfaceConfigurations[logicalIntfName] = "\r\n".join(logicalInterfaceConfiguration)
+            if "{" in confLine:
+              unitName =  confLine[0:confLine.index("{")].strip()
+            elif ";" in confLine:
+              unitName =  confLine[0:confLine.index(";")].strip()
+            logicalInterfaceConfiguration = []
+          else:
+            logicalInterfaceConfiguration.append(confLine)
+        # Add the last physical/logical interface to _interfaceConfigurations
+        if unitName != "":
+          unitNumber = re.findall(r"\d+", unitName)[0]
+          logicalIntfName = currentIntfName + "." + unitNumber
+          self._interfaceConfigurations[logicalIntfName] = "\r\n".join(logicalInterfaceConfiguration)   
         else:
-          self._interfaceConfigurations[currentIntfName] = "\r\n".join(currentConfiguration)
+          self._interfaceConfigurations[currentIntfName] = "\r\n".join(currentConfiguration)   
+
       if "{" in thisLine:
         currentIntfName = thisLine[0:thisLine.index("{")].strip()
       elif ";" in thisLine:
@@ -1287,6 +1389,62 @@ def ParseInterfaceConfigurations(self):
     else:
       currentConfiguration.append(thisLine)
 
+
+""" Parse out the interface range definitions from device"""
+def ParseInterfaceRanges(self):
+  ranges = Session.ExecCommand("show configuration interfaces | display set | match interface-range")
+  for line in [l.lower().strip() for l in ranges.splitlines()] :
+    words = line.split(" ")
+    if "interface-range" in line :
+      if " member-range " in line :
+        # line is like : set interfaces interface-range WORKSTATION-IP-PHONE member-range ge-0/0/0 to ge-0/0/41
+        # add ranges
+        rangeName = words[3]
+        fromInterfaceName = words[5]
+        toInterfaceName = words[7]
+        # find if already a defined range
+        foundRange = next((ir for ir in self.InterfaceRanges if ir.rangeName == rangeName), None)
+        if foundRange != None : 
+          foundRange.AddInterfaceSpan(fromInterfaceName, toInterfaceName)
+        else:
+          newRange = InterfaceRange(rangeName)
+          newRange.AddInterfaceSpan(fromInterfaceName, toInterfaceName)
+          self.InterfaceRanges.append(newRange)  
+      elif " member " in line :
+          # line is like : set interfaces interface-range WORKSTATION-IP-PHONE member ge-0/0/0
+          # add ranges
+          rangeName = words[3]
+          fromInterfaceName = words[5]
+          toInterfaceName = words[5]
+          # find if already a defined range
+          foundRange = next((ir for ir in self.InterfaceRanges if ir.rangeName == rangeName), None)
+          if foundRange != None : 
+            foundRange.AddInterfaceSpan(fromInterfaceName, toInterfaceName)
+          else:
+            newRange = InterfaceRange(rangeName)
+            newRange.AddInterfaceSpan(fromInterfaceName, toInterfaceName)
+            self.InterfaceRanges.append(newRange)   
+      else :
+        rangeName = words[3]
+        # find a defined range (should aready be in the list)
+        foundRange = next((ir for ir in self.InterfaceRanges if ir.rangeName == rangeName), None)
+        if foundRange != None : 
+          # set interface properties for ranges
+          if "interface-mode" in line :
+            # line is like : set interfaces interface-range WORKSTATION-IP-PHONE unit 0 family ethernet-switching interface-mode access
+            foundRange.portMode = words[len(words) - 1]         
+          elif "port-mode" in line :
+            # line is like : set interfaces interface-range WORKSTATION-IP-PHONE unit 0 family ethernet-switching interface-mode access
+            foundRange.portMode = words[len(words) - 1] 
+          elif "vlan members" in line :
+            # line is like : set interfaces interface-range WORKSTATION-IP-PHONE unit 0 family ethernet-switching vlan members Corp-Access
+            foundRange.vlanMembers.append(words[len(words) - 1])
+        else:
+          raise Exception("Interface range name &lt;{0}&gt; definition is missing".format(rangeName))
+  
+  pass
+  
+
 """ Determines if a given name is an interface name we want to parse"""
 def IsInterrestingInterface(self, intfName):
   return intfName.startswith("ge-") or intfName.startswith("xe-") or intfName.startswith("et-") or intfName.startswith("ae") or intfName.startswith("irb") or intfName.startswith("vlan") or intfName.startswith("lo")
@@ -1294,12 +1452,13 @@ def IsInterrestingInterface(self, intfName):
 def Reset(self) :
   self.Interfaces = []
   self.AllInterfaceConfiguration = ""
+  self.InterfaceRanges = []
 </CustomCodeBlock>
     <DemoMode>false</DemoMode>
     <Description />
     <WatchVariables />
     <Initializer />
-    <EditorSize>{Width=1067, Height=956}|{X=273,Y=-19}</EditorSize>
+    <EditorSize>{Width=1355, Height=1069}|{X=293,Y=-3}</EditorSize>
     <FullTypeName>PGT.VisualScripts.vScriptGeneralObject</FullTypeName>
   </vScriptCommands>
   <vScriptConnector>
@@ -1626,14 +1785,79 @@ def Reset(self) :
   </vScriptConnector>
   <Parameters>
     <ScriptName>JunOS</ScriptName>
-    <GlobalCode># last changed : 2018.10.04
-scriptVersion = "2.2"
+    <GlobalCode># last changed : 2018.10.16
+scriptVersion = "2.5"
 #--
 _hostName = None
 _stackCount = -1
 
 # The routing protocols run by this router
-_runningRoutingProtocols = []</GlobalCode>
+_runningRoutingProtocols = []
+
+"""A span of two Interfaces"""
+class InterfaceSpan():
+  fromPIC = 0
+  fromFPC = 0
+  fromPort = 0
+  toPIC = 0
+  toFPC = 0
+  toPort = 0
+  
+  """Initialize a new SwithInterfaceSpan by defining the from and to interface names"""
+  def __init__(self, fromInterfaceName, toInterfaceName) :
+    self.fromSwitchInterface = fromInterfaceName
+    f = re.findall(r"\d+(?=\.?)", fromInterfaceName)
+    if len(f) == 3 :
+      self.fromFPC = int(f[0])
+      self.fromPIC = int(f[1])
+      self.fromPort = int(f[2])
+    else:
+      raise ValueError("FromInterface name is invalid")
+    self.toSwitchInterface = toInterfaceName
+    t = re.findall(r"\d+(?=\.?)", toInterfaceName)
+    if len(t) == 3 :
+      self.toFPC = int(t[0])
+      self.toPIC = int(t[1])
+      self.toPort = int(t[2])
+    else:
+      raise ValueError("ToInterface name is invalid")
+    
+  def IsInterfaceInRange(self, testSwitchInterface):
+    t = re.findall(r"\d+(?=\.?)", testSwitchInterface)
+    if len(t) == 3:
+      testFPC = int(t[0])
+      testPIC = int(t[1])
+      testPort = int(t[2])
+      matched = testFPC &gt;= self.fromFPC and  testFPC &lt;= self.toFPC and testPIC &gt;= self.fromPIC and testPIC &lt;= self.toPIC and testPort &gt;= self.fromPort and testPort &lt;= self.toPort  
+      return matched
+    else:
+      return False
+  
+
+
+"""Manifests a Juniper specific Interface-Range definition"""
+class InterfaceRange():
+  rangeName = ""
+  # The list of SwithInterfaceSpans for this range definition
+  rangeSpans = []
+  portMode = ""
+  vlanMembers = []
+  
+  """Initialize a new SwithInterfaceRange object by range name"""
+  def __init__(self, rangeName) :
+    self.rangeName = rangeName
+    self.rangeSpans = []
+    self.vlanMembers = []
+  
+  """Adds a new SwitchInterfaceSpan to the range definition"""
+  def AddInterfaceSpan(self, fromInterfaceName, toInterfaceName):
+    self.rangeSpans.append(InterfaceSpan(fromInterfaceName, toInterfaceName))
+    
+  """Determines if a given SwitchInterface belongs to the range definition"""
+  def IsInterfaceInRange(self, testSwitchInterface):
+    return any(map(lambda r : r.IsInterfaceInRange(testSwitchInterface), self.rangeSpans))
+
+</GlobalCode>
     <BreakPolicy>Before</BreakPolicy>
     <CustomNameSpaces>import re
 import sys
@@ -1644,16 +1868,16 @@ import PGT.Common
 import L3Discovery
 import System.Net</CustomNameSpaces>
     <CustomReferences />
-    <DebuggingAllowed>true</DebuggingAllowed>
+    <DebuggingAllowed>false</DebuggingAllowed>
     <LogFileName />
     <WatchVariables />
     <Language>Python</Language>
     <IsTemplate>false</IsTemplate>
     <IsRepository>false</IsRepository>
-    <EditorScaleFactor>0.3228367</EditorScaleFactor>
+    <EditorScaleFactor>0.5764994</EditorScaleFactor>
     <Description>This vScript implements a NetworkMap Router Module
 capable of handling Juniper EX/MX/SRX devices runing JunOS.</Description>
-    <EditorSize>{Width=437, Height=505}</EditorSize>
-    <PropertiesEditorSize>{Width=665, Height=460}|{X=507,Y=275}</PropertiesEditorSize>
+    <EditorSize>{Width=618, Height=590}</EditorSize>
+    <PropertiesEditorSize>{Width=885, Height=602}|{X=2437,Y=279}</PropertiesEditorSize>
   </Parameters>
 </vScriptDS>
