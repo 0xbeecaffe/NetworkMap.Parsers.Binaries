@@ -288,9 +288,9 @@ namespace L3Discovery.Routers.CiscoIOS
 			{
 				_versionInfo = session.ExecCommand("show version");
 				_hostName = session.GetHostName();
-				bool isCisco = _versionInfo.ToLowerInvariant().Contains("cisco");
-				DebugEx.WriteLine(string.Format("{0}.Initialize() : returning {1}, based on {2} ", GetType().FullName, isCisco, _versionInfo), DebugLevel.Full);
-				return isCisco;
+				bool isCiscoIOS = _versionInfo.ToLowerInvariant().Contains("cisco") && !_versionInfo.ToLowerInvariant().Contains("nexus");
+				DebugEx.WriteLine(string.Format("{0}.Initialize() : returning {1}, based on {2} ", GetType().FullName, isCiscoIOS, _versionInfo), DebugLevel.Full);
+				return isCiscoIOS;
 			}
 			else
 			{
@@ -956,7 +956,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return a string that describes the function of this protocol parser, like supported model, platform, version, protocol, etc...
 		/// </summary>
-		public string SupportTag => "Cisco, IOS Router support module v2.0";
+		public string SupportTag => "Cisco, IOS Router support module v2.1";
 
 		/// <summary>
 		/// Must be implemented to return serial number information of the device
