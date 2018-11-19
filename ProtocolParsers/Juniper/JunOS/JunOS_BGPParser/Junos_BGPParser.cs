@@ -15,6 +15,7 @@ using PGT.Common;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -40,7 +41,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
       else return false;
     }
 
-    public void Parse(INeighborRegistry registry, CancellationToken token)
+    public void Parse(INeighborRegistry registry, CancellationToken token, RoutingInstance instance)
     {
       if (_router?.Session == null || !_router.Session.IsConnected()) throw new ArgumentException("Unable to parse BGP. Either thisRouter or Session parameter is invalid");
       else
@@ -48,8 +49,10 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
         try
         {
           _OperationStatusLabel = "Querying bgp neighbors...";
-          string bgpNeighbors = _router.Session.ExecCommand("show bgp neighbor");
-          token.ThrowIfCancellationRequested();
+					string instanceName = instance?.Name.ToLower() ?? "default";
+					string bgpNeighbors = instanceName == "default" ? _router.Session.ExecCommand("show bgp neighbor") : _router.Session.ExecCommand(string.Format("show bgp neighbor instance {0}", instanceName));
+
+					token.ThrowIfCancellationRequested();
           string[] bgp_lines = bgpNeighbors.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
           string peerRouterID = "";
           string localNeighboringIP = "";
@@ -128,7 +131,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
                   Match m = Regex.Match(line, @"(?<=Peer ID: )[\d.]{0,99}", RegexOptions.Compiled);
                   if (!m.Success) throw new InvalidOperationException("Cannot parse BGP output : unable to retrieve peer router ID.");
                   peerRouterID = m.Value;
-                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(NeighborProtocol.BGP), _router.BGPAutonomousSystem, peerRouterID, remoteAS), DebugLevel.Informational);
+                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(NeighborProtocol.BGP), _router.BGPAutonomousSystem(instance), peerRouterID, remoteAS), DebugLevel.Informational);
                   continue;
                 }
                 #endregion
@@ -172,7 +175,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
               _OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
               RouterInterface ri = _router.GetInterfaceByName(localInterfaceName);
               _OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
-              registry.RegisterNeighbor(_router, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+              registry.RegisterNeighbor(_router, instance, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
               // now all is done for this peer, skip lines until next peer is found
               skipRestOfLines = true;
             }
@@ -213,7 +216,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
       else return null;
     }
 
-    public string SupportTag => "Juniper, JunOS BGP Protocol Parser module v2.0";
+		public string SupportTag => string.Format("Juniper, JunOS BGP Protocol Parser module  v{0}", Assembly.GetAssembly(typeof(Junos_BGPParser)).GetName().Version.ToString());
 
     public Enum[] SupportedProtocols => new Enum[] { NeighborProtocol.BGP };
 

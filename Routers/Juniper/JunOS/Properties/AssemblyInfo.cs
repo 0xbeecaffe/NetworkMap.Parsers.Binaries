@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Juniper EX, QFX switch support module PGT Network Map")]
-[assembly: AssemblyDescription("PGT Network Map support module for Juniper EX series and QFX switches")]
+[assembly: AssemblyTitle("Juniper EX, QFX, MX Router module for PGT Network Map")]
+[assembly: AssemblyDescription("PGT Network Map router support module for Juniper EX, QFX, MX series")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("http://www.prettygoodterminal.com")]
 [assembly: AssemblyProduct("PGTNetworkMap")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("4.0.0.0")]
+[assembly: AssemblyFileVersion("4.0.0.0")]
