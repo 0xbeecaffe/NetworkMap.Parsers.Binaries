@@ -131,7 +131,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
                   Match m = Regex.Match(line, @"(?<=Peer ID: )[\d.]{0,99}", RegexOptions.Compiled);
                   if (!m.Success) throw new InvalidOperationException("Cannot parse BGP output : unable to retrieve peer router ID.");
                   peerRouterID = m.Value;
-                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(NeighborProtocol.BGP), _router.BGPAutonomousSystem(instance), peerRouterID, remoteAS), DebugLevel.Informational);
+                  DebugEx.WriteLine(String.Format("JunOSBGPParser : found a neighbor {0}AS{1} <-> {2}AS{3}", _router.RouterID(NeighborProtocol.BGP, instance), _router.BGPAutonomousSystem(instance), peerRouterID, remoteAS), DebugLevel.Informational);
                   continue;
                 }
                 #endregion
@@ -154,7 +154,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
                     case BGPType.iBGP:
                       {
                         // since JunOS does not show Local Interface for iBGP, we need to query it, if we know the local ip
-                        if (localNeighboringIP != "") localInterfaceName = _router.GetInterfaceNameByIPAddress(localNeighboringIP);
+                        if (localNeighboringIP != "") localInterfaceName = _router.GetInterfaceNameByIPAddress(localNeighboringIP, instance);
                         break;
                       }
                   }
@@ -169,11 +169,11 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
               if (!sessionEstablished)
               {
                 peerRouterID = remoteNeighboringIP;
-                if (localNeighboringIP != "") localInterfaceName = _router.GetInterfaceNameByIPAddress(localNeighboringIP);
+                if (localNeighboringIP != "") localInterfaceName = _router.GetInterfaceNameByIPAddress(localNeighboringIP, instance);
               }
               // search database for peer router, select it or add new neighbor
               _OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
-              RouterInterface ri = _router.GetInterfaceByName(localInterfaceName);
+              RouterInterface ri = _router.GetInterfaceByName(localInterfaceName, instance);
               _OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
               registry.RegisterNeighbor(_router, instance, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
               // now all is done for this peer, skip lines until next peer is found
