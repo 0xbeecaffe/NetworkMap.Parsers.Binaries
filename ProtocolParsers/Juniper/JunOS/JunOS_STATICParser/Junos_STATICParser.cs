@@ -12,6 +12,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -34,13 +35,16 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
       else return false;
     }
 
-    public void Parse(INeighborRegistry registry, CancellationToken token)
+    public void Parse(INeighborRegistry registry, CancellationToken token, RoutingInstance instance)
     {
       if (_router?.Session == null || registry == null || !_router.Session.IsConnected()) throw new ArgumentException("Unable to parse STATIC routes, invalid parameters.");
       try
       {
         _OperationStatusLabel = "Querying static routes...";
-        string routes = _router.Session.ExecCommand("show route protocol static");
+				string cmd = "show route protocol static";
+				if (instance?.Name?.ToLower() != "master") cmd = string.Format("show route table {0}.inet.0 protocol static", instance.Name);
+
+				string routes = _router.Session.ExecCommand(cmd);
         token.ThrowIfCancellationRequested();
         MatchCollection knownNetworks = Regex.Matches(routes, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
         if (knownNetworks.Count > 0)
@@ -68,9 +72,9 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
                 string nextHopViaInterfaceName = Regex.Match(thisProtocolBlock, @"(?<=via ).*", RegexOptions.Compiled)?.Value?.Trim('\r');
 
                 _OperationStatusLabel = string.Format("Querying router interface {0}...", nextHopViaInterfaceName);
-                RouterInterface ri = _router.GetInterfaceByName(nextHopViaInterfaceName);
+                RouterInterface ri = _router.GetInterfaceByName(nextHopViaInterfaceName, instance);
                 _OperationStatusLabel = string.Format("Registering STATIC neighbor {0}...", nextHopAddress);
-                registry.RegisterSTATICNeighbor(_router, thisNetwork, nextHopAddress, ri.Address, ri);
+                registry.RegisterSTATICNeighbor(_router, instance, thisNetwork, nextHopAddress, ri.Address, ri);
               }
               catch (Exception Ex)
               {
@@ -101,6 +105,6 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
 
     public Enum[] SupportedProtocols => new Enum[] { NeighborProtocol.STATIC };
 
-    public string SupportTag => "Juniper, JunOS STATIC Protocol Parser module v2.0";
-  }
+		public string SupportTag => string.Format("Juniper, JunOS STATIC Protocol Parser module  v{0}", Assembly.GetAssembly(typeof(Junos_STATICParser)).GetName().Version.ToString());
+	}
 }
