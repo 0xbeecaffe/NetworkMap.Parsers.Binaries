@@ -36,7 +36,6 @@ namespace L3Discovery.Routers.CiscoIOS
 		private int _stackCount = -1;
 		private string _bgpASNumber;
 		private string _operationStatusLabel = "";
-		private const string _internalClassVersion = "v2.00";
 		private PGTDataSet.ScriptSettingRow ScriptSettings;
 		// There is no global router ID settings in IOS. Therefore, we will prefer BGP then OSPF RouterID, but 
 		// we still need to determine a default routerID in case no dynamic routing protocol is running only STATIC.
@@ -60,9 +59,9 @@ namespace L3Discovery.Routers.CiscoIOS
 		private Dictionary<string, RouterInterface> _interfaces = new Dictionary<string, RouterInterface>();
 
 		/// <summary>
-		/// The list of routing protocols active on this router
+		/// The dictionary of routing protocols active on this router, keyed by VRF name
 		/// </summary>
-		private List<NeighborProtocol> _runningNeighborProtocols;
+		private Dictionary<string, List<NeighborProtocol>> _runningNeighborProtocols;
 		#endregion
 
 		#region Constructors
@@ -71,7 +70,7 @@ namespace L3Discovery.Routers.CiscoIOS
 			if (DebugEx.DebugLevelThreshold >= DebugLevel.Full)
 			{
 				Assembly curAssembly = Assembly.GetAssembly(typeof(CiscoIOSRouter));
-				DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated from {1}. Internal class version : {2}", this.GetType().FullName, curAssembly, _internalClassVersion), DebugLevel.Full);
+				DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated from {1}.", this.GetType().FullName, curAssembly), DebugLevel.Full);
 			}
 			else DebugEx.WriteLine(string.Format("{0}.ctor() : class instantiated", this.GetType().FullName), DebugLevel.Informational);
 		}
@@ -81,41 +80,53 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return the list of static and dynamic routing protocols active on this router. 
 		/// </summary>
-		public Enum[] ActiveProtocols
+		public Enum[] ActiveProtocols(RoutingInstance instance)
 		{
-			get
+			if (_runningNeighborProtocols == null)
 			{
-				if (_runningNeighborProtocols == null)
+				// -- build command depending if requested for VRF or global routing
+				_runningNeighborProtocols = new Dictionary<string, List<NeighborProtocol>>();
+				_runningNeighborProtocols[instance.Name] = new List<NeighborProtocol>();
+				// --
+				string cmd = "show ip protocols";
+				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
 				{
-					_runningNeighborProtocols = new List<L3Discovery.NeighborProtocol>();
-
-
-					string response = _session.ExecCommand("show ip protocols");
-					if (response != "")
+					cmd = string.Format("show ip protocols vrf {0}", instance.Name);
+				}
+				// -- check running routing protocols
+				string response = _session.ExecCommand(cmd);
+				if (response != "")
+				{
+					var protocolLines = response.SplitByLine().Where(l => l.Trim().ToLowerInvariant().StartsWith("routing protocol is"));
+					foreach (string thisprotocolLine in protocolLines)
 					{
-						var protocolLines = response.SplitByLine().Where(l => l.Trim().ToLowerInvariant().StartsWith("routing protocol is"));
-						foreach (string thisprotocolLine in protocolLines)
+						foreach (NeighborProtocol thisProtocol in Enum.GetValues(typeof(NeighborProtocol)))
 						{
-							foreach (NeighborProtocol thisProtocol in Enum.GetValues(typeof(NeighborProtocol)))
+							if (thisprotocolLine.Contains(thisProtocol.ToString().ToLowerInvariant()))
 							{
-								if (thisprotocolLine.Contains(thisProtocol.ToString().ToLowerInvariant()))
-								{
-									_runningNeighborProtocols.Add(thisProtocol);
-									break;
-								}
+								_runningNeighborProtocols[instance.Name].Add(thisProtocol);
+								break;
 							}
 						}
 					}
-
-					response = _session.ExecCommand("show ip route static");
-					if (!string.IsNullOrEmpty(response)) _runningNeighborProtocols.Add(NeighborProtocol.STATIC);
-
-					response = _session.ExecCommand("show cdp");
-					if (!response.ToLowerInvariant().Contains("not enabled")) _runningNeighborProtocols.Add(NeighborProtocol.CDP);
 				}
-				DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningNeighborProtocols.Select(p => p.ToString()))), DebugLevel.Full);
-				return _runningNeighborProtocols.Cast<Enum>().ToArray();
+				// -- STATIC routing 
+				cmd = "show ip route static";
+				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+				{
+					cmd = string.Format("show ip route vrf {0} static", instance.Name);
+				}
+				response = _session.ExecCommand(cmd);
+				if (!string.IsNullOrEmpty(response)) _runningNeighborProtocols[instance.Name].Add(NeighborProtocol.STATIC);
+				// -- CDP for default instance only
+				if (instance.Name.ToLower() == RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+				{
+					response = _session.ExecCommand("show cdp");
+					if (!response.ToLowerInvariant().Contains("not enabled")) _runningNeighborProtocols[instance.Name].Add(NeighborProtocol.CDP);
+				}
 			}
+			DebugEx.WriteLine(string.Format("CiscoIOSRouter : Routing protocols active on {0} : {1}", ManagementIP, string.Join(",", _runningNeighborProtocols.Select(p => p.ToString()))), DebugLevel.Full);
+			return _runningNeighborProtocols[instance.Name].Cast<Enum>().ToArray();
 		}
 
 		/// <summary>
@@ -123,13 +134,10 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public string BGPAutonomousSystem
+		public string BGPAutonomousSystem(RoutingInstance instance)
 		{
-			get
-			{
-				if (_bgpASNumber == null) CalculateRouterIDAndASNumber();
-				return _bgpASNumber;
-			}
+			if (_bgpASNumber == null) CalculateRouterIDAndASNumber(instance);
+			return _bgpASNumber;
 		}
 
 		/// <summary>
@@ -138,7 +146,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <param name="session"></param>
 		/// <returns></returns>
 
-		public RouterInterface GetInterfaceByName(string InterfaceName)
+		public RouterInterface GetInterfaceByName(string InterfaceName, RoutingInstance instance)
 		{
 			RouterInterface result = null;
 			if (string.IsNullOrEmpty(InterfaceName)) throw new ArgumentException("Invalid interface name");
@@ -164,7 +172,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public string GetInterfaceNameByIPAddress(string Address)
+		public string GetInterfaceNameByIPAddress(string Address, RoutingInstance instance)
 		{
 			if (string.IsNullOrEmpty(Address)) throw new ArgumentException("Invalid interface address. GetInterfaceNameByIPAddress requires a valid ip address to query.");
 			string ifName = "";
@@ -352,7 +360,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		public string Platform { get { return "IOS"; } }
 
-		public void RegisterNHRP(INeighborRegistry registry)
+		public void RegisterNHRP(INeighborRegistry registry, RoutingInstance instance)
 		{
 			try
 			{
@@ -390,7 +398,7 @@ namespace L3Discovery.Routers.CiscoIOS
 						// interface definition is changing
 						if (GroupID != "" && VIPAddress != "")
 						{
-							registry.RegisterNHRPPeer(this, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
+							registry.RegisterNHRPPeer(this, instance, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
 							VIPAddress = "";
 							GroupID = "";
 							PeerAddress = "";
@@ -399,7 +407,7 @@ namespace L3Discovery.Routers.CiscoIOS
 						// 
 						string[] words = thisLine.SplitBySpace();
 						string ifName = words[0];
-						ri = GetInterfaceByName(ifName);
+						ri = GetInterfaceByName(ifName, instance);
 						Match m = Regex.Match(thisLine, @"(?<=Group )\d{0,99}", RegexOptions.Compiled);
 						if (m.Success) GroupID = m.Value;
 						continue;
@@ -428,7 +436,7 @@ namespace L3Discovery.Routers.CiscoIOS
 				// register the last one
 				if (ri != null && VIPAddress != "" && GroupID != "")
 				{
-					registry.RegisterNHRPPeer(this, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
+					registry.RegisterNHRPPeer(this, instance, ri, NHRPProtocol.HSRP, isActive, VIPAddress, GroupID, PeerAddress);
 				}
 			}
 			catch (Exception Ex)
@@ -453,7 +461,7 @@ namespace L3Discovery.Routers.CiscoIOS
 			_bgpASNumber = null;
 			_interfaces.Clear();
 			_routerID.Clear();
-			_runningNeighborProtocols.Clear();
+			_runningNeighborProtocols = null;
 		}
 
 		/// <summary>
@@ -461,10 +469,40 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public string RouterID(NeighborProtocol protocol)
+		public string RouterID(NeighborProtocol protocol, RoutingInstance instance)
 		{
-			if (_routerID.Count == 0) CalculateRouterIDAndASNumber();
+			if (_routerID.Count == 0) CalculateRouterIDAndASNumber(instance);
 			return (_routerID.ContainsKey(protocol)) ? _routerID[protocol] : defaultlRouterID;
+		}
+
+		/// <summary>
+		/// Returns the list of VRFs
+		/// </summary>
+		/// <param name="LogicalSystemName"></param>
+		/// <returns></returns>
+		public RoutingInstance[] RoutingInstances(string LogicalSystemName)
+		{
+			List<RoutingInstance> result = new List<RoutingInstance>();
+			result.Add(new RoutingInstance("Cisco"));
+			try
+			{
+				string response = Session.ExecCommand("show ip vrf");
+				if (!string.IsNullOrEmpty(response))
+				{
+					var vrfNames = response.SplitByLine().Skip(1).Where(line => line.SplitBySpace().Length > 1).Select(line => line.SplitBySpace()[0].Trim());
+					foreach (string thisName in vrfNames)
+					{
+						RoutingInstance ri = new RoutingInstance();
+						ri.Name = thisName;
+						result.Add(ri);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				DebugEx.WriteLine("CiscoIOSRouter.RoutingInstances() : unexpected error : " + ex.Message);
+			}
+			return result.ToArray();
 		}
 
 		/// <summary>
@@ -472,144 +510,186 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public RouteTableEntry[] RoutingTable
+		public RouteTableEntry[] RoutingTable(RoutingInstance instance)
 		{
-			get
+			List<RouteTableEntry> parsedRoutes = new List<RouteTableEntry>();
+			try
 			{
-				List<RouteTableEntry> parsedRoutes = new List<RouteTableEntry>();
-				try
+				string routes = "";
+				#region Get route table
+				string cmd = "show ip route summary";
+				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
 				{
-					string routes = "";
-					#region Get route table
-					string routeSummary = _session.ExecCommand("show ip route summary");
-					// 
-					// Example output
-					//
-					// xyz#sh ip route summary 
-					// IP routing table name is default(0x0)
-					// IP routing table maximum-paths is 32
-					// Route Source    Networks Subnets     Replicates Overhead    Memory(bytes)
-					// connected       0           6           0           528         1728
-					// static          1           6           0           616         2016
-					// application     0           0           0           0           0
-					// bgp 199563      190399      501894      0           60921784    199380384
+					cmd = string.Format("show ip route vrf {0} summary", instance.Name);
+				}
+				string routeSummary = _session.ExecCommand(cmd);
+				// 
+				// Example output
+				//
+				// xyz#sh ip route summary 
+				// IP routing table name is default(0x0)
+				// IP routing table maximum-paths is 32
+				// Route Source    Networks Subnets     Replicates Overhead    Memory(bytes)
+				// connected       0           6           0           528         1728
+				// static          1           6           0           616         2016
+				// application     0           0           0           0           0
+				// bgp 199563      190399      501894      0           60921784    199380384
 
-					//	External: 690892 Internal: 1401 Local: 0
-					// internal        7047                                            53772096
-					// Total           197447      501906      0           60922928    253156224
-					// xyz#
-					string routeTotals = routeSummary.SplitByLine().FirstOrDefault(l => l.ToLowerInvariant().StartsWith("total"));
-					if (routeTotals != null)
+				//	External: 690892 Internal: 1401 Local: 0
+				// internal        7047                                            53772096
+				// Total           197447      501906      0           60922928    253156224
+				// xyz#
+				string routeTotals = routeSummary.SplitByLine().FirstOrDefault(l => l.ToLowerInvariant().StartsWith("total"));
+				if (routeTotals != null)
+				{
+					string[] w = routeTotals.SplitBySpace();
+					if (w.Length >= 2 && int.TryParse(w[1], out int nCount))
 					{
-						string[] w = routeTotals.SplitBySpace();
-						if (w.Length >= 2 && int.TryParse(w[1], out int nCount))
+						if (nCount > 30000)
 						{
-							if (nCount > 30000)
+							// this would be too much to retrieve via terminal connection, get only default route
+							cmd = "show ip route 0.0.0.0";
+							if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
 							{
-								// this would be too much to retrieve via terminal connection, get only default route
-								routes = _session.ExecCommand("show ip route 0.0.0.0");
+								cmd = string.Format("show ip route vrf {0} 0.0.0.0", instance.Name);
 							}
-							else routes = _session.ExecCommand("show ip route");
+							routes = _session.ExecCommand(cmd);
+						}
+						else
+						{
+							cmd = "show ip route";
+							if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+							{
+								cmd = string.Format("show ip route vrf {0}", instance.Name);
+							}
+							routes = _session.ExecCommand(cmd);
 						}
 					}
-					else
+				}
+				else
+				{
+					cmd = "show ip route";
+					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
 					{
-						routes = _session.ExecCommand("show ip route");
+						cmd = string.Format("show ip route vrf {0}", instance.Name);
 					}
-					#endregion
-					string[] routeLines = routes.SplitByLine();
-					if (Version.ToLowerInvariant().Contains("ios-xe software"))
+					routes = _session.ExecCommand(cmd);
+				}
+				#endregion
+				string[] routeLines = routes.SplitByLine();
+				if (Version.ToLowerInvariant().Contains("ios-xe software"))
+				{
+					// Parsing output for Cisco IOS-XE Software
+					if (routeLines.Length > 0)
 					{
-						// Parsing output for Cisco IOS-XE Software
-						if (routeLines.Length > 0)
+						// insert actual routes
+						NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
+						bool expectingNextHop = false;
+						string prefix = "";
+						int maskLength = -1;
+						string subnettedPrefix = "";
+						int subnettedMaskLength = -1;
+						string nextHop = "";
+						string adminDistance = "";
+						string routeMetric = "";
+						bool parserSuccess = false;
+						string outInterface = "";
+						foreach (string rLine in routeLines.Select(l => l.Trim()))
 						{
-							// insert actual routes
-							NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
-							bool expectingNextHop = false;
-							string prefix = "";
-							int maskLength = -1;
-							string subnettedPrefix = "";
-							int subnettedMaskLength = -1;
-							string nextHop = "";
-							string adminDistance = "";
-							string routeMetric = "";
-							bool parserSuccess = false;
-							string outInterface = "";
-							foreach (string rLine in routeLines.Select(l => l.Trim()))
+							// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
+							if (rLine.Contains("subnetted"))
 							{
-								// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
-								if (rLine.Contains("subnetted"))
+								// lets check if we find an ipAddress/MaskLength combination in the line
+								Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+								if (prefixFound.Success)
 								{
-									// lets check if we find an ipAddress/MaskLength combination in the line
-									Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
-									if (prefixFound.Success)
+									string[] prefixAndMask = prefixFound.Value.Split('/');
+									if (prefixAndMask.Length == 2 && int.TryParse(prefixAndMask[1], out subnettedMaskLength))
 									{
-										string[] prefixAndMask = prefixFound.Value.Split('/');
-										if (prefixAndMask.Length == 2 && int.TryParse(prefixAndMask[1], out subnettedMaskLength))
-										{
-											subnettedPrefix = prefixAndMask[0];
-										}
+										subnettedPrefix = prefixAndMask[0];
 									}
-									// proceed to next rLine
-									continue;
 								}
-								if (rLine.StartsWith("B"))
+								// proceed to next rLine
+								continue;
+							}
+							if (rLine.StartsWith("B"))
+							{
+								thisProtocol = NeighborProtocol.BGP;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
+							{
+								thisProtocol = NeighborProtocol.OSPF;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
+							{
+								thisProtocol = NeighborProtocol.EIGRP;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("R"))
+							{
+								thisProtocol = NeighborProtocol.RIP;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("L"))
+							{
+								thisProtocol = NeighborProtocol.LOCAL;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("C"))
+							{
+								thisProtocol = NeighborProtocol.CONNECTED;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("S"))
+							{
+								thisProtocol = NeighborProtocol.STATIC;
+								expectingNextHop = false;
+							}
+							else if (rLine.StartsWith("[") && expectingNextHop) ; // this is an empty statement on purpose !
+							else
+							{
+								thisProtocol = NeighborProtocol.UNKNOWN;
+								expectingNextHop = false;
+							}
+							// reset variables if current line is not a continuation
+							if (!expectingNextHop)
+							{
+								prefix = "";
+								maskLength = -1;
+								nextHop = "";
+								adminDistance = "";
+								routeMetric = "";
+								parserSuccess = false;
+								outInterface = "";
+							}
+							if (thisProtocol != NeighborProtocol.UNKNOWN)
+							{
+								if (thisProtocol == NeighborProtocol.LOCAL || thisProtocol == NeighborProtocol.CONNECTED)
 								{
-									thisProtocol = NeighborProtocol.BGP;
-									expectingNextHop = false;
+									// we expect only one ip addresses in these lines which is the prefix
+									Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+									if (m.Success)
+									{
+										string s = m.Value;
+										string[] prefixAndMask = s.Split('/');
+										prefix = prefixAndMask[0];
+										maskLength = int.Parse(prefixAndMask[1]);
+										expectingNextHop = true;
+										// this line should also contain the out interface as the last word
+										string[] words = rLine.SplitByComma();
+										outInterface = words[words.Length - 1];
+										expectingNextHop = false;
+										parserSuccess = true;
+									}
 								}
-								else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
-								{
-									thisProtocol = NeighborProtocol.OSPF;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
-								{
-									thisProtocol = NeighborProtocol.EIGRP;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("R"))
-								{
-									thisProtocol = NeighborProtocol.RIP;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("L"))
-								{
-									thisProtocol = NeighborProtocol.LOCAL;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("C"))
-								{
-									thisProtocol = NeighborProtocol.CONNECTED;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("S"))
-								{
-									thisProtocol = NeighborProtocol.STATIC;
-									expectingNextHop = false;
-								}
-								else if (rLine.StartsWith("[") && expectingNextHop) ; // this is an empty statement on purpose !
 								else
 								{
-									thisProtocol = NeighborProtocol.UNKNOWN;
-									expectingNextHop = false;
-								}
-								// reset variables if current line is not a continuation
-								if (!expectingNextHop)
-								{
-									prefix = "";
-									maskLength = -1;
-									nextHop = "";
-									adminDistance = "";
-									routeMetric = "";
-									parserSuccess = false;
-									outInterface = "";
-								}
-								if (thisProtocol != NeighborProtocol.UNKNOWN)
-								{
-									if (thisProtocol == NeighborProtocol.LOCAL || thisProtocol == NeighborProtocol.CONNECTED)
+									if (!expectingNextHop)
 									{
-										// we expect only one ip addresses in these lines which is the prefix
+										// we expect two ip addresses in these lines, first is the prefix and second is next-hop
+										// check for the prefix first
 										Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
 										if (m.Success)
 										{
@@ -618,88 +698,198 @@ namespace L3Discovery.Routers.CiscoIOS
 											prefix = prefixAndMask[0];
 											maskLength = int.Parse(prefixAndMask[1]);
 											expectingNextHop = true;
-											// this line should also contain the out interface as the last word
-											string[] words = rLine.SplitByComma();
-											outInterface = words[words.Length - 1];
-											expectingNextHop = false;
-											parserSuccess = true;
 										}
-									}
-									else
-									{
-										if (!expectingNextHop)
+										else
 										{
-											// we expect two ip addresses in these lines, first is the prefix and second is next-hop
-											// check for the prefix first
-											Match m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+											// check if we find an ip address in line and if it was a subnet of last prefix
+
+											// unfortunately logic seems to be broken in cas of some IOS-XE, like below route table entry is totally crap :
+											//     159.63.0.0 / 27 is subnetted, 2 subnets
+											// S        159.63.248.32[1 / 0] via 212.162.30.89
+											// S        159.63.248.96[1 / 0] via 212.162.30.89
+
+											m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+
+											// Due to above issue , below check does not work and we need to trust the subnettedPrefix value anyhow
+											// if (m.Success && IPOperations.IsIPAddressInNetwork(m.Value, subnettedPrefix, subnettedMaskLength))
+
 											if (m.Success)
 											{
-												string s = m.Value;
-												string[] prefixAndMask = s.Split('/');
-												prefix = prefixAndMask[0];
-												maskLength = int.Parse(prefixAndMask[1]);
+												// the maskLength is still valid for this prefix
+												prefix = m.Value;
+												maskLength = subnettedMaskLength;
 												expectingNextHop = true;
 											}
-											else
-											{
-												// check if we find an ip address in line and if it was a subnet of last prefix
-
-												// unfortunately logic seems to be broken in cas of some IOS-XE, like below route table entry is totally crap :
-												//     159.63.0.0 / 27 is subnetted, 2 subnets
-												// S        159.63.248.32[1 / 0] via 212.162.30.89
-												// S        159.63.248.96[1 / 0] via 212.162.30.89
-
-											  m = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
-												
-												// Due to above issue , below check does not work and we need to trust the subnettedPrefix value anyhow
-												// if (m.Success && IPOperations.IsIPAddressInNetwork(m.Value, subnettedPrefix, subnettedMaskLength))
-
-												if (m.Success)
-												{
-													// the maskLength is still valid for this prefix
-													prefix = m.Value;
-													maskLength = subnettedMaskLength;
-													expectingNextHop = true;
-												}
-											}
 										}
-										if (expectingNextHop)
+									}
+									if (expectingNextHop)
+									{
+										// get next-hop
+										Match m = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+										if (m.Success)
 										{
-											// get next-hop
-											Match m = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+											expectingNextHop = false;
+											parserSuccess = true;
+											nextHop = m.Value;
+											// get preference
+											m = Regex.Match(rLine, @"\[(.*?)\]");
 											if (m.Success)
 											{
-												expectingNextHop = false;
-												parserSuccess = true;
-												nextHop = m.Value;
-												// get preference
-												m = Regex.Match(rLine, @"\[(.*?)\]");
-												if (m.Success)
-												{
-													string[] preferences = m.Value.Split('/');
-													adminDistance = preferences[0].TrimStart('[');
-													routeMetric = preferences[1].TrimEnd(']');
-												}
-												// this line should also contain the out interface
-												string[] words = rLine.SplitByComma();
-												if (words.Length > 1)
-												{
-													outInterface = words[words.Length - 1];
-													// discard outInterface if not a real interface name, like matches date pattern
-													if (Regex.IsMatch(outInterface, @"(\d{1,2}w\d{1,2}d)|(\d{1,2}d\d{1,2}h)", RegexOptions.Compiled)) outInterface = "";
-												}
+												string[] preferences = m.Value.Split('/');
+												adminDistance = preferences[0].TrimStart('[');
+												routeMetric = preferences[1].TrimEnd(']');
 											}
-											else expectingNextHop = true; // only for debugging
+											// this line should also contain the out interface
+											string[] words = rLine.SplitByComma();
+											if (words.Length > 1)
+											{
+												outInterface = words[words.Length - 1];
+												// discard outInterface if not a real interface name, like matches date pattern
+												if (Regex.IsMatch(outInterface, @"(\d{1,2}w\d{1,2}d)|(\d{1,2}d\d{1,2}h)", RegexOptions.Compiled)) outInterface = "";
+											}
 										}
-
+										else expectingNextHop = true; // only for debugging
 									}
+
 								}
+							}
+							if (parserSuccess)
+							{
+								try
+								{
+									RouteTableEntry re = new RouteTableEntry();
+									re.RouterID = RouterID(thisProtocol, instance);
+									re.Prefix = prefix;
+									re.MaskLength = maskLength;
+									re.Protocol = thisProtocol.ToString();
+									re.AD = adminDistance;
+									re.Metric = routeMetric;
+									re.NextHop = nextHop;
+									re.OutInterface = outInterface;
+									re.Best = true; // the show ip route output only lists best routes :-(
+									re.Tag = "";
+									parsedRoutes.Add(re);
+								}
+								catch (Exception Ex)
+								{
+									string msg = string.Format("CiscoIOSRouter.RoutingTable() : error processing route table : {0}", Ex.Message);
+									DebugEx.WriteLine(msg);
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					// Parsing output for non IOS-XE Software
+					if (routeLines.Length > 0)
+					{
+						// insert actual routes
+						NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
+						string prefix = "";
+						int maskLength = -1;
+						string nextHop = "";
+						string adminDistance = "";
+						string routeMetric = "";
+						bool parserSuccess = false;
+						string outInterface = "";
+						foreach (string rLine in routeLines.Select(l => l.Trim()))
+						{
+							string[] words = rLine.SplitBySpace();
+							// lets check if we find an ipAddress/MaskLength combination in the line
+							Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
+							// or just an ipAddress
+							Match addressFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+							// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
+							if (rLine.Contains("subnetted") && prefixFound.Success)
+							{
+								string[] addressAndMask = prefixFound.Value.Split('/');
+								if (addressAndMask.Length == 2) int.TryParse(addressAndMask[1], out maskLength);
+								// proceed to next rLine
+								continue;
+							}
+							if (prefixFound.Success)
+							{
+								string[] addressAndMask = prefixFound.Value.Split('/');
+								if (addressAndMask.Length == 2)
+								{
+									int.TryParse(addressAndMask[1], out maskLength);
+									prefix = addressAndMask[0];
+								}
+							}
+							else if (addressFound.Success)
+							{
+								prefix = addressFound.Value;
+							}
+							else continue;
+
+							if (prefix != "")
+							{
+								parserSuccess = true;
+								if (prefix == "0.0.0.0") maskLength = 0;
+								// get next-hop
+								Match nexthopFound = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
+								if (nexthopFound.Success)
+								{
+									nextHop = nexthopFound.Value;
+								}
+								// get preference
+								Match routeDetails = Regex.Match(rLine, @"\[(.*?)\]");
+								if (routeDetails.Success)
+								{
+									string[] preferences = routeDetails.Value.Split('/');
+									adminDistance = preferences[0].TrimStart('[');
+									routeMetric = preferences[1].TrimEnd(']');
+								}
+								// this line should also contain the out interface
+								outInterface = words[words.Length - 1];
+							}
+							else
+							{
+								// no ip address in this line, proceed to next
+								continue;
+							}
+							// here we already know a mask length and the actual routed prefix, so check the protocol
+							if (rLine.StartsWith("B"))
+							{
+								thisProtocol = NeighborProtocol.BGP;
+							}
+							else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
+							{
+								thisProtocol = NeighborProtocol.OSPF;
+							}
+							else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
+							{
+								thisProtocol = NeighborProtocol.EIGRP;
+							}
+							else if (rLine.StartsWith("R"))
+							{
+								thisProtocol = NeighborProtocol.RIP;
+							}
+							else if (rLine.StartsWith("L"))
+							{
+								thisProtocol = NeighborProtocol.LOCAL;
+							}
+							else if (rLine.StartsWith("C"))
+							{
+								thisProtocol = NeighborProtocol.CONNECTED;
+							}
+							else if (rLine.StartsWith("S"))
+							{
+								thisProtocol = NeighborProtocol.STATIC;
+							}
+							else
+							{
+								thisProtocol = NeighborProtocol.UNKNOWN;
+							}
+							if (thisProtocol != NeighborProtocol.UNKNOWN)
+							{
 								if (parserSuccess)
 								{
 									try
 									{
 										RouteTableEntry re = new RouteTableEntry();
-										re.RouterID = RouterID(thisProtocol);
+										re.RouterID = RouterID(thisProtocol, instance);
 										re.Prefix = prefix;
 										re.MaskLength = maskLength;
 										re.Protocol = thisProtocol.ToString();
@@ -720,150 +910,18 @@ namespace L3Discovery.Routers.CiscoIOS
 							}
 						}
 					}
-					else
-					{
-						// Parsing output for non IOS-XE Software
-						if (routeLines.Length > 0)
-						{
-							// insert actual routes
-							NeighborProtocol thisProtocol = NeighborProtocol.UNKNOWN;
-							string prefix = "";
-							int maskLength = -1;
-							string nextHop = "";
-							string adminDistance = "";
-							string routeMetric = "";
-							bool parserSuccess = false;
-							string outInterface = "";
-							foreach (string rLine in routeLines.Select(l => l.Trim()))
-							{
-								string[] words = rLine.SplitBySpace();
-								// lets check if we find an ipAddress/MaskLength combination in the line
-								Match prefixFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2}", RegexOptions.Compiled);
-								// or just an ipAddress
-								Match addressFound = Regex.Match(rLine, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
-								// if the line contains the expression "subnetted" then we will learn the subnet mask for upcoming route entries and continue the loop
-								if (rLine.Contains("subnetted") && prefixFound.Success)
-								{
-									string[] addressAndMask = prefixFound.Value.Split('/');
-									if (addressAndMask.Length == 2) int.TryParse(addressAndMask[1], out maskLength);
-									// proceed to next rLine
-									continue;
-								}
-								if (prefixFound.Success)
-								{
-									string[] addressAndMask = prefixFound.Value.Split('/');
-									if (addressAndMask.Length == 2)
-									{
-										int.TryParse(addressAndMask[1], out maskLength);
-										prefix = addressAndMask[0];
-									}
-								}
-								else if (addressFound.Success)
-								{
-									prefix = addressFound.Value;
-								}
-								else continue;
-
-								if (prefix != "")
-								{
-									parserSuccess = true;
-									if (prefix == "0.0.0.0") maskLength = 0;
-									// get next-hop
-									Match nexthopFound = Regex.Match(rLine, @"(?<=via )\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", RegexOptions.Compiled);
-									if (nexthopFound.Success)
-									{
-										nextHop = nexthopFound.Value;
-									}
-									// get preference
-									Match routeDetails = Regex.Match(rLine, @"\[(.*?)\]");
-									if (routeDetails.Success)
-									{
-										string[] preferences = routeDetails.Value.Split('/');
-										adminDistance = preferences[0].TrimStart('[');
-										routeMetric = preferences[1].TrimEnd(']');
-									}
-									// this line should also contain the out interface
-									outInterface = words[words.Length - 1];
-								}
-								else
-								{
-									// no ip address in this line, proceed to next
-									continue;
-								}
-								// here we already know a mask length and the actual routed prefix, so check the protocol
-								if (rLine.StartsWith("B"))
-								{
-									thisProtocol = NeighborProtocol.BGP;
-								}
-								else if (rLine.StartsWith("O") || rLine.StartsWith("IA") || rLine.StartsWith("N1") || rLine.StartsWith("N2") || rLine.StartsWith("E1") || rLine.StartsWith("E2"))
-								{
-									thisProtocol = NeighborProtocol.OSPF;
-								}
-								else if (rLine.StartsWith("D") || rLine.StartsWith("EX"))
-								{
-									thisProtocol = NeighborProtocol.EIGRP;
-								}
-								else if (rLine.StartsWith("R"))
-								{
-									thisProtocol = NeighborProtocol.RIP;
-								}
-								else if (rLine.StartsWith("L"))
-								{
-									thisProtocol = NeighborProtocol.LOCAL;
-								}
-								else if (rLine.StartsWith("C"))
-								{
-									thisProtocol = NeighborProtocol.CONNECTED;
-								}
-								else if (rLine.StartsWith("S"))
-								{
-									thisProtocol = NeighborProtocol.STATIC;
-								}
-								else
-								{
-									thisProtocol = NeighborProtocol.UNKNOWN;
-								}
-								if (thisProtocol != NeighborProtocol.UNKNOWN)
-								{
-									if (parserSuccess)
-									{
-										try
-										{
-											RouteTableEntry re = new RouteTableEntry();
-											re.RouterID = RouterID(thisProtocol);
-											re.Prefix = prefix;
-											re.MaskLength = maskLength;
-											re.Protocol = thisProtocol.ToString();
-											re.AD = adminDistance;
-											re.Metric = routeMetric;
-											re.NextHop = nextHop;
-											re.OutInterface = outInterface;
-											re.Best = true; // the show ip route output only lists best routes :-(
-											re.Tag = "";
-											parsedRoutes.Add(re);
-										}
-										catch (Exception Ex)
-										{
-											string msg = string.Format("CiscoIOSRouter.RoutingTable() : error processing route table : {0}", Ex.Message);
-											DebugEx.WriteLine(msg);
-										}
-									}
-								}
-							}
-						}
-					}
 				}
-				catch (CommandTimeoutException Ex)
-				{
-					DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() : Command timed out while gathering route table : " + Ex.Message);
-					throw;
-				}
-				catch (Exception Ex)
-				{
-					DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() :  thrown an unexpected error while gathering route table : " + Ex.Message);
-				}
-				return parsedRoutes.ToArray();
 			}
+			catch (CommandTimeoutException Ex)
+			{
+				DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() : Command timed out while gathering route table : " + Ex.Message);
+				throw;
+			}
+			catch (Exception Ex)
+			{
+				DebugEx.WriteLine("CiscoIOSRouter.RoutingTable() :  thrown an unexpected error while gathering route table : " + Ex.Message);
+			}
+			return parsedRoutes.ToArray();
 		}
 
 		/// <summary>
@@ -872,53 +930,50 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// </summary>
 		/// <param name="session"></param>
 		/// <returns></returns>
-		public RouterInterface[] RoutedInterfaces
+		public RouterInterface[] RoutedInterfaces(RoutingInstance instance)
 		{
-			get
+			List<RouterInterface> fi = new List<RouterInterface>();
+			try
 			{
-				List<RouterInterface> fi = new List<RouterInterface>();
-				try
+				string inetInterfaces = _session.ExecCommand("show ip int brief");
+
+
+				foreach (string line in inetInterfaces.SplitByLine())
 				{
-					string inetInterfaces = _session.ExecCommand("show ip int brief");
-
-
-					foreach (string line in inetInterfaces.SplitByLine())
+					try
 					{
-						try
+						string[] words = line.SplitBySpace();
+						if (words.Length >= 6)
 						{
-							string[] words = line.SplitBySpace();
-							if (words.Length >= 6)
+							// words should look like : GigabitEthernet0/0/0,100.65.0.46,YES,NVRAM,up,up   
+							string ifName = words[0];
+							string ifIP = words[1];
+							IPAddress ipa;
+							if (IPAddress.TryParse(ifIP, out ipa))
 							{
-								// words should look like : GigabitEthernet0/0/0,100.65.0.46,YES,NVRAM,up,up   
-								string ifName = words[0];
-								string ifIP = words[1];
-								IPAddress ipa;
-								if (IPAddress.TryParse(ifIP, out ipa))
-								{
-									RouterInterface ri = new RouterInterface();
-									ri.Name = ifName;
-									ri.Address = ifIP;
-									ri.Status = string.Format("{0},{1}", words[4], words[5]);
-									ri.MaskLength = "";
-									ri.Configuration = GetRouterinterfaceFromCacheByName(ri.Name)?.Configuration ?? "";
-									fi.Add(ri);
-								}
+								RouterInterface ri = new RouterInterface();
+								ri.Name = ifName;
+								ri.Address = ifIP;
+								ri.Status = string.Format("{0},{1}", words[4], words[5]);
+								ri.MaskLength = "";
+								ri.Configuration = GetRouterinterfaceFromCacheByName(ri.Name)?.Configuration ?? "";
+								fi.Add(ri);
 							}
 						}
-						catch (Exception Ex)
-						{
-							string msg = string.Format("CiscoIOSRouter says : error processing routed interfaces : {0}", Ex.Message);
-							DebugEx.WriteLine(msg);
-						}
+					}
+					catch (Exception Ex)
+					{
+						string msg = string.Format("CiscoIOSRouter says : error processing routed interfaces : {0}", Ex.Message);
+						DebugEx.WriteLine(msg);
 					}
 				}
-				catch (Exception Ex)
-				{
-					string msg = string.Format("CiscoIOSRouter says : error processing routed interfaces : {0}", Ex.Message);
-					DebugEx.WriteLine(msg);
-				}
-				return fi.ToArray();
 			}
+			catch (Exception Ex)
+			{
+				string msg = string.Format("CiscoIOSRouter says : error processing routed interfaces : {0}", Ex.Message);
+				DebugEx.WriteLine(msg);
+			}
+			return fi.ToArray();
 		}
 
 		/// <summary>
@@ -995,10 +1050,12 @@ namespace L3Discovery.Routers.CiscoIOS
 			}
 		}
 
+		public string[] LogicalSystems => new string[] { "Default" };
+
 		#endregion
 
 		#region Private members
-		private void CalculateRouterIDAndASNumber()
+		private void CalculateRouterIDAndASNumber(RoutingInstance instance)
 		{
 			#region Determine default router ID
 			string l3interfaces = _session.ExecCommand("sh ip interface brief");
@@ -1051,7 +1108,7 @@ namespace L3Discovery.Routers.CiscoIOS
 
 			#region  get routerID for all routing protocols this router is running
 			// ordering is important to ensure that BGP and OSPF precedes STATIC
-			foreach (NeighborProtocol thisPprotocol in ActiveProtocols.Where(p => p is NeighborProtocol).OrderBy(p => p))
+			foreach (NeighborProtocol thisPprotocol in ActiveProtocols(instance).Where(p => p is NeighborProtocol).OrderBy(p => p))
 			{
 				switch (thisPprotocol)
 				{
@@ -1186,6 +1243,8 @@ namespace L3Discovery.Routers.CiscoIOS
 				_systemSerial = _systemSerial?.TrimStart(';');
 			}
 		}
+
+
 		#endregion
 	}
 }
