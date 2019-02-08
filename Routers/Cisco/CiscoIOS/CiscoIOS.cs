@@ -505,6 +505,40 @@ namespace L3Discovery.Routers.CiscoIOS
 			return result.ToArray();
 		}
 
+		public int RouteTableSize(RoutingInstance instance)
+		{
+			string cmd = "show ip route summary";
+			if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+			{
+				cmd = string.Format("show ip route vrf {0} summary", instance.Name);
+			}
+			string routeSummary = _session.ExecCommand(cmd);
+			// 
+			// Example output
+			//
+			// xyz#sh ip route summary 
+			// IP routing table name is default(0x0)
+			// IP routing table maximum-paths is 32
+			// Route Source    Networks Subnets     Replicates Overhead    Memory(bytes)
+			// connected       0           6           0           528         1728
+			// static          1           6           0           616         2016
+			// application     0           0           0           0           0
+			// bgp 199563      190399      501894      0           60921784    199380384
+
+			//	External: 690892 Internal: 1401 Local: 0
+			// internal        7047                                            53772096
+			// Total           197447      501906      0           60922928    253156224
+			// xyz#
+			int routeCount = -1;
+			string routeTotals = routeSummary.SplitByLine().FirstOrDefault(l => l.ToLowerInvariant().StartsWith("total"));
+			if (routeTotals != null)
+			{
+				string[] w = routeTotals.SplitBySpace();
+				if (w.Length >= 2 && int.TryParse(w[1], out routeCount)) ;
+			}
+			return routeCount;
+		}
+
 		/// <summary>
 		/// Must return the full routing table of the device
 		/// </summary>
@@ -517,54 +551,18 @@ namespace L3Discovery.Routers.CiscoIOS
 			{
 				string routes = "";
 				#region Get route table
-				string cmd = "show ip route summary";
-				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
-				{
-					cmd = string.Format("show ip route vrf {0} summary", instance.Name);
-				}
-				string routeSummary = _session.ExecCommand(cmd);
-				// 
-				// Example output
-				//
-				// xyz#sh ip route summary 
-				// IP routing table name is default(0x0)
-				// IP routing table maximum-paths is 32
-				// Route Source    Networks Subnets     Replicates Overhead    Memory(bytes)
-				// connected       0           6           0           528         1728
-				// static          1           6           0           616         2016
-				// application     0           0           0           0           0
-				// bgp 199563      190399      501894      0           60921784    199380384
 
-				//	External: 690892 Internal: 1401 Local: 0
-				// internal        7047                                            53772096
-				// Total           197447      501906      0           60922928    253156224
-				// xyz#
-				string routeTotals = routeSummary.SplitByLine().FirstOrDefault(l => l.ToLowerInvariant().StartsWith("total"));
-				if (routeTotals != null)
+				int nCount = RouteTableSize(instance);
+				string cmd = "";
+				if (nCount > 30000)
 				{
-					string[] w = routeTotals.SplitBySpace();
-					if (w.Length >= 2 && int.TryParse(w[1], out int nCount))
+					cmd = "show ip route 0.0.0.0";
+					// this would be too much to retrieve via terminal connection, get only default route
+					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
 					{
-						if (nCount > 30000)
-						{
-							// this would be too much to retrieve via terminal connection, get only default route
-							cmd = "show ip route 0.0.0.0";
-							if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
-							{
-								cmd = string.Format("show ip route vrf {0} 0.0.0.0", instance.Name);
-							}
-							routes = _session.ExecCommand(cmd);
-						}
-						else
-						{
-							cmd = "show ip route";
-							if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
-							{
-								cmd = string.Format("show ip route vrf {0}", instance.Name);
-							}
-							routes = _session.ExecCommand(cmd);
-						}
+						cmd = string.Format("show ip route vrf {0} 0.0.0.0", instance.Name);
 					}
+					routes = _session.ExecCommand(cmd);
 				}
 				else
 				{

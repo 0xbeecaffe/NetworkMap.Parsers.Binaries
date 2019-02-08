@@ -27,30 +27,32 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 		/// The IRouter this parser is working for
 		/// </summary>
 		private IRouter _router;
+
 		private string _OperationStatusLabel = "Init";
 
-		public string OperationStatusLabel => _OperationStatusLabel;
+		public string GetOperationStatusLabel() => _OperationStatusLabel;
 
 		public bool Initilize(IRouter router, Enum protocol)
 		{
 			_router = router;
 			if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.BGP)
 			{
-				return router?.Vendor == "JunOS";
+				return router?.GetVendor() == "JunOS";
 			}
 			else return false;
 		}
 
 		public void Parse(INeighborRegistry registry, CancellationToken token, RoutingInstance instance)
 		{
-			if (_router?.Session == null || !_router.Session.IsConnected()) throw new ArgumentException("Unable to parse BGP. Either thisRouter or Session parameter is invalid");
+			var session = _router.GetSession();
+			if (session == null || !session.IsConnected()) throw new ArgumentException("Unable to parse BGP. Either thisRouter or Session parameter is invalid");
 			else
 			{
 				try
 				{
 					_OperationStatusLabel = "Querying bgp neighbors...";
 					string instanceName = instance?.Name.ToLower() ?? "default";
-					string bgpNeighbors = instanceName == "default" ? _router.Session.ExecCommand("show bgp neighbor") : _router.Session.ExecCommand(string.Format("show bgp neighbor instance {0}", instanceName));
+					string bgpNeighbors = instanceName == "default" ? session.ExecCommand("show bgp neighbor") : session.ExecCommand(string.Format("show bgp neighbor instance {0}", instanceName));
 
 					token.ThrowIfCancellationRequested();
 					string[] bgp_lines = bgpNeighbors.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
@@ -247,9 +249,9 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 			else return null;
 		}
 
-		public string SupportTag => string.Format("Juniper, JunOS BGP Protocol Parser module  v{0}", Assembly.GetAssembly(typeof(Junos_BGPParser)).GetName().Version.ToString());
+		public string GetSupportTag() => string.Format("Juniper, JunOS BGP Protocol Parser module v{0}", Assembly.GetAssembly(typeof(Junos_BGPParser)).GetName().Version.ToString());
 
-		public Enum[] SupportedProtocols => new Enum[] { NeighborProtocol.BGP };
+		public object[] GetSupportedProtocols() => new Enum[] { NeighborProtocol.BGP };
 
 		internal enum BGPType { eBGP, iBGP, undetermined };
 	}
