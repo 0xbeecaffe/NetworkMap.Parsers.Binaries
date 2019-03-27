@@ -32,7 +32,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 
 		public string GetOperationStatusLabel() => _OperationStatusLabel;
 
-		public bool Initilize(IRouter router, Enum protocol)
+		public bool Initialize(IRouter router, Enum protocol)
 		{
 			_router = router;
 			if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.BGP)
