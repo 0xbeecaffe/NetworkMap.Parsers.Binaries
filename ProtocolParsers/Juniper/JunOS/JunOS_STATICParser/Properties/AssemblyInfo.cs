@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("JunOS_STATICParser")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Juniper JunOS STATIC parser")]
+[assembly: AssemblyDescription("PGT Network Map STATIC protocol parser module for Juniper EX, QFX, MX series")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("JunOS_STATICParser")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCompany("http://www.prettygoodterminal.com")]
+[assembly: AssemblyProduct("PGTNetworkMap")]
+[assembly: AssemblyCopyright("Copyright © 2017 - 2019 Laszlo Frank")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("2fb138b2-c840-4c80-a8d5-02911a77ffca")]
+[assembly: Guid("5D92441F-F45F-47B0-B251-31030003AE32")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("5.0.0.0")]
-[assembly: AssemblyFileVersion("5.0.0.0")]
+[assembly: AssemblyVersion("6.0.0.0")]
+[assembly: AssemblyFileVersion("6.0.0.0")]

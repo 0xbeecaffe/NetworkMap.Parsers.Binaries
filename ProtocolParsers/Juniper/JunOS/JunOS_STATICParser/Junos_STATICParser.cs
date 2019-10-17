@@ -21,7 +21,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
   public class Junos_STATICParser : IGenericProtocolParser, ISTATICProtocolParser
   {
     private string _OperationStatusLabel = "Idle";
-
+		private const string ParsingForVendor = "JunOS";
     private IRouter _router;
 
     public string GetOperationStatusLabel() => _OperationStatusLabel;
@@ -31,7 +31,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
       _router = router;
       if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.STATIC)
       {
-        return router?.GetVendor() == "JunOS";
+        return router?.GetVendor() == ParsingForVendor;
       }
       else return false;
     }
@@ -111,5 +111,10 @@ namespace L3Discovery.ProtocolParsers.JunOS.STATIC
     public object[] GetSupportedProtocols() => new Enum[] { NeighborProtocol.STATIC };
 
 		public string GetSupportTag() => string.Format("Juniper, JunOS STATIC Protocol Parser module v{0}", Assembly.GetAssembly(typeof(Junos_STATICParser)).GetName().Version.ToString());
+
+		public string GetVendor()
+		{
+			return ParsingForVendor;
+		}
 	}
 }
