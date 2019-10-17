@@ -30,6 +30,8 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 
 		private string _OperationStatusLabel = "Init";
 
+		private const string ParsingForVendor = "JunOS";
+
 		public string GetOperationStatusLabel() => _OperationStatusLabel;
 
 		public bool Initialize(IRouter router, Enum protocol)
@@ -37,7 +39,7 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 			_router = router;
 			if (protocol is NeighborProtocol && (NeighborProtocol)protocol == NeighborProtocol.BGP)
 			{
-				return router?.GetVendor() == "JunOS";
+				return router?.GetVendor() == ParsingForVendor;
 			}
 			else return false;
 		}
@@ -69,8 +71,10 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 					BGPType _bgpType = BGPType.undetermined;
 
 					string localRid = _router.RouterID(NeighborProtocol.BGP, instance);
-					string localAS = _router.BGPAutonomousSystem(instance);
-
+					string defaultLocalAS = _router.BGPAutonomousSystem(instance)?.Trim() ?? "";
+					string localAS = "";
+					// If not null, peering uses Local-as feature and neighboring details must be registered
+					BGPProtocolDetails bgpDetails = null;
 					var trimmedLines = bgp_lines.Select(l => l.Trim()).ToList();
 					for (int lineIndex = 0; lineIndex < trimmedLines.Count(); lineIndex++)
 					{
@@ -96,7 +100,6 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 								peerRouterID = "";
 								localNeighboringIP = "";
 								remoteNeighboringIP = "";
-								remoteAS = "";
 								description = "";
 								neighborState = "";
 								sessionEstablished = true;
@@ -112,7 +115,16 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 								// Get AS Numbers
 								var ASes = Regex.Matches(line, @"(?<=AS )[\d.]{0,99}", RegexOptions.Compiled);
 								if (ASes.Count != 2) throw new InvalidOperationException("Cannot parse BGP output : unable to retrieve local and remote AS numbers.");
-								remoteAS = ASes[0].Value;
+								remoteAS = ASes[0].Value.Trim();
+								localAS = ASes[1].Value.Trim();
+								if (localAS != defaultLocalAS)
+								{
+									DebugEx.WriteLine("JunOSBGPParser : Local AS feature detected, registering BGPPerringDetails ", DebugLevel.Full);
+									bgpDetails = new BGPProtocolDetails();
+									bgpDetails.LocalASN = localAS;
+									bgpDetails.RemoteASN = remoteAS;
+								}
+								else bgpDetails = null;
 								_OperationStatusLabel = string.Format("Processing neighbor {0} for AS {1}...", remoteNeighboringIP, remoteAS);
 								continue;
 							}
@@ -207,8 +219,13 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 							_OperationStatusLabel = string.Format("Querying router interface {0}...", localInterfaceName);
 							RouterInterface ri = _router.GetInterfaceByName(localInterfaceName, instance);
 							_OperationStatusLabel = string.Format("Registering BGP neighbor {0}...", peerRouterID);
-							DebugEx.WriteLine(String.Format("JunOSBGPParser : registering neighbor {0}AS{1} <-> {2}AS{3}", localRid, localAS, peerRouterID, remoteAS), DebugLevel.Full);
-							registry.RegisterNeighbor(_router, instance, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+							DebugEx.WriteLine(String.Format("JunOSBGPParser : registering neighbor {0} AS {1} <-> {2} AS {3}", localRid, localAS, peerRouterID, remoteAS), DebugLevel.Full);
+							int neighborshipID = registry.RegisterNeighbor(_router, instance, NeighborProtocol.BGP, peerRouterID, remoteAS, description, remoteNeighboringIP, ri, neighborState);
+							if (bgpDetails != null)
+							{
+								DebugEx.WriteLine("JunOSBGPParser : registering bgp protocol details", DebugLevel.Full);
+								registry.RegisterNeighboringDetails(neighborshipID, bgpDetails);
+							}
 							// now all is done for this peer, skip lines until next peer is found
 							skipRestOfLines = true;
 						}
@@ -252,6 +269,11 @@ namespace L3Discovery.ProtocolParsers.JunOS.BGP
 		public string GetSupportTag() => string.Format("Juniper, JunOS BGP Protocol Parser module v{0}", Assembly.GetAssembly(typeof(Junos_BGPParser)).GetName().Version.ToString());
 
 		public object[] GetSupportedProtocols() => new Enum[] { NeighborProtocol.BGP };
+
+		public string GetVendor()
+		{
+			return ParsingForVendor;
+		}
 
 		internal enum BGPType { eBGP, iBGP, undetermined };
 	}
