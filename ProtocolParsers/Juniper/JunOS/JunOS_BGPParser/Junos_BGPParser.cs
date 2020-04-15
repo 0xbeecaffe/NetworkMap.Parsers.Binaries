@@ -1,17 +1,17 @@
 ﻿/*
  * #########################################################################*/
 /* #                                                                       #*/
-/* #  This file is part of PGTNetworkMap project, which is written         #*/
-/* #  as a PGT plug-in to perform Layer 3 network inventory.               #*/
+/* #  This file is part of NetworkMap project, which is written            #*/
+/* #  as a Script N'Go plug-in to perform Layer 2/3 network discovery.     #*/
 /* #                                                                       #*/
 /* #  You may not use this file except in compliance with the license.     #*/
 /* #                                                                       #*/
-/* #  Copyright Laszlo Frank (c) 2014-2018                                 #*/
+/* #  Copyright Eszközbeszerzés Kft. (c) 2020                              #*/
 /* #                                                                       #*/
 /* #########################################################################*/
 
 
-using PGT.Common;
+using Scriptngo.Common;
 using System;
 using System.Diagnostics;
 using System.Linq;

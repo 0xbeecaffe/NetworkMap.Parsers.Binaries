@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\PrettyGoodTerminal\bin\L3Discovery\ProtocolParsers\</OutputPath>
+    <OutputPath>..\..\..\..\..\Script N%27Go\bin\NetworkMap\Parsers\binaries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,23 +24,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\..\PrettyGoodTerminal\bin\NetworkMap\Parsers\binaries\</OutputPath>
+    <OutputPath>..\..\..\..\..\Script N%27Go\bin\NetworkMap\Parsers\binaries\</OutputPath>
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\PrettyGoodTerminal\Common.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\..\..\ScriptNGo\bin\Common.dll</HintPath>
     </Reference>
-    <Reference Include="PGTInterfaces">
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\PrettyGoodTerminal\PGTInterfaces.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="NetworkMap">
+      <HintPath>..\..\..\..\..\ScriptNGo\bin\NetworkMap.dll</HintPath>
     </Reference>
-    <Reference Include="PGTNetworkMap">
-      <HintPath>..\..\..\..\..\PrettyGoodTerminal\bin\PGTNetworkMap.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="SNGInterfaces">
+      <HintPath>..\..\..\..\..\ScriptNGo\bin\SNGInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
