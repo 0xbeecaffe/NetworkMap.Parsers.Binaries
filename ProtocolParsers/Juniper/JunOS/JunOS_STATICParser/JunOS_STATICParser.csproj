@@ -33,14 +33,17 @@
     <Reference Include="Common, Version=9.0.0.0, Culture=neutral, PublicKeyToken=4e60e817fa1c378a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\ScriptNGo\bin\Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NetworkMap, Version=7.5.3.0, Culture=neutral, PublicKeyToken=3403079c73b83fdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\ScriptNGo\bin\NetworkMap.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SNGInterfaces, Version=9.0.0.0, Culture=neutral, PublicKeyToken=74dbe1797572435d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\ScriptNGo\bin\SNGInterfaces.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

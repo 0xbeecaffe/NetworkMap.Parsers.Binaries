@@ -27,6 +27,7 @@ namespace L3Discovery.Routers.CiscoIOS
 	public class CiscoIOSRouter : IRouter
 	{
 		#region Fields
+		private const string ParsingForVendor = "Cisco";
 		private IScriptableSession _session;
 		private string _hostName;
 		private string _versionInfo;
@@ -89,7 +90,7 @@ namespace L3Discovery.Routers.CiscoIOS
 				_runningNeighborProtocols[instance.Name] = new List<NeighborProtocol>();
 				// --
 				string cmd = "show ip protocols";
-				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 				{
 					cmd = string.Format("show ip protocols vrf {0}", instance.Name);
 				}
@@ -112,14 +113,14 @@ namespace L3Discovery.Routers.CiscoIOS
 				}
 				// -- STATIC routing 
 				cmd = "show ip route static";
-				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+				if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 				{
 					cmd = string.Format("show ip route vrf {0} static", instance.Name);
 				}
 				response = _session.ExecCommand(cmd);
 				if (!string.IsNullOrEmpty(response)) _runningNeighborProtocols[instance.Name].Add(NeighborProtocol.STATIC);
 				// -- CDP for default instance only
-				if (instance.Name.ToLower() == RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+				if (instance.Name.ToLower() == RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 				{
 					response = _session.ExecCommand("show cdp");
 					if (!response.ToLowerInvariant().Contains("not enabled")) _runningNeighborProtocols[instance.Name].Add(NeighborProtocol.CDP);
@@ -483,7 +484,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		public RoutingInstance[] RoutingInstances(string LogicalSystemName)
 		{
 			List<RoutingInstance> result = new List<RoutingInstance>();
-			result.Add(new RoutingInstance("Cisco"));
+			result.Add(new RoutingInstance(ParsingForVendor));
 			try
 			{
 				string response = Session.ExecCommand("show ip vrf");
@@ -508,7 +509,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		public int RouteTableSize(RoutingInstance instance)
 		{
 			string cmd = "show ip route summary";
-			if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+			if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 			{
 				cmd = string.Format("show ip route vrf {0} summary", instance.Name);
 			}
@@ -558,7 +559,7 @@ namespace L3Discovery.Routers.CiscoIOS
 				{
 					cmd = "show ip route 0.0.0.0";
 					// this would be too much to retrieve via terminal connection, get only default route
-					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 					{
 						cmd = string.Format("show ip route vrf {0} 0.0.0.0", instance.Name);
 					}
@@ -567,7 +568,7 @@ namespace L3Discovery.Routers.CiscoIOS
 				else
 				{
 					cmd = "show ip route";
-					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName("Cisco").ToLower())
+					if (instance.Name.ToLower() != RoutingInstance.DefaultInstanceName(ParsingForVendor).ToLower())
 					{
 						cmd = string.Format("show ip route vrf {0}", instance.Name);
 					}
@@ -1033,7 +1034,7 @@ namespace L3Discovery.Routers.CiscoIOS
 		/// <summary>
 		/// Must return the router vendor. The vendor information must be aligned with PGT Vendors
 		/// </summary>
-		public string Vendor { get { return "Cisco"; } }
+		public string Vendor { get { return ParsingForVendor; } }
 
 		/// <summary>
 		/// Must return version information about a device

@@ -32,12 +32,15 @@
   <ItemGroup>
     <Reference Include="Common">
       <HintPath>..\..\..\..\..\ScriptNGo\bin\Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NetworkMap">
       <HintPath>..\..\..\..\..\ScriptNGo\bin\NetworkMap.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SNGInterfaces">
       <HintPath>..\..\..\..\..\ScriptNGo\bin\SNGInterfaces.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
